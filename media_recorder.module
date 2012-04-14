@@ -1,0 +1,265 @@
+<?php
+/**
+ * @file
+ * Adds a media recorder plugin to the media module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function media_recorder_menu() {
+  
+  // Adds a tab to the media browser.
+  $items['file/add/record'] = array(
+    'title' => 'Record',
+    'description' => 'Add internet files to your media library.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('media_recorder_add'),
+    'access callback' => 'media_recorder_access',
+    'type' => MENU_LOCAL_TASK,
+  );
+  
+  // Callback that process the php://input from Wami.swf.
+  $items['media_recorder/record/%'] = array(
+    'title' => 'Record',
+    'description' => 'Record a video or audio file.',
+    'page callback' => 'media_recorder_record',
+    'access callback' => 'media_recorder_access',
+    'callback arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  
+  // Callback that sends the temporary recorder file to the Wami recorder.
+  $items['media_recorder/play/%'] = array(
+    'page callback' => 'media_recorder_play',
+    'access callback' => 'media_recorder_access',
+    'callback arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+
+/**
+ * Menu callback for recording a media file.
+ */
+function media_recorder_record() {
+  
+  // The file name is sent in the url from Wami.
+  $filename = arg(2);
+  
+  if ( !empty($filename) ) {
+  
+  $uri = 'temporary://' . $filename;
+    
+    // Grab the audio wav data from the php input stream.
+  $data = file_get_contents('php://input');
+  
+  // Save file data to temporary file directory.
+  $file = file_save_data($data, $uri, FILE_EXISTS_REPLACE);
+  
+  // Re-save as a temporary file in database.
+  $file->status = 0;
+  file_save($file);
+  
+  }
+  else {
+    return 'There is no filename specified.';
+  }
+}
+
+/**
+ * Menu callback for playing a media file.
+ */
+function media_recorder_play() {
+  
+  // The file name is sent in the url from Wami.
+  $filename = arg(2);
+  
+  if ( !empty($filename) ) {
+    
+    $uri = 'temporary://' . $filename;
+    
+    // Add http headers.
+    $http_headers = array(
+      'Content-Type' => 'audio/x-wav',
+    );
+    
+    // Send the wav file directly to the client.
+    file_transfer($uri, $http_headers);
+  
+  }
+  else {
+    return 'There is no filename specified.';
+  }
+}
+
+/**
+ * Access callback for the media_recorder media browser plugin.
+ */
+function media_recorder_access($account = NULL) {
+  return user_access('add media from media recorder');
+}
+
+/**
+ * Implement hook_permission().
+ */
+function media_recorder_permission() {
+  return array(
+    'add media from media recorder' => array(
+      'title' => t('Add media from media recorder.'),
+      'description' => t('Add media using a recorder such as Wami recorder.'),
+    ),
+  );
+}
+
+/**
+ * Provides a form for adding media items using the Wami Recorder.
+ */
+function media_recorder_add($form, &$form_state) {
+  global $user;
+  $filename = 'mr' . $user->sid . '.wav';
+
+  // Build the Wami recorder form.
+  $form['media_recorder_title'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Title',
+    '#weight' => 0,
+  );
+  $form['media_recorder']['#markup'] = media_recorder_wami_recorder($filename);
+  $form['media_recorder_filename'] = array(
+    '#type' => 'hidden',
+    '#value' => $filename,
+  );
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save Recording'),
+  );
+  return $form;
+}
+
+function media_recorder_add_validate($form, &$form_state) {
+  global $user;
+  
+  // Get the filename of the temporary recorded file.
+  $filename = $form_state['values']['media_recorder_filename'];
+  
+  // User submitted title, which has already been run through check_plain().
+  $title = $form_state['values']['media_recorder_title'];
+  
+  // Destination filename to be saved in file_default_scheme.
+  // TODO: Provide a setting to set this using tokens.
+  $new_filename = $user->name . date('U') . '.wav';
+  
+  if ( !empty($title) ) {
+    
+    // Destination directory to save the permanent file.
+    $destination = file_default_scheme() . '://media_recorder';
+  
+    if ( file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS) ) {
+      
+      // Get the file data from the temp file.
+      $temp_file = 'temporary://' . $filename;
+      
+      // Check to see if the temporary file exists before we get it's contents.
+      if ( file_exists($temp_file) ) {
+        $data = file_get_contents($temp_file);
+      } 
+      else {
+        form_set_error('media_recorder', t("You must record before saving."));
+      }
+      
+      if ( !empty($data) ) {
+      
+        // Save file data to permanent file directory.
+        $uri = $destination . '/' . $new_filename;
+        $file = file_save_data($data, $uri, FILE_EXISTS_REPLACE);
+        
+        // Change the filename to the user inputed title.
+        $file->filename = $title;
+        $file = file_save($file);
+        
+        // Store the file array to use in media_recorder_add_submit().
+        $form_state['storage']['file'] = $file;
+        
+        // TODO||NOTTODO: Is it worth deleting the temp file here?
+      
+      }
+      else {
+        form_set_error('media_recorder', t("You must record before saving."));
+      }      
+    }
+    else {
+      form_set_error('media_recorder', t("Directory doesn't exist or isn't writable."));
+    }
+  }
+  else {
+    form_set_error('media_recorder_title', t('Recording must have a title.'));
+  }
+}
+
+/**
+ * Upload a file from a URL.
+ *
+ * This will copy a file from a remote location and store it locally.
+ *
+ * @see media_parse_to_uri()
+ * @see media_parse_to_file()
+ */
+function media_recorder_add_submit($form, &$form_state) {
+  
+  $file = $form_state['storage']['file'];
+  if (!$file->fid) {
+    form_set_error('file', t('The file %file could not be saved. An unknown error has occurred.', array('%file' => $file->filename)));
+    return;
+  }
+  else {
+    // Add the file to the form_state, otherwise Media won't process it correctly.
+    $form_state['file'] = $file;
+    $title = $form_state['values']['media_recorder_title'];
+    drupal_set_message(t('Recording %title has been saved.', array('%title' => $title)));
+  }
+  
+  // Redirect to the file edit page after submission.
+  if (media_access('edit')) {
+    $destination = array('destination' => 'admin/content/file');
+    if (isset($_GET['destination'])) {
+      $destination = drupal_get_destination();
+      unset($_GET['destination']);
+    }
+    $form_state['redirect'] = array('file/' . $file->fid . '/edit', array('query' => $destination));
+  }
+  else {
+    $form_state['redirect'] = 'admin/content/file';
+  }
+}
+
+// Wami Recorder via http://code.google.com/p/wami-recorder/
+// License: http://www.opensource.org/licenses/mit-license.php
+function media_recorder_wami_recorder($filename) {
+  
+  $record_path = url('media_recorder/record') . '/';
+  $play_path = url('media_recorder/play') . '/';
+  
+  drupal_add_js(drupal_get_path('module', 'media_recorder') . '/js/swfobject.js');
+  drupal_add_js(drupal_get_path('module', 'media_recorder') . '/js/wami.js');
+  drupal_add_js(drupal_get_path('module', 'media_recorder') . '/js/wami_gui.js');
+  drupal_add_js(array('mediaRecorder' => array('modulePath' => drupal_get_path('module', 'media_recorder'))), 'setting');
+  drupal_add_js(array('mediaRecorder' => array('fileName' => $filename)), 'setting');
+  drupal_add_js(array('mediaRecorder' => array('recordPath' => $record_path)), 'setting');
+  drupal_add_js(array('mediaRecorder' => array('playPath' => $play_path)), 'setting');
+  drupal_add_css(drupal_get_path('module', 'media_recorder') . '/css/wami_gui.css');
+    
+  $recorder = '<div id="media-recorder">';
+  $recorder .= '<div id="controls">';
+  $recorder .= '<div id="media-recorder-record" class="record-off"><span>Record</span></div>';
+  $recorder .= '<div id="media-recorder-stop" class="stop-off"><span>Stop</span></div>';
+  $recorder .= '<div id="media-recorder-play" class="play-off"><span>Play</span></div>';
+  $recorder .= '</div>';
+  $recorder .= '<div id="meter">Press Record to Start</div>';
+  $recorder .= '<div id="wami-swf"></div>';
+  $recorder .= '</div>';
+  
+  return $recorder;
+}
