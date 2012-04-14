@@ -1,7 +1,0 @@
-; $Id$
-name = Media Recorder
-description = "Adds a recording option to the Media module."
-package = "Media"
-core = 7.x
-dependencies[] = media
-files[] = includes/MediaBrowserRecorder.inc
