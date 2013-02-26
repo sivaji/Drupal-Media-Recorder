@@ -1,0 +1,405 @@
+<?php
+/**
+ * @file
+ * Adds a media recorder widget and add form to the media module.
+ */
+
+/**
+ * Implements hook_library().
+ */
+function media_recorder_library() {
+  $libraries = array();
+  $libraries['swfobject'] = array(
+    'title' => 'SWFObject',
+    'version' => '2.2',
+    'website' => 'http://code.google.com/p/swfobject/',
+    'js' => array(
+      libraries_get_path('swfobject') . '/swfobject.js' => array('group' => JS_LIBRARY, 'preprocess' => FALSE),
+    ),
+  );
+  $libraries['wami'] = array(
+    'title' => 'WAMI Recorder',
+    'version' => '',
+    'website' => 'http://code.google.com/p/wami-recorder/',
+    'js' => array(
+      libraries_get_path('wami') . '/recorder.js' => array('group' => JS_LIBRARY, 'preprocess' => FALSE),
+    ),
+  );
+  $libraries['Recorderjs'] = array(
+    'title' => 'Recorderjs',
+    'version' => '',
+    'website' => 'https://github.com/mattdiamond/Recorderjs/',
+    'js' => array(
+      libraries_get_path('Recorderjs') . '/recorder.js' => array('group' => JS_LIBRARY, 'preprocess' => FALSE),
+    ),
+  );
+  return $libraries;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function media_recorder_menu() {
+
+  // Adds a tab to the media browser.
+  $items['file/add/record'] = array(
+    'title' => 'Voice Recorder',
+    'description' => 'Add internet files to your media library.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('media_recorder_add'),
+    'access callback' => 'media_recorder_access',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  // Callback that process the php://input from Wami.swf.
+  $items['media_recorder/record/%'] = array(
+    'title' => 'Record',
+    'description' => 'Record a video or audio file.',
+    'page callback' => 'media_recorder_record',
+    'access callback' => 'media_recorder_access',
+    'callback arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+
+  // Callback that sends the temporary recorder file to the Wami recorder.
+  $items['media_recorder/play/%'] = array(
+    'page callback' => 'media_recorder_play',
+    'access callback' => 'media_recorder_access',
+    'callback arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Menu callback for recording a media file.
+ */
+function media_recorder_record() {
+  global $user;
+
+  // The file name is sent in the url from Wami.
+  $filename = arg(2);
+  if (isset($_FILES['mediaRecorder']['tmp_name'])) {
+    $url = $_FILES['mediaRecorder']['tmp_name'];
+  } else {
+    $url = 'php://input';
+  }
+
+  if (!empty($filename) && !empty($url)) {
+
+    $uri = 'public://users/' . $user->uid . '/' . $filename;
+
+    // Grab the audio wav data from the php input stream.
+    $data = file_get_contents($url);
+
+    // Save file data to temporary file directory.
+    $file = file_save_data($data, $uri, FILE_EXISTS_REPLACE);
+
+    // Re-save as a temporary file in database, for some reason saving using
+    // temporary scheme still sets status as 1.
+    $file->status = 0;
+    file_save($file);
+
+    echo drupal_json_output($file);
+  }
+  else {
+    echo FALSE;
+  }
+}
+
+/**
+ * Access callback for the media_recorder media browser plugin.
+ */
+function media_recorder_access($account = NULL) {
+  return user_access('add media from media recorder');
+}
+
+/**
+ * Implement hook_permission().
+ */
+function media_recorder_permission() {
+  return array(
+    'add media from media recorder' => array(
+      'title' => t('Add media using the media recorder.'),
+      'description' => t('Add media using a the media recorder widget.'),
+    ),
+  );
+}
+
+/**
+ * Provides a form for adding media items using the Wami Recorder.
+ */
+function media_recorder_add($form, &$form_state = array(), $types = NULL) {
+  global $user;
+
+  // Build the media recorder form.
+  $form['#id'] = 'media-recorder-form';
+  $form['#attributes']['class'][] = 'field-widget-media-recorder';
+  // Add title field.
+  $form['media_recorder_title']['#type'] = 'textfield';
+  $form['media_recorder_title']['#title'] = t('Title');
+  // Add a hidden filepath input.
+  $form['media_recorder_filepath']['#type'] = 'hidden';
+  // Add file field.
+  $form['media_recorder_upload'] = array(
+    '#type' => 'managed_file',
+    '#title' => t('Upload a new file'),
+    '#upload_location' => 'public://users/' . $user->uid,
+    '#upload_validators' => array(
+      'file_validate_extensions' => array('mp3 m4a mpg mov m4v mp4 mpeg avi ogg oga ogv'),
+      'file_validate_size' => array(1024 * 1024 * 1024),
+    ),
+    '#progress_indicator' => 'bar',
+    '#pre_render' => array('file_managed_file_pre_render', 'file_entity_upload_validators_pre_render'),
+  );
+  $form['media_recorder_upload']['#process'][] = 'media_recorder_form_process';
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit']['#type'] = 'submit';
+  $form['actions']['submit']['#value'] = t('Save Recording');
+
+  return $form;
+}
+
+/**
+ * Custom validation callback.
+ * @see: media_recorder_add
+ */
+function media_recorder_add_validate($form, &$form_state) {
+  global $user;
+  $title = isset($form_state['values']['media_recorder_title']) ? $form_state['values']['media_recorder_title'] : '';
+  $fid = isset($form_state['values']['media_recorder_upload']) ? $form_state['values']['media_recorder_upload'] : 0;
+  $filepath = isset($form_state['values']['media_recorder_filepath']) ? $form_state['values']['media_recorder_filepath'] : '';
+  $file = NULL;
+  dsm($form_state);
+  // Check title exists.
+  if (empty($title)) {
+    form_set_error('media_recorder_title', t('Recording cannot be saved without a title.'));
+    return;
+  }
+  // Check file exists.
+  if ($fid == 0 && empty($filepath)) {
+    form_set_error('media_recorder_upload', t('No Recording submitted.'));
+    return;
+  }
+  // Load submitted file.
+  if ($fid !== 0) {
+    $file = file_load($fid);
+  } elseif (is_string($filepath)) {
+    $fid = db_query('SELECT fm.fid FROM {file_managed} fm WHERE fm.uri = :filepath', array(':filepath' => $filepath))->fetchField();
+    $file = file_load($fid);
+  }
+  // Check file has been loaded properly.
+  if (is_null($file)) {
+    form_set_error('media_recorder_upload', t('No Recording submitted.'));
+    return;
+  }
+  // Process file.
+  if ($file) {
+    // Validate file doesn't exceed quota limit.
+    $limit = 1024 * 1024 * 1024;
+    $file_validate_size_errors = file_validate_size($file, $limit, $limit * 5);
+    if (empty($file_validate_size_errors)) {
+      // Move file to change it's filename.
+      $file = file_move($file, $form['media_recorder_upload']['#upload_location'] . '/' . transliteration_clean_filename($title) . '.wav');
+      // Save permanent file with new title.
+      $file->filename = $title;
+      $file->display = TRUE;
+      $file->status = FILE_STATUS_PERMANENT;
+      $file = file_save($file);
+      // Set file element to saved file.
+      $form_state['file'] = $file;
+      // Notify user of successful upload.
+      drupal_set_message(t('The file @name was uploaded', array('@name' => $file->filename)));
+    }
+    // Report file validation errors.
+    else {
+      form_set_error('media_recorder_upload', t(implode('<br />', $file_validate_size_errors)));
+      return;
+    }
+  }
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function media_recorder_field_widget_info() {
+  return array(
+    'media_recorder' => array(
+      'label' => t('Media Recorder'),
+      'field types' => array('file'),
+      'settings' => array(
+        'progress_indicator' => 'throbber',
+        'allowed_schemes' => array('public', 'private'),
+      ),
+      'behaviors' => array(
+        'multiple values' => FIELD_BEHAVIOR_CUSTOM,
+        'default value' => FIELD_BEHAVIOR_NONE,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function media_recorder_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $field['settings']['display_field'] = 0;
+  $settings = $instance['settings'];
+  $elements = file_field_widget_form($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
+  foreach (element_children($elements) as $delta) {
+    $fields[] = $delta;
+    // Add a hidden filepath input
+    $elements[$delta]['media_recorder_filepath']['#type'] = 'hidden';
+    $elements[$delta]['#element_validate'][] = 'media_recorder_field_widget_form_validate';
+    $elements[$delta]['#process'][] = 'media_recorder_form_process';
+    $elements[$delta]['#delta'] = $delta;
+  }
+  if ($field['cardinality'] == 1) {
+    if (empty($elements[0]['#default_value']['fid'])) {
+      $elements[0]['#description'] = theme('file_upload_help', array('description' => $instance['description'], 'upload_validators' => $elements[0]['#upload_validators']));
+    }
+  }
+  else {
+    $elements['#file_upload_description'] = theme('file_upload_help', array('upload_validators' => $elements[0]['#upload_validators']));
+  }
+  return $elements;
+}
+
+/**
+ * Custom validation callback.
+ * @see: media_recorder_field_widget_form
+ */
+function media_recorder_field_widget_form_validate($element, &$form_state) {
+  global $user;
+  $field_name = $element['#field_name'];
+  $langcode = $element['#language'];
+  $filename = 'mr' . $user->sid . '.wav';
+
+  // Grab title from entity if available.
+  if (isset($form_state['values']['title']) && !empty($form_state['values']['title'])) {
+    $title = $form_state['values']['title'];
+  }
+  // Add custom logic for comments.
+  // TODO: This needs improved to be scalable for all entity types.
+  elseif (isset($form_state['comment']) && is_object($form_state['comment']) && isset($form_state['values']['nid']) && is_numeric($form_state['values']['nid'])) {
+    $node = node_load($form_state['values']['nid']);
+    $title = 'Comment on ' . $node->title;
+  }
+  // Iterate through field and process values.
+  foreach ($form_state['values'][$field_name][$langcode] as $key => $values) {
+    $field_title = !empty($values['media_recorder_title']) ? $values['media_recorder_title'] : $title;
+    $fid = !empty($values['fid']) ? $values['fid'] : 0;
+    $filepath = !empty($values['media_recorder_filepath']) ? $values['media_recorder_filepath'] : '';
+    $file = NULL;
+    // Check title exists.
+    if (empty($field_title)) {
+      form_set_error('media_recorder_title', t('Recording cannot be saved without a title.'));
+      return;
+    }
+    // Check file exists.
+    if ($fid == 0 && empty($filepath)) {
+      form_set_error('media_recorder_upload', t('No Recording submitted.'));
+      return;
+    }
+    // Load submitted file.
+    if ($fid !== 0) {
+      $file = file_load($fid);
+    } elseif (is_string($filepath)) {
+      $fid = db_query('SELECT fm.fid FROM {file_managed} fm WHERE fm.uri = :filepath', array(':filepath' => $filepath))->fetchField();
+      $file = file_load($fid);
+    }
+    // Check file has been loaded properly.
+    if (is_null($file)) {
+      form_set_error('media_recorder_upload', t('No Recording submitted.'));
+      return;
+    }
+    // Process file.
+    if ($file) {
+      // Validate file doesn't exceed quota limit.
+      $limit = 1024 * 1024 * 1024;
+      $file_validate_size_errors = file_validate_size($file, $limit, $limit * 5);
+      if (empty($file_validate_size_errors)) {
+        // Move file to change it's filename.
+        $file = file_move($file, $element['#upload_location'] . '/' . transliteration_clean_filename($title) . '.wav');
+        // Save permanent file with new title.
+        $file->filename = $title;
+        $file->display = TRUE;
+        $file->status = FILE_STATUS_PERMANENT;
+        $file = file_save($file);
+        // Set new values for this element.
+        $form_state['values'][$field_name][$langcode][$key]['fid'] = $file->fid;
+        $form_state['values'][$field_name][$langcode][$key]['display'] = 1;
+      }
+      // Report file validation errors.
+      else {
+        form_set_error('media_recorder_upload', t(implode('<br />', $file_validate_size_errors)));
+        return;
+      }
+    }
+  }
+}
+
+/**
+ * Process callback for managed file media recorder field.
+ * @see: media_recorder_field_widget_form
+ * @see: media_recorder_add
+ */
+function media_recorder_form_process($element, &$form_state, &$form) {
+  global $user;
+  $field_name = isset($element['#field_name']) ? $element['#field_name'] : 'media_recorder_upload';
+  $language = isset($element['#language']) ? $element['#language'] : '';
+  $delta = isset($element['#delta']) ? $element['#delta'] : NULL;
+  $filename = 'MR' . $user->sid . '.wav';
+  $recordpath = url('media_recorder/record');
+  $filepath = 'public://users/' . $user->uid;
+  $url = file_create_url($filepath);
+
+  // Process element.
+  $element = file_managed_file_process($element, $form_state, $form);
+
+  // Add recorder markup.
+  $recorder = '<div id="media-recorder">';
+  $recorder .= '<div id="controls"><div id="media-recorder-record" class="record-off"><span>Record</span></div></div>';
+  $recorder .= '<canvas id="media-recorder-analyser"></canvas>';
+  $recorder .= '<div id="volume"></div>';
+  $recorder .= '<div id="media-recorder-status">0:00 / 5:00</div>';
+  $recorder .= '</div>';
+  $recorder .= '</div>';
+  $player = '<audio id="media-recorder-audio" controls width="300" height="30"><source src="" type="audio/wav"></audio>';
+  $element['#suffix'] = $recorder . $player;
+
+  // Add general css/js/settings.
+  $form['#attached']['library'][] = array('system', 'ui.progressbar');
+  $form['#attached']['library'][] = array('system', 'ui.slider');
+  $form['#attached']['library'][] = array('media_recorder', 'swfobject');
+  $form['#attached']['library'][] = array('media_recorder', 'wami');
+  $form['#attached']['library'][] = array('media_recorder', 'Recorderjs');
+  $form['#attached']['css'][] = drupal_get_path('module', 'media_recorder') . '/css/media_recorder.css';
+  $form['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/media_recorder.js';
+  $form['#attached']['js'][] = array(
+    'data' => array(
+      'mediaRecorder' => array(
+        'modulePath' => drupal_get_path('module', 'media_recorder'),
+        'fieldName' => $field_name,
+        'language' => $language,
+        'delta' => $delta,
+        'fileName' => $filename,
+        'recordPath' => $recordpath,
+        'filePath' => $filepath,
+        'url' => $url,
+        'timeLimit' => 300000,
+      ),
+    ),
+    'type' => 'setting',
+  );
+
+  // Add HTML5 recorderjs recorder.
+  //$form['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/recorderjs/recorder.js';
+
+  // Add WAMI recorder.
+  //$form['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/swfobject.js';
+  //$form['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/wami.js';
+
+  return $element;
+}
