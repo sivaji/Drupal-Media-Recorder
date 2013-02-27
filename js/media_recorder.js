@@ -44,10 +44,10 @@
 
   Drupal.mediaRecorder.HTML5.updateAnalysers = function (time) {
     if (!Drupal.mediaRecorder.HTML5.analyserContext) {
-      var canvas = document.getElementById('media-recorder-analyser');
-      Drupal.mediaRecorder.HTML5.canvasWidth = canvas.width;
-      Drupal.mediaRecorder.HTML5.canvasHeight = canvas.height;
-      Drupal.mediaRecorder.HTML5.analyserContext = canvas.getContext('2d');
+      var canvas = $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-analyser');
+      Drupal.mediaRecorder.HTML5.canvasWidth = canvas[0].width;
+      Drupal.mediaRecorder.HTML5.canvasHeight = canvas[0].height;
+      Drupal.mediaRecorder.HTML5.analyserContext = canvas[0].getContext('2d');
     }
     var SPACING = 1;
     var BAR_WIDTH = 1;
@@ -123,14 +123,13 @@
   // Start recording callback.
   Drupal.mediaRecorder.HTML5.recordStart = function() {
     Drupal.mediaRecorder.HTML5.recordDuring();
-    $('#media-recorder-record').unbind('click');
-    $('#media-recorder-record').click(function() { Drupal.mediaRecorder.HTML5.stop(); });
-    $('#media-recorder-record').removeClass('record-off');
-    $('#media-recorder-record').addClass('record-on');
+    $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record')
+      .removeClass('record-off').addClass('record-on')
+      .unbind('click').click(function() { Drupal.mediaRecorder.HTML5.stop(); });
   };
   // During recording callback.
   Drupal.mediaRecorder.HTML5.recordDuring = function() {
-    $("#media-recorder #media-recorder-record").animate({opacity: 0.1}, 999);
+    $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record').animate({opacity: 0.1}, 999);
     var currentSeconds = 0;
     var opacityValue = 1;
     recordInterval = setInterval(function() {
@@ -149,20 +148,20 @@
       } else {
         opacityValue = 0.1;
       }
-      $("#media-recorder #media-recorder-record").animate({opacity: opacityValue}, 999);
+      $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record').animate({opacity: opacityValue}, 999);
+      if (mm < 10) { mm = "0" + mm; }
       if (ss < 10) { ss = "0" + ss; }
       // Refresh time display with current time.
-      $('#media-recorder-status').html(mm + ':' + ss + ' / 5:00');
+      $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-status').html(mm + ':' + ss + ' / 05:00');
     }, 1000);
   };
   // Finish recording callback.
   Drupal.mediaRecorder.HTML5.recordFinish = function() {
     clearInterval(recordInterval);
-    $('#media-recorder-record').unbind('click');
-    $('#media-recorder-record').click(function() { Drupal.mediaRecorder.HTML5.record(); });
-    $('#media-recorder-record').removeClass('record-on');
-    $('#media-recorder-record').addClass('record-off');
-    $("#media-recorder #media-recorder-record").animate({opacity: 1}, 1000);
+    $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record')
+      .removeClass('record-on').addClass('record-off')
+      .animate({opacity: 1}, 1000).unbind('click')
+      .click(function() { Drupal.mediaRecorder.HTML5.record(); });
   };
   // Stop recording callback.
   Drupal.mediaRecorder.HTML5.stop = function() {
@@ -170,9 +169,9 @@
     Drupal.mediaRecorder.HTML5.recorder.stop();
     Drupal.mediaRecorder.HTML5.recorder.exportWAV(function(blob) {
       var url = URL.createObjectURL(blob);
-      var audio = $('#media-recorder-audio');
+      var audio = $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-audio audio');
       $(audio).attr('src', url);
-      $('#media-recorder-status').html('<div id="progressbar"></div>');
+      $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-status').html('<div class="progressbar"></div>');
       Drupal.mediaRecorder.HTML5.sendBlob(blob);
     });
     Drupal.mediaRecorder.HTML5.recorder.clear();
@@ -195,16 +194,18 @@
     function updateProgress(evt) {
       if (evt.lengthComputable) {
         var percentComplete = (evt.loaded / evt.total) * 100;
-        $('#progressbar').progressbar({value: percentComplete});
+        $('#' + Drupal.settings.mediaRecorder.cssid + ' .progressbar').progressbar({value: percentComplete});
       } else {
-        $('#progressbar').progressbar({value: 100});
+        $('#' + Drupal.settings.mediaRecorder.cssid + ' .progressbar').progressbar({value: 100});
       }
     }
     function transferComplete(evt) {
       var file = JSON.parse(req.response);
-      var elementName = Drupal.mediaRecorder.fieldFormatter('fid');
-      $('input[name="' + elementName + '"]').val(file.fid);
-      $('#media-recorder-status').html('0:00 / 5:00');
+      var fidInput = Drupal.mediaRecorder.fieldFormatter('fid');
+      var filepathInput = Drupal.mediaRecorder.fieldFormatter('media_recorder_filepath');
+      $('input[name="' + fidInput + '"]').val(file.fid);
+      $('input[name="' + filepathInput + '"]').val(Drupal.settings.mediaRecorder.filePath + '/' + Drupal.settings.mediaRecorder.fileName);
+      $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-status').html('00:00 / 05:00');
     }
     function transferFailed(evt) {
       Drupal.mediaRecorder.onError("An error occurred while transferring the file.");
@@ -223,9 +224,9 @@
     // Don't start WAMI unless div is present.
     // This is only an issue when wami is loaded by ajax. 
     findWamiInterval = setInterval(function() {
-      if ($('#wami').length) {
+      if ($('#wami-' + Drupal.settings.mediaRecorder.cssid).length) {
         Wami.setup({
-          id: 'wami',
+          id: 'wami-' + Drupal.settings.mediaRecorder.cssid,
           swfUrl: Drupal.settings.basePath + 'sites/all/libraries/wami/Wami.swf'
         });
         clearInterval(findWamiInterval);
@@ -244,14 +245,13 @@
   // Start recording callback.
   Drupal.mediaRecorder.WAMI.recordStart = function() {
     Drupal.mediaRecorder.WAMI.recordDuring();
-    $('#media-recorder-record').unbind('click');
-    $('#media-recorder-record').click(function() { Drupal.mediaRecorder.WAMI.stop(); });
-    $('#media-recorder-record').removeClass('record-off');
-    $('#media-recorder-record').addClass('record-on');
+    $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record')
+      .removeClass('record-off').addClass('record-on')
+      .unbind('click').click(function() { Drupal.mediaRecorder.WAMI.stop(); });
   };
   // During recording callback.
   Drupal.mediaRecorder.WAMI.recordDuring = function() {
-    $("#media-recorder #media-recorder-record").animate({opacity: 0.1}, 999);
+    $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record').animate({opacity: 0.1}, 999);
     var currentSeconds = 0;
     var opacityValue = 1;
     recordInterval = setInterval(function() {
@@ -270,21 +270,22 @@
       } else {
         opacityValue = 0.1;
       }
-      $("#media-recorder #media-recorder-record").animate({opacity: opacityValue}, 999);
+      $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record').animate({opacity: opacityValue}, 999);
+      if (mm < 10) { mm = "0" + mm; }
       if (ss < 10) { ss = "0" + ss; }
       // Refresh time display with current time.
-      $('#media-recorder-status').html(mm + ':' + ss + ' / 5:00');
+      $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-status').html(mm + ':' + ss + ' / 05:00');
     }, 1000);
-    $('#media-recorder-analyser').replaceWith('<div id="media-recorder-analyser"></div>');
+    $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-analyser').replaceWith('<div class="media-recorder-analyser"></div>');
     meterInterval = setInterval(function() {
       // Refresh meter bar.
       var level = Wami.getRecordingLevel();
       var marginTop = Math.round(( 100 - level ) / 2);
       if (level === 0) { level = 1; }
-      $('#media-recorder-analyser').append('<div class="meter-bar"><div class="inner record" style="height:' + level + '%; margin-top: ' + marginTop + 'px"></div></div>');
-      var barsNumber = $('#media-recorder-analyser').children().size();
+      $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-analyser').append('<div class="meter-bar"><div class="inner record" style="height:' + level + '%; margin-top: ' + marginTop + 'px"></div></div>');
+      var barsNumber = $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-analyser').children().size();
       if (barsNumber >= 100) {
-        $('#media-recorder-analyser').children().first().remove();
+        $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-analyser').children().first().remove();
       }
     }, 50);
   };
@@ -292,7 +293,7 @@
   Drupal.mediaRecorder.WAMI.recordFinish = function() {
     var time = new Date().getTime(); // Adds time to audio url to disable caching.
     var url = Drupal.settings.mediaRecorder.url + '/' + Drupal.settings.mediaRecorder.fileName;
-    var audio = $('#media-recorder-audio');
+    var audio = $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-audio audio');
     var elementName = Drupal.mediaRecorder.fieldFormatter('media_recorder_filepath');
     // Clear all recording intervals.
     clearInterval(recordInterval);
@@ -300,18 +301,13 @@
     clearInterval(meterInterval);
     // Set audio and file input values.
     $(audio).attr('src', url + '?' + time);
-    if ($('input[name="media_recorder_filepath"]').length) {
-      $('input[name="media_recorder_filepath"]').val(Drupal.settings.mediaRecorder.filePath + '/' + Drupal.settings.mediaRecorder.fileName);
-    } else {
-      $('input[name="' + elementName + '"]').val(Drupal.settings.mediaRecorder.filePath + '/' + Drupal.settings.mediaRecorder.fileName);
-    }
+    $('input[name="' + elementName + '"]').val(Drupal.settings.mediaRecorder.filePath + '/' + Drupal.settings.mediaRecorder.fileName);
     // Change recorder HTML/CSS.
-    $('#media-recorder-record').unbind('click');
-    $('#media-recorder-record').click(function() { Drupal.mediaRecorder.WAMI.record(); });
-    $('#media-recorder-record').removeClass('record-on');
-    $('#media-recorder-record').addClass('record-off');
-    $('#media-recorder-status').html('0:00 / 5:00');
-    $("#media-recorder #media-recorder-record").animate({opacity: 1}, 1000);
+    $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record')
+      .removeClass('record-on').addClass('record-off')
+      .unbind('click').click(function() { Drupal.mediaRecorder.WAMI.record(); });
+    $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-status').html('00:00 / 05:00');
+    $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record').animate({opacity: 1}, 1000);
   };
   // Stop recording callback.
   Drupal.mediaRecorder.WAMI.stop = function() {
@@ -321,7 +317,7 @@
     progressInterval = setInterval(function() {
       progressCount = progressCount + 1;
       progressIndicator = progressIndicator + '.';
-      $("#media-recorder-status").html('Uploading' + progressIndicator);
+      $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-status').html('Uploading' + progressIndicator);
       if (progressCount === 3) { progressCount = 0; progressIndicator = ''; }
     }, 500);
   };
@@ -333,17 +329,41 @@
   // Add setup to drupal behaviors.
   Drupal.behaviors.mediaRecorder = {
     attach: function() {
+      
+      // Hides all media widget file fields.
+      var mediaRecorder = $('.media-recorder-wrapper');
+      mediaRecorder.each(function(){
+        var width = $(this).attr('width') + 'px';
+        var height = $(this).attr('height') + 'px';
+        $(this).find('.media-recorder').css({'width': width, 'height': height});
+      });
+      
+      // Hides all media widget file fields.
       var mediaRecorderFields = $('.field-widget-media-recorder .form-type-managed-file');
       mediaRecorderFields.each(function(){
         $(this).find('.form-managed-file').hide();
         $(this).find('.description').hide();
       });
+      
+      // Check if form has been submitted and prepopulate audio source.
+      var filepathInput = Drupal.mediaRecorder.fieldFormatter('media_recorder_filepath');
+      $('input[name="' + filepathInput + '"]').each(function(){
+        // Set audio and file input values.
+        if ($(this).val()) {
+          var url = Drupal.settings.mediaRecorder.url + '/' + Drupal.settings.mediaRecorder.fileName;
+          var time = new Date().getTime(); // Adds time to audio url to disable caching.
+          var audio = $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-audio audio');
+          $(audio).attr('src', url + '?' + time);
+        }
+      });
+      
+      // Load HTML5 recorder.
       if (navigator.getUserMedia || navigator.webkitGetUserMedia) {
-        $('#media-recorder').addClass('HTML5');
-        $('#media-recorder-record').click(function() {
+        $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder').addClass('HTML5');
+        $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record').click(function() {
           Drupal.mediaRecorder.HTML5.record();
         });
-        $("#volume").slider({
+        $('#' + Drupal.settings.mediaRecorder.cssid + ' .volume').slider({
           orientation: "vertical",
           range: "min",
           step: 0.05,
@@ -355,14 +375,18 @@
           }
         });
         Drupal.mediaRecorder.HTML5.setup();
-      } else {
-        $('#media-recorder').addClass('WAMI');
-        $('#media-recorder').append('<div id="media-recorder-mic-settings"><span>Settings</span></div>');
-        $('#media-recorder').prepend('<div id="wami"></div><input id="wami-filepath" type="hidden">');
-        $('#media-recorder-record').click(function() {
+      }
+      
+      // Load HTML5 recorder.
+      else if (window.Wami) {
+        $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder')
+          .addClass('WAMI')
+          .append('<div class="media-recorder-mic-settings"><span>Settings</span></div>')
+          .prepend('<div id="wami-' + Drupal.settings.mediaRecorder.cssid + '"></div><input id="wami-filepath" type="hidden">');
+        $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-record').click(function() {
           Drupal.mediaRecorder.WAMI.record();
         });
-        $('#media-recorder-mic-settings').click(function() {
+        $('#' + Drupal.settings.mediaRecorder.cssid + ' .media-recorder-mic-settings').click(function() {
           Wami.showSecurity("microphone");
         });
         Drupal.mediaRecorder.WAMI.setup();
