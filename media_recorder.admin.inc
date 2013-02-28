@@ -59,8 +59,15 @@ function media_recorder_admin_form() {
       '#dialog' => TRUE,
     );
   }
-  // Add default audio field based on add form.
-  $media_recorder_settings = variable_get('media_recorder', array());
+  // Add default audio field based on media_recorder_add form.
+  $media_recorder = variable_get('media_recorder', array());
+  $media_recorder_title = isset($media_recorder['media_recorder_title']) ? $media_recorder['media_recorder_title'] : '';
+  if (isset($media_recorder['und'][0]['fid']) && !empty($media_recorder['und'][0]['fid'])) {
+    $fid = $media_recorder['und'][0]['fid'];
+  } elseif (isset($media_recorder['und'][0]['media_recorder_filepath']) && !empty($media_recorder['und'][0]['media_recorder_filepath'])) {
+    $file = file_uri_to_object($filepath);
+    $fid = $file->fid;
+  }
   // Add class to form to designate as using media recorder widget.
   $form['#attributes']['class'][] = 'field-widget-media-recorder';
   // Add media recorder container.
@@ -70,14 +77,13 @@ function media_recorder_admin_form() {
   // Add title field.
   $form['media_recorder']['media_recorder_title']['#type'] = 'textfield';
   $form['media_recorder']['media_recorder_title']['#title'] = t('Title');
-  $form['media_recorder']['media_recorder_title']['#default_value'] = $media_recorder_settings['media_recorder_title'];
+  $form['media_recorder']['media_recorder_title']['#default_value'] = $media_recorder_title;
   // Add hidden fid field.
   $form['media_recorder']['und'][0]['fid']['#type'] = 'hidden';
+  $form['media_recorder']['und'][0]['fid']['#default_value'] = $fid;
   $form['media_recorder']['und'][0]['fid']['#process'] = array('media_recorder_add_form_process');
-  $form['media_recorder']['und'][0]['fid']['#default_value'] = $media_recorder_settings['und'][0]['fid'];
   // Add a hidden filepath field.
   $form['media_recorder']['und'][0]['media_recorder_filepath']['#type'] = 'hidden';
-  $form['media_recorder']['und'][0]['media_recorder_filepath']['#default_value'] = $media_recorder_settings['und'][0]['media_recorder_filepath'];
   // Add custom validation handler for upload default audio.
   $form['#validate'][] = 'media_recorder_add_validate';
   return system_settings_form($form);

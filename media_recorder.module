@@ -135,12 +135,12 @@ function template_preprocess_media_recorder(&$variables) {
     }
     // Mediaelement not available.
     else {
-	    $variables['audio'] = '<audio id="media-recorder-audio" controls width="300" height="30"><source src="' . $url . '" type="audio/wav" /></audio>';
+	    $variables['audio'] = '<audio id="media-recorder-audio" controls src="' . $url . '" type="audio/wav" width="300" height="30"></audio>';
     }
   }
   // No file present.
   else {
-	  $variables['audio'] = '<audio id="media-recorder-audio" controls width="300" height="30"><source src="" type="audio/wav" /></audio>';
+	  $variables['audio'] = '<audio id="media-recorder-audio" controls width="300" height="30"></audio>';
   }
 }
 
@@ -161,19 +161,13 @@ function media_recorder_record() {
   }
   // Process file.
   if (!empty($filename) && !empty($url)) {
-    // Prepares upload directory for current user.
-    $upload_directory = 'public://' . token_replace(variable_get('media_recorder_upload_directory', ''));
+    $upload_directory = 'public://media_recorder';
     file_prepare_directory($upload_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
     $uri = $upload_directory . '/' . $filename;
-    // Grab the audio wav data from the php input stream.
     $data = file_get_contents($url);
-    // Save file data to temporary file directory.
     $file = file_save_data($data, $uri, FILE_EXISTS_REPLACE);
-    // Re-save as a temporary file in database, for some reason saving using
-    // temporary scheme still sets status as 1.
     $file->status = 0;
     file_save($file);
-    // Return file object to client.
     echo drupal_json_output($file);
   }
   else {
@@ -235,21 +229,22 @@ function media_recorder_add_validate($form, &$form_state) {
   $fid = !empty($form_state['values']['media_recorder']['und'][0]['fid']) ? $form_state['values']['media_recorder']['und'][0]['fid'] : 0;
   $filepath = isset($form_state['values']['media_recorder']['und'][0]['media_recorder_filepath']) ? $form_state['values']['media_recorder']['und'][0]['media_recorder_filepath'] : '';
   $file = NULL;
-  $upload_directory = 'public://' . token_replace(variable_get('media_recorder_upload_directory', ''));
-  file_prepare_directory($upload_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
   // Check file exists.
   if ($fid == 0 && empty($filepath)) {
     form_set_error('fid', t('No Recording submitted.'));
     return;
   }
-  // Load submitted file.
+  // Load file from fid (files saved using XHR).
   if ($fid !== 0) {
     $file = file_load($fid);
   }
-  // Load file from filepath (Needed for WAMI recorder).
+  // Load file from filepath (file saved with WAMI recorder).
+  // WAMI doesn't give access to server response, so we use file uri.
+  // This will be deprecated when getUserMedia is available and consistant
+  // in all browsers.
   elseif (is_string($filepath)) {
-    $fid = db_query('SELECT fm.fid FROM {file_managed} fm WHERE fm.uri = :filepath', array(':filepath' => $filepath))->fetchField();
-    $file = file_load($fid);
+    $file = file_uri_to_object($filepath);
+    $file = file_load($file->fid);
   }
   // Check file has been loaded properly.
   if (is_null($file)) {
@@ -264,19 +259,24 @@ function media_recorder_add_validate($form, &$form_state) {
   // Process file.
   if ($file) {
     // Validate file type.
+    $file->filename = drupal_basename($file->uri);
     $file_validate_size_errors = file_validate($file, array(
       'file_validate_extensions' => array('wav mp3 m4a mpg mov m4v mp4 mpeg avi ogg oga ogv'),
     ));
     if (empty($file_validate_size_errors)) {
+      $upload_directory = 'public://' . token_replace(variable_get('media_recorder_upload_directory', ''));
+      file_prepare_directory($upload_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
       // Move file to change it's filename.
       $file = file_move($file, $upload_directory . '/' . transliteration_clean_filename($title) . '.wav');
       // Save permanent file with new title.
-      $file->filename = $title;
+      $file->filename = trim($title);
       $file->display = TRUE;
-      $file->status = FILE_STATUS_PERMANENT;
       $file = file_save($file);
       // Set file element to saved file.
-      $form_state['file'] = $file;
+      $form_state['input']['media_recorder']['und'][0]['fid'] = $file->fid;
+      $form_state['input']['media_recorder']['und'][0]['media_recorder_filepath'] = $file->uri;
+      $form_state['values']['media_recorder']['und'][0]['fid'] = $file->fid;
+      $form_state['values']['media_recorder']['und'][0]['media_recorder_filepath'] = $file->uri;
       // Notify user of successful upload.
       drupal_set_message(t('The file @name was uploaded', array('@name' => $file->filename)));
     }
@@ -326,11 +326,13 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
   $elements = file_field_widget_form($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
   foreach (element_children($elements) as $delta) {
     $fields[] = $delta;
-    // Add a hidden filepath input
-    $elements[$delta]['media_recorder_filepath']['#type'] = 'hidden';
-    $elements[$delta]['#element_validate'][] = 'media_recorder_field_widget_form_validate';
-    $elements[$delta]['#process'][] = 'media_recorder_widget_form_process';
     $elements[$delta]['#delta'] = $delta;
+    // Add a hidden filepath input
+    if (empty($elements[$delta]['#default_value']['fid'])) {
+      $elements[$delta]['media_recorder_filepath']['#type'] = 'hidden';
+      $elements[$delta]['#process'][] = 'media_recorder_widget_form_process';
+      $elements[$delta]['#element_validate'][] = 'media_recorder_field_widget_form_validate';
+    }
   }
   if ($field['cardinality'] == 1) {
     if (empty($elements[0]['#default_value']['fid'])) {
@@ -351,7 +353,6 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
   global $user;
   $field_name = $element['#field_name'];
   $langcode = $element['#language'];
-  $filename = 'MR' . $user->sid . '.wav';
   // Iterate through field and process values.
   foreach ($form_state['values'][$field_name][$langcode] as $key => $values) {
     $title = '';
@@ -363,13 +364,16 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
       form_set_error('fid', t('No Recording submitted.'));
       return;
     }
-    // Load submitted file.
-    if ($fid !== 0) {
-      $file = file_load($fid);
+    // Load file from filepath (file saved with WAMI recorder).
+    // WAMI doesn't give access to server response, so we use file uri.
+    // This will be deprecated when getUserMedia is available and consistant
+    // in all browsers.
+    if (is_string($filepath)) {
+      $file = file_uri_to_object($filepath);
+      $file = file_load($file->fid);
     }
-    // Load file from filepath (Needed for WAMI recorder).
-    elseif (is_string($filepath)) {
-      $fid = db_query('SELECT fm.fid FROM {file_managed} fm WHERE fm.uri = :filepath', array(':filepath' => $filepath))->fetchField();
+    // Load file from fid (files saved using XHR).
+    elseif ($fid !== 0) {
       $file = file_load($fid);
     }
     // Check file has been loaded properly.
@@ -395,14 +399,17 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
     // Process file.
     if ($file) {
       // Validate file type.
+      $file->filename = drupal_basename($file->uri);
       $file_validate_size_errors = file_validate($file, array(
         'file_validate_extensions' => array('wav mp3 m4a mpg mov m4v mp4 mpeg avi ogg oga ogv'),
       ));
       if (empty($file_validate_size_errors)) {
+        $upload_directory = $element['#upload_location'];
+        file_prepare_directory($upload_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
         // Move file to change it's filename.
         $file = file_move($file, $element['#upload_location'] . '/' . transliteration_clean_filename($title) . '.wav');
         // Save permanent file with new title.
-        $file->filename = $title;
+        $file->filename = trim($title);
         $file->display = TRUE;
         $file->status = FILE_STATUS_PERMANENT;
         $file = file_save($file);
@@ -439,33 +446,33 @@ function media_recorder_process_file(&$element, &$form_state, &$form) {
   $field_name = isset($element['#field_name']) ? $element['#field_name'] : 'media_recorder';
   $language = isset($element['#language']) ? $element['#language'] : 'und';
   $delta = isset($element['#delta']) ? $element['#delta'] : 0;
-  $filename = 'MR' . $user->sid . '.wav';
-  $recordpath = url('media_recorder/record');
-  $filepath = 'public://' . token_replace(variable_get('media_recorder_upload_directory', ''));
+  $filename = $user->sid . '.wav'; // Temporary filename.
+  $recordpath = url('media_recorder/record'); // Recording menu path.
+  $filepath = 'public://media_recorder';  // Temporary recording directory.
   $url = file_create_url($filepath);
-  // Prepare directory for file operations.
-  file_prepare_directory($upload_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
   // Add recorder.
+  $media_recorder = variable_get('media_recorder', array());
+  $media_recorder_fid = isset($media_recorder['und'][0]['fid']) ? $media_recorder['und'][0]['fid'] : '';
   $variables = array(
     'cssid' => 'media-recorder-' . $field_name . '-' . $language . '-' . $delta,
     'width' => variable_get('media_recorder_width', 300),
     'height' => variable_get('media_recorder_height', 100),
     'timelimit' => variable_get('media_recorder_timelimit', 300),
-    'audio' => variable_get('media_recorder_audio', 70),
+    'audio' => !empty($element['#default_value']['fid']) ? $element['#default_value']['fid'] : $media_recorder_fid,
   );
   $element['#suffix'] = theme('media_recorder', $variables);
   // Add general css/js/settings.
-  $form['#attached']['library'][] = array('system', 'ui.progressbar');
-  $form['#attached']['library'][] = array('system', 'ui.slider');
-  $form['#attached']['library'][] = array('media_recorder', 'swfobject');
-  $form['#attached']['library'][] = array('media_recorder', 'wami');
-  $form['#attached']['library'][] = array('media_recorder', 'Recorderjs');
-  $form['#attached']['css'][] = drupal_get_path('module', 'media_recorder') . '/css/media_recorder.css';
-  $form['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/media_recorder.js';
-  $form['#attached']['js'][] = array(
+  $element['#attached']['library'][] = array('system', 'ui.progressbar');
+  $element['#attached']['library'][] = array('system', 'ui.slider');
+  $element['#attached']['library'][] = array('media_recorder', 'swfobject');
+  $element['#attached']['library'][] = array('media_recorder', 'wami');
+  $element['#attached']['library'][] = array('media_recorder', 'Recorderjs');
+  $element['#attached']['css'][] = drupal_get_path('module', 'media_recorder') . '/css/media_recorder.css';
+  $element['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/media_recorder.js';
+  $element['#attached']['js'][] = array(
     'data' => array(
       'mediaRecorder' => array(
-        'cssid' => 'media-recorder-' . $field_name . '-' . $language . '-' . $delta,
+        'cssID' => 'media-recorder-' . $field_name . '-' . $language . '-' . $delta,
         'modulePath' => drupal_get_path('module', 'media_recorder'),
         'fieldName' => $field_name,
         'language' => $language,
