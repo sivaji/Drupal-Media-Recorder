@@ -11,7 +11,7 @@
 function media_recorder_admin_form() {
   $form = array();
   // Prepares upload directory for current user.
-  $upload_directory = 'public://' . variable_get('media_recorder_upload_directory', '');
+  $upload_directory = 'public://' . token_replace(variable_get('media_recorder_upload_directory', ''));
   file_prepare_directory($upload_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
   // Check that all libraries exist.
   $required_libraries = array('swfobject', 'wami', 'Recorderjs');
