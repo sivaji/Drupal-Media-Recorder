@@ -234,17 +234,17 @@ function media_recorder_add_validate($form, &$form_state) {
     form_set_error('fid', t('No Recording submitted.'));
     return;
   }
-  // Load file from fid (files saved using XHR).
-  if ($fid !== 0) {
-    $file = file_load($fid);
-  }
   // Load file from filepath (file saved with WAMI recorder).
   // WAMI doesn't give access to server response, so we use file uri.
   // This will be deprecated when getUserMedia is available and consistant
   // in all browsers.
-  elseif (is_string($filepath)) {
+  if (is_string($filepath)) {
     $file = file_uri_to_object($filepath);
     $file = file_load($file->fid);
+  }
+  // Load file from fid (files saved using XHR).
+  elseif ($fid !== 0) {
+    $file = file_load($fid);
   }
   // Check file has been loaded properly.
   if (is_null($file)) {
