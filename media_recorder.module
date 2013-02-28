@@ -293,7 +293,7 @@ function media_recorder_add_validate($form, &$form_state) {
  * @see: media_recorder_add
  */
 function media_recorder_add_form_process($element, &$form_state, &$form) {
-  media_recorder_process_file($element, $form_state, $form);
+  media_recorder_process_file($element, $form_state);
   return $element;
 }
 
@@ -432,7 +432,7 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
  */
 function media_recorder_widget_form_process($element, &$form_state, &$form) {
   $element = file_managed_file_process($element, $form_state, $form);
-  media_recorder_process_file($element, $form_state, $form);
+  media_recorder_process_file($element, $form_state);
   return $element;
 }
 
@@ -441,7 +441,7 @@ function media_recorder_widget_form_process($element, &$form_state, &$form) {
  * @see: media_recorder_add_form_process
  * @see: media_recorder_widget_form_process
  */
-function media_recorder_process_file(&$element, &$form_state, &$form) {
+function media_recorder_process_file(&$element, &$form_state) {
   global $user;
   $field_name = isset($element['#field_name']) ? $element['#field_name'] : 'media_recorder';
   $language = isset($element['#language']) ? $element['#language'] : 'und';
