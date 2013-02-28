@@ -1,8 +1,10 @@
+.media-recorder-wrapper {
+  position: relative;
+}
+
 /* Media recorder */
 .media-recorder {
   position: relative;
-  width: 100%;
-  height: 100%;
   padding: 0;
   -moz-transition: border 0.2s ease 0s;
   background: rgb(41,41,41); /* Old browsers */
@@ -14,6 +16,12 @@
   background: linear-gradient(to bottom,  rgba(41,41,41,1) 0px,rgba(37,37,37,1) 100%); /* W3C */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#292929', endColorstr='#252525',GradientType=0 ); /* IE6-9 */
   border-radius: 5px 5px 0 0;
+}
+
+.media-recorder-audio {
+  position: absolute;
+  bottom: 0;
+  left: 0;
 }
 
 .media-recorder.HTML5 .controls {
