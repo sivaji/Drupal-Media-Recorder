@@ -357,12 +357,6 @@
         $(this).find('.media-recorder-wrapper').each(function() {
           $(this).once().addClass('media-recorder-processed');
           var cssID = $(this).attr('id');
-          var width = parseInt($(this).attr('width'), 10);
-          var height = parseInt($(this).attr('height'), 10);
-          var audioHeight = $(this).find('.media-recorder-audio').outerHeight();
-          $('.media-recorder-audio').css('display', 'block');
-          $(this).width(width).height(height + audioHeight);
-          $(this).find('.media-recorder').width(width).height(height);
           // Load HTML5 recorder.
           if (navigator.getUserMedia || navigator.webkitGetUserMedia) {
             $('#' + cssID + ' .media-recorder').addClass('HTML5');

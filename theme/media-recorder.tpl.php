@@ -12,8 +12,8 @@
  */
 ?>
 
-<div id="<? print $cssid; ?>" class="media-recorder-wrapper" width="<? print $width; ?>" height="<? print $height; ?>">
-  <div class="media-recorder">
+<div id="<? print $cssid; ?>" class="media-recorder-wrapper" style="width:<? print $width; ?>px; height:<? print $height + 30; ?>px;">
+  <div class="media-recorder" style="width:<? print $width; ?>px; height:<? print $height; ?>px;">
     <div class="controls">
       <div class="media-recorder-record record-off">
         <span>Record</span>
@@ -23,7 +23,7 @@
     <div class="volume"></div>
     <div class="media-recorder-status">00:00 / <? print $timelimit; ?></div>
   </div>
-  <div class="media-recorder-audio">
+  <div class="media-recorder-audio" style="width:<? print $width; ?>px; height: 30px;">
     <?php print $audio; ?>
   </div>
 </div>
