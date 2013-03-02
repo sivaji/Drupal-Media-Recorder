@@ -67,6 +67,8 @@ function media_recorder_admin_form() {
   } elseif (isset($media_recorder['und'][0]['media_recorder_filepath']) && !empty($media_recorder['und'][0]['media_recorder_filepath'])) {
     $file = file_uri_to_object($filepath);
     $fid = $file->fid;
+  } else {
+    $fid = 0;
   }
   // Add class to form to designate as using media recorder widget.
   $form['#attributes']['class'][] = 'field-widget-media-recorder';
@@ -81,7 +83,7 @@ function media_recorder_admin_form() {
   // Add hidden fid field.
   $form['media_recorder']['und'][0]['fid']['#type'] = 'hidden';
   $form['media_recorder']['und'][0]['fid']['#default_value'] = $fid;
-  $form['media_recorder']['und'][0]['fid']['#process'] = array('media_recorder_add_form_process');
+  $form['media_recorder']['#process'] = array('media_recorder_add_form_process');
   // Add a hidden filepath field.
   $form['media_recorder']['und'][0]['media_recorder_filepath']['#type'] = 'hidden';
   // Add custom validation handler for upload default audio.

@@ -346,19 +346,28 @@
   // Add setup to drupal behaviors.
   Drupal.behaviors.mediaRecorder = {
     attach: function() {
-      // Hides all media widget file fields.
-      $('.field-widget-media-recorder').each(function(){
-        if ($(this).find('.media-recorder-wrapper').hasClass('media-recorder-processed')) {
-          return;
-        }
-        $(this).find('.form-managed-file').hide();
-        $(this).find('.description').hide();
+      var enableRecorder = '';
+      if (navigator.getUserMedia || navigator.webkitGetUserMedia) {
+        enableRecorder = 'html5';
+      } else if (swfobject.hasFlashPlayerVersion('10')) {
+        enableRecorder = 'wami';
+      } else {
+        enableRecorder = false;
+      }
+      if (!enableRecorder) {
         // Hides all media widget file fields.
-        $(this).find('.media-recorder-wrapper').each(function() {
-          $(this).once().addClass('media-recorder-processed');
-          var cssID = $(this).attr('id');
-          // Load HTML5 recorder.
-          if (navigator.getUserMedia || navigator.webkitGetUserMedia) {
+        $('.field-widget-media-recorder').each(function(){
+          if ($(this).find('.media-recorder-wrapper').hasClass('media-recorder-processed')) {
+            return;
+          }
+          $(this).find('.form-managed-file input').hide();
+          $(this).find('.description').hide();
+          // Hides all media widget file fields.
+          $(this).find('.media-recorder-wrapper').each(function() {
+            $(this).once().addClass('media-recorder-processed');
+            var cssID = $(this).attr('id');
+            // Load HTML5 recorder.
+            if (navigator.getUserMedia || navigator.webkitGetUserMedia) {
             $('#' + cssID + ' .media-recorder').addClass('HTML5');
             $('#' + cssID + ' .media-recorder-record').click(function() {
               Drupal.mediaRecorder.HTML5.record();
@@ -376,22 +385,27 @@
             });
             Drupal.mediaRecorder.HTML5.setup();
           }
-          // Load HTML5 recorder.
-          else if (window.Wami) {
-            $('#' + cssID + ' .media-recorder')
-              .addClass('WAMI')
-              .append('<div class="media-recorder-mic-settings"><span>Settings</span></div>')
-              .prepend('<div id="wami-' + cssID + '"></div><input id="wami-filepath" type="hidden">');
-            $('#' + cssID + ' .media-recorder-record').click(function() {
-              Drupal.mediaRecorder.WAMI.record();
-            });
-            $('#' + cssID + ' .media-recorder-mic-settings').click(function() {
-              Wami.showSecurity("microphone");
-            });
-            Drupal.mediaRecorder.WAMI.setup();
-          }
+            // Load HTML5 recorder.
+            else if (window.Wami) {
+              $('#' + cssID + ' .media-recorder')
+                .addClass('WAMI')
+                .append('<div class="media-recorder-mic-settings"><span>Settings</span></div>')
+                .prepend('<div id="wami-' + cssID + '"></div><input id="wami-filepath" type="hidden">');
+              $('#' + cssID + ' .media-recorder-record').click(function() {
+                Drupal.mediaRecorder.WAMI.record();
+              });
+              $('#' + cssID + ' .media-recorder-mic-settings').click(function() {
+                Wami.showSecurity("microphone");
+              });
+              Drupal.mediaRecorder.WAMI.setup();
+            }
+          });
         });
-      });
+      } else {
+        $('.media-recorder-wrapper').each(function() {
+          $(this).hide();
+        });
+      }
     }
   };
 

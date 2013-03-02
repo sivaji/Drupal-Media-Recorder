@@ -209,7 +209,7 @@ function media_recorder_add($form, &$form_state = array(), $types = NULL) {
   $form['media_recorder']['media_recorder_title']['#title'] = t('Title');
   // Add hidden fid field.
   $form['media_recorder']['und'][0]['fid']['#type'] = 'hidden';
-  $form['media_recorder']['und'][0]['fid']['#process'] = array('media_recorder_add_form_process');
+  $form['media_recorder']['#process'] = array('media_recorder_add_form_process');
   // Add a hidden filepath field.
   $form['media_recorder']['und'][0]['media_recorder_filepath']['#type'] = 'hidden';
   // Add a submit button.
@@ -271,6 +271,7 @@ function media_recorder_add_validate($form, &$form_state) {
       // Save permanent file with new title.
       $file->filename = trim($title);
       $file->display = TRUE;
+      $file->status = FILE_STATUS_PERMANENT;
       $file = file_save($file);
       // Set file element to saved file.
       $form_state['input']['media_recorder']['und'][0]['fid'] = $file->fid;
@@ -354,6 +355,7 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
   $field_name = $element['#field_name'];
   $langcode = $element['#language'];
   // Iterate through field and process values.
+  // TODO: Improve validation to check input array rather than just values array.
   foreach ($form_state['values'][$field_name][$langcode] as $key => $values) {
     $title = '';
     $fid = !empty($values['fid']) ? $values['fid'] : 0;
@@ -361,19 +363,23 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
     $file = NULL;
     // Check file exists.
     if ($fid == 0 && empty($filepath)) {
-      form_set_error('fid', t('No Recording submitted.'));
-      return;
+      if ($element['#required']) {
+        form_set_error('fid', t('No Recording submitted.'));
+        return;
+      } else {
+        return;
+      }
     }
     // Load file from filepath (file saved with WAMI recorder).
     // WAMI doesn't give access to server response, so we use file uri.
     // This will be deprecated when getUserMedia is available and consistant
     // in all browsers.
-    if (is_string($filepath)) {
+    if (is_string($filepath) && !empty($filepath)) {
       $file = file_uri_to_object($filepath);
       $file = file_load($file->fid);
     }
     // Load file from fid (files saved using XHR).
-    elseif ($fid !== 0) {
+    else {
       $file = file_load($fid);
     }
     // Check file has been loaded properly.
@@ -460,7 +466,7 @@ function media_recorder_process_file(&$element, &$form_state) {
     'timelimit' => variable_get('media_recorder_timelimit', 300),
     'audio' => !empty($element['#default_value']['fid']) ? $element['#default_value']['fid'] : $media_recorder_fid,
   );
-  $element['#suffix'] = theme('media_recorder', $variables);
+  $element['markup']['#markup'] = theme('media_recorder', $variables);
   // Add general css/js/settings.
   $element['#attached']['library'][] = array('system', 'ui.progressbar');
   $element['#attached']['library'][] = array('system', 'ui.slider');
