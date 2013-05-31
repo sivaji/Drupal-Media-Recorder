@@ -6,16 +6,15 @@
 .media-recorder {
   position: relative;
   padding: 0;
-  -moz-transition: border 0.2s ease 0s;
-  background: rgb(41,41,41); /* Old browsers */
-  background: -moz-linear-gradient(top,  rgba(41,41,41,1) 0px, rgba(37,37,37,1) 100%); /* FF3.6+ */
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0px,rgba(41,41,41,1)), color-stop(100%,rgba(37,37,37,1))); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(top,  rgba(41,41,41,1) 0px,rgba(37,37,37,1) 100%); /* Chrome10+,Safari5.1+ */
-  background: -o-linear-gradient(top,  rgba(41,41,41,1) 0px,rgba(37,37,37,1) 100%); /* Opera 11.10+ */
-  background: -ms-linear-gradient(top,  rgba(41,41,41,1) 0px,rgba(37,37,37,1) 100%); /* IE10+ */
-  background: linear-gradient(to bottom,  rgba(41,41,41,1) 0px,rgba(37,37,37,1) 100%); /* W3C */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#292929', endColorstr='#252525',GradientType=0 ); /* IE6-9 */
-  border-radius: 5px 5px 0 0;
+  background: #4a4c4d; /* Old browsers */
+  background: -moz-linear-gradient(top,  #4a4c4d 0%, #2b2d2d 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#4a4c4d), color-stop(100%,#2b2d2d)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  #4a4c4d 0%,#2b2d2d 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  #4a4c4d 0%,#2b2d2d 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  #4a4c4d 0%,#2b2d2d 100%); /* IE10+ */
+  background: linear-gradient(to bottom,  #4a4c4d 0%,#2b2d2d 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#4a4c4d', endColorstr='#2b2d2d',GradientType=0 ); /* IE6-9 */
+  border-radius: 3px;
 }
 
 .media-recorder-audio {
@@ -102,13 +101,6 @@
   opacity: .5;
   border-radius: 0 5px 0 0;
   padding: 2%;
-}
-
-/* Places the swf security panel to the right side of recorder. */
-.media-recorder.WAMI .wami {
-  position: absolute;
-  top: 0;
-  right: 0;
 }
 
 .media-recorder.WAMI .controls {

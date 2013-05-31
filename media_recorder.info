@@ -4,4 +4,8 @@ package = "Media"
 core = 7.x
 
 dependencies[] = media
+dependencies[] = libraries
+dependencies[] = modernizr
+dependencies[] = transliteration
+
 files[] = includes/MediaBrowserRecorder.inc

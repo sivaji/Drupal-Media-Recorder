@@ -105,7 +105,7 @@ function template_preprocess_media_recorder(&$variables) {
     if (module_exists('mediaelement')) {
       $settings = array(
         'controls' => 1,
-        'width' => $variables['width'],
+        'width' => '100%',
         'height' => 30,
         'download_link' => 0,
         'download_text' => t('Download'),
@@ -113,8 +113,8 @@ function template_preprocess_media_recorder(&$variables) {
       $js_settings = array();
       $js_settings['opts'] = array();
       $js_settings['controls'] = (bool)$settings['controls'];
-      $js_settings['opts']['audioHeight'] = (int)$settings['height'];
-      $js_settings['opts']['audioWidth'] = (int)$settings['width'];
+      $js_settings['opts']['audioWidth'] = '100%';
+      $js_settings['opts']['audioHeight'] = 30;
       $class = 'mediaelement_audio' . $variables['id'];
       $audio = array(
         '#theme' => 'mediaelement_audio',
@@ -204,6 +204,7 @@ function media_recorder_add($form, &$form_state = array(), $types = NULL) {
   // Add media recorder container.
   $form['media_recorder']['#type'] = 'container';
   $form['media_recorder']['#tree'] = TRUE;
+  $form['media_recorder']['#required'] = TRUE;
   // Add title field.
   $form['media_recorder']['media_recorder_title']['#type'] = 'textfield';
   $form['media_recorder']['media_recorder_title']['#title'] = t('Title');
@@ -231,8 +232,12 @@ function media_recorder_add_validate($form, &$form_state) {
   $file = NULL;
   // Check file exists.
   if ($fid == 0 && empty($filepath)) {
-    form_set_error('fid', t('No Recording submitted.'));
-    return;
+    if ($form['media_recorder']['#required']) {
+      form_set_error('fid', t('No Recording submitted.'));
+      return;
+    } else {
+      return;
+    }
   }
   // Load file from filepath (file saved with WAMI recorder).
   // WAMI doesn't give access to server response, so we use file uri.
@@ -410,10 +415,11 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
         'file_validate_extensions' => array('wav mp3 m4a mpg mov m4v mp4 mpeg avi ogg oga ogv'),
       ));
       if (empty($file_validate_size_errors)) {
+        $path_info = pathinfo($file->uri);
         $upload_directory = $element['#upload_location'];
         file_prepare_directory($upload_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
         // Move file to change it's filename.
-        $file = file_move($file, $element['#upload_location'] . '/' . transliteration_clean_filename($title) . '.wav');
+        $file = file_move($file, $element['#upload_location'] . '/' . transliteration_clean_filename($title) . '.' . $path_info['extension']);
         // Save permanent file with new title.
         $file->filename = trim($title);
         $file->display = TRUE;
@@ -468,23 +474,22 @@ function media_recorder_process_file(&$element, &$form_state) {
   );
   $element['markup']['#markup'] = theme('media_recorder', $variables);
   // Add general css/js/settings.
-  $element['#attached']['library'][] = array('system', 'ui.progressbar');
-  $element['#attached']['library'][] = array('system', 'ui.slider');
-  $element['#attached']['library'][] = array('media_recorder', 'swfobject');
-  $element['#attached']['library'][] = array('media_recorder', 'wami');
-  $element['#attached']['library'][] = array('media_recorder', 'Recorderjs');
-  $element['#attached']['css'][] = drupal_get_path('module', 'media_recorder') . '/css/media_recorder.css';
-  $element['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/media_recorder.js';
-  $element['#attached']['js'][] = array(
+  $element['markup']['#attached']['library'][] = array('system', 'ui.progressbar');
+  $element['markup']['#attached']['library'][] = array('system', 'ui.slider');
+  $element['markup']['#attached']['library'][] = array('media_recorder', 'swfobject');
+  $element['markup']['#attached']['library'][] = array('media_recorder', 'wami');
+  $element['markup']['#attached']['library'][] = array('media_recorder', 'Recorderjs');
+  $element['markup']['#attached']['css'][] = drupal_get_path('module', 'media_recorder') . '/css/media_recorder.css';
+  $element['markup']['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/media_recorder.js';
+  $element['markup']['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/jquery.mediaRecorder.js';
+  $element['markup']['#attached']['js'][] = array(
     'data' => array(
       'mediaRecorder' => array(
-        'cssID' => 'media-recorder-' . $field_name . '-' . $language . '-' . $delta,
-        'modulePath' => drupal_get_path('module', 'media_recorder'),
         'fieldName' => $field_name,
         'language' => $language,
         'delta' => $delta,
         'fileName' => $filename,
-        'recordPath' => $recordpath,
+        'recordingPath' => $recordpath,
         'filePath' => $filepath,
         'url' => $url,
         'timeLimit' => variable_get('media_recorder_timelimit', 300) * 1000,
