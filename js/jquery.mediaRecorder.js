@@ -5,7 +5,7 @@
  * License: GPL.
  *******************************************************************/
 
-;(function($, window, document, undefined) {
+(function($, window, document, undefined) {
 
   // ********************************************************************
   // * Global variables.
@@ -239,7 +239,6 @@
           mediaRecorder.prototype.flashRecord(element, options);
         });
 
-
       // Add Wami related markup.
       element.wami = $('<div id="wami-' + $(element).attr('id') + '" class="wami"></div>');
       element.recorder.micSettings = $('<div class="media-recorder-mic-settings"><span>Settings</span></div>')
@@ -327,7 +326,7 @@
       element.recorder.meterInterval = window.setInterval(function() {
         // Refresh meter bar.
         var level = Wami.getRecordingLevel();
-        var marginTop = Math.round(( 100 - level ) / 2.5);
+        var marginTop = Math.round((100 - level) / 2.5);
         if (level === 0) { level = 2; }
         $(element).find('.media-recorder-analyser').append('<div class="meter-bar"><div class="inner record" style="height:' + level + '%; margin-top: ' + marginTop + 'px"></div></div>');
         var barsNumber = $(element).find('.media-recorder-analyser').children().size();
@@ -470,9 +469,9 @@
     for (var i = 0; i < numBars; ++i) {
       var magnitude = 0;
       var offset = Math.floor(i * multiplier);
-      // gotta sum/average the block, or we miss narrow-bandwidth spikes
-      for (var j = 0; j < multiplier; j++)
-      magnitude += freqByteData[offset + j];
+      for (var j = 0; j < multiplier; j++) {
+        magnitude += freqByteData[offset + j];
+      }
       magnitude = magnitude / multiplier;
       var magnitude2 = freqByteData[i * multiplier];
       analyserContext.fillStyle = "hsl( " + Math.round((i * 360) / numBars) + ", 100%, 50%)";
@@ -485,7 +484,8 @@
   // * Update Audio Element.
   // ********************************************************************
   function updateAudio(element, options) {
-    var time = new Date().getTime(); // Adds time to audio url to disable caching.
+    // Adds time to audio url to disable caching.
+    var time = new Date().getTime();
     var url = options.drupalURL + '/' + options.drupalFileName;
     // Using hack to support IE9 and below browsers.
     if (wavCheck) {
