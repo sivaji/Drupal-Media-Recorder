@@ -1,3 +1,8 @@
+/**
+ * @file
+ * Adds an interface between the media recorder jQuery plugin and the drupal media module.
+ */
+
 (function($) {
   // Add setup to drupal behaviors.
   Drupal.behaviors.mediaRecorder = {

@@ -135,12 +135,12 @@ function template_preprocess_media_recorder(&$variables) {
     }
     // Mediaelement not available.
     else {
-	    $variables['audio'] = '<audio id="media-recorder-audio" controls src="' . $url . '" type="audio/wav" width="300" height="30"></audio>';
+      $variables['audio'] = '<audio id="media-recorder-audio" controls src="' . $url . '" type="audio/wav" width="300" height="30"></audio>';
     }
   }
   // No file present.
   else {
-	  $variables['audio'] = '<audio id="media-recorder-audio" controls width="300" height="30"></audio>';
+    $variables['audio'] = '<audio id="media-recorder-audio" controls width="300" height="30"></audio>';
   }
 }
 
@@ -222,7 +222,7 @@ function media_recorder_add($form, &$form_state = array(), $types = NULL) {
 
 /**
  * Custom validation callback.
- * @see: media_recorder_add
+ * @see media_recorder_add()
  */
 function media_recorder_add_validate($form, &$form_state) {
   global $user;
@@ -235,7 +235,8 @@ function media_recorder_add_validate($form, &$form_state) {
     if ($form['media_recorder']['#required']) {
       form_set_error('fid', t('No Recording submitted.'));
       return;
-    } else {
+    }
+    else {
       return;
     }
   }
@@ -296,7 +297,7 @@ function media_recorder_add_validate($form, &$form_state) {
 
 /**
  * Process callback for media recorder field.
- * @see: media_recorder_add
+ * @see media_recorder_add()
  */
 function media_recorder_add_form_process($element, &$form_state, &$form) {
   media_recorder_process_file($element, $form_state);
@@ -353,7 +354,7 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
 
 /**
  * Custom validation callback.
- * @see: media_recorder_field_widget_form
+ * @see media_recorder_field_widget_form()
  */
 function media_recorder_field_widget_form_validate($element, &$form_state) {
   global $user;
@@ -371,7 +372,8 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
       if ($element['#required']) {
         form_set_error('fid', t('No Recording submitted.'));
         return;
-      } else {
+      }
+      else {
         return;
       }
     }
@@ -440,7 +442,7 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
 
 /**
  * Process callback for media recorder field.
- * @see: media_recorder_field_widget_form
+ * @see media_recorder_field_widget_form()
  */
 function media_recorder_widget_form_process($element, &$form_state, &$form) {
   $element = file_managed_file_process($element, $form_state, $form);
@@ -450,8 +452,8 @@ function media_recorder_widget_form_process($element, &$form_state, &$form) {
 
 /**
  * Helper function for process callbacks.
- * @see: media_recorder_add_form_process
- * @see: media_recorder_widget_form_process
+ * @see media_recorder_add_form_process()
+ * @see media_recorder_widget_form_process()
  */
 function media_recorder_process_file(&$element, &$form_state) {
   global $user;

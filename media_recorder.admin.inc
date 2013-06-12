@@ -19,8 +19,8 @@ function media_recorder_admin_form() {
     $library = drupal_get_library('media_recorder', $name);
     if (!file_exists(key($library['js']))) {
       $message = '';
-      $link = l('README.txt', drupal_get_path('module', 'media_recorder') . '/README.txt');
-      $message = t('The %title library is not installed. ', array('%title' => $library['title']));
+      $link = l(t('README.txt'), drupal_get_path('module', 'media_recorder') . '/README.txt');
+      $message = t('The %title library is not installed.', array('%title' => $library['title']));
       $message .= t('Please view the !link for download instructions.', array('!link' => $link));
       drupal_set_message($message, 'error');
     }
@@ -41,7 +41,7 @@ function media_recorder_admin_form() {
   $form['media_recorder_timelimit'] = array(
     '#type' => 'textfield',
     '#title' => t('Media recorder time limit'),
-    '#description' => t('Enter a time limit for recordings in seconds. Currently set to ' . gmdate('i:s', variable_get('media_recorder_timelimit', 300)) .' minutes.'),
+    '#description' => t('Enter a time limit for recordings in seconds. Currently set to @time minutes.', array('@time' => gmdate('i:s', variable_get('media_recorder_timelimit', 300)))),
     '#default_value' => variable_get('media_recorder_timelimit', 300),
   );
   // Recorder upload directory.
@@ -49,7 +49,7 @@ function media_recorder_admin_form() {
     '#type' => 'textfield',
     '#title' => t("File directory for uploaded recordings"),
     '#default_value' => variable_get('media_recorder_upload_directory', ''),
-    '#description' => t('Optional subdirectory within the upload destination where files will be stored. Do not include preceding or trailing slashes. <br />NOTE: To save default audio in this directory, save this setting first before recording. '),
+    '#description' => t('Optional subdirectory within the upload destination where files will be stored. Do not include preceding or trailing slashes. <br />NOTE: To save default audio in this directory, save this setting first before recording.'),
   );
   // Recorder upload directory token support.
   if (module_exists('token')) {
@@ -64,10 +64,12 @@ function media_recorder_admin_form() {
   $media_recorder_title = isset($media_recorder['media_recorder_title']) ? $media_recorder['media_recorder_title'] : '';
   if (isset($media_recorder['und'][0]['fid']) && !empty($media_recorder['und'][0]['fid'])) {
     $fid = $media_recorder['und'][0]['fid'];
-  } elseif (isset($media_recorder['und'][0]['media_recorder_filepath']) && !empty($media_recorder['und'][0]['media_recorder_filepath'])) {
+  }
+  elseif (isset($media_recorder['und'][0]['media_recorder_filepath']) && !empty($media_recorder['und'][0]['media_recorder_filepath'])) {
     $file = file_uri_to_object($filepath);
     $fid = $file->fid;
-  } else {
+  }
+  else {
     $fid = 0;
   }
   // Add class to form to designate as using media recorder widget.
