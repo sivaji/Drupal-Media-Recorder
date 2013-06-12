@@ -1,9 +1,9 @@
-// ********************************************************************
-// * Project: Drupal Media Recorder jQuery Plugin
-// * Description: Adds a media recorder to the drupal media module.
-// * Author: Norman Kerr
-// * License: GPL.
-// ********************************************************************
+/********************************************************************
+ * Project: Drupal Media Recorder jQuery Plugin
+ * Description: Adds a media recorder to the drupal media module.
+ * Author: Norman Kerr
+ * License: GPL.
+ *******************************************************************/
 
 ;(function($, window, document, undefined) {
 
@@ -13,9 +13,9 @@
 
   // jQuery plugin variables.
   var defaults = {
-    'timeLimit': 300000,
+    'timeLimit': 300000
   };
-  
+
   // Audio analyzer variables.
   var analyserNode = null;
   var analyserContext = null;
@@ -36,12 +36,12 @@
 
   // Only enable for Chrome Canary at this point, due to Chrome showing
   // AudioContext as enabled, even though it's disabled.
-  if (browser.webkit == true && browser.version >= 537.36) {
+  if (browser.webkit === true && browser.version >= 537.36) {
     getUserMediaCheck = true;
   } else {
     getUserMediaCheck = false;
   }
-  
+
   // Feature Debugging.
   //console.log(browser);
   //console.log('getUserMedia: ' + getUserMediaCheck);
@@ -60,20 +60,20 @@
     this.options = $.extend({}, defaults, options);
     this.defaults = defaults;
 
-		// Check for existing recorder.
-		if (typeof this.element.recorder != 'undefined') {
-			return this.element.mediaRecorder;
-		} else {
-			// Attach recorder to DOM node for reference
-			this.element.mediaRecorder = this;
-		}
+    // Check for existing recorder.
+    if (typeof this.element.recorder != 'undefined') {
+      return this.element.mediaRecorder;
+    } else {
+      // Attach recorder to DOM node for reference
+      this.element.mediaRecorder = this;
+    }
 
     if (getUserMediaCheck && webAudioCheck) {
       this.init();
     } else {
       this.flashInit();
     }
-    
+
     return this;
   }
 
@@ -141,8 +141,8 @@
       // Initiate getUserMedia.
       navigator.getUserMedia(
         {audio: true},
-        function(stream) {startUserMedia(element, options, stream)},
-        function(error) {onError(error)}
+        function(stream) {startUserMedia(element, options, stream);},
+        function(error) {onError(error);}
       );
     },
 
@@ -260,16 +260,17 @@
       // Initiate Wami.
       Wami.setup({
         id: 'wami-' + $(element).attr('id'),
-        swfUrl: options.swfURL,
+        swfUrl: options.swfURL
       });
 
       // Test that html5 audio tags can play wav files (not possible in IE9-).
       if (!wavCheck && browser.msie) {
         var audio = element.find('.media-recorder-audio');
+        var url = '';
         if (audio.children('audio').length) {
-          var url = audio.children('audio').attr('src');
+          url = audio.children('audio').attr('src');
         } else if (audio.children('embed').length) {
-          var url = audio.children('embed').attr('src');
+          url = audio.children('embed').attr('src');
         }
         audio.css('position', 'static');
         audio.detach().insertBefore(element);
@@ -370,8 +371,7 @@
         $(element).find('.media-recorder-status').html('Uploading' + progressIndicator);
         if (progressCount === 3) { progressCount = 0; progressIndicator = ''; }
       }, 500);
-    },
-
+    }
   };
 
   // ********************************************************************
@@ -446,7 +446,7 @@
     function transferCanceled(evt) {
       onError("The transfer has been canceled by the user.");
     }
-  };
+  }
 
   // ********************************************************************
   // * Update Audio Canvas.
@@ -479,7 +479,7 @@
       analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
     }
     rafID = window.webkitRequestAnimationFrame(updateAudioCanvas);
-  };
+  }
 
   // ********************************************************************
   // * Update Audio Element.
@@ -494,7 +494,7 @@
       var embed = '<embed width="300" height="30" autostart="false" src="' + url + '?' + time + '" />';
       $(element).parent().find('.media-recorder-audio').html(embed);
     }
-  };
+  }
 
   // ********************************************************************
   // * Format Input Field Helper.
@@ -503,7 +503,7 @@
     var language = options.drupalLanguage ? '[' + options.drupalLanguage + ']' : '';
     var delta = (options.drupalDelta !== null) ? '[' + options.drupalDelta + ']' : '';
     return options.drupalFieldName + language + delta + '[' + name + ']';
-  };
+  }
 
   function millisecondsToTime(milliSeconds) {
     // Format Current Time
@@ -524,6 +524,6 @@
   // ********************************************************************
   function onError(msg) {
     alert(msg);
-  };
+  }
 
 })(jQuery, window, document);

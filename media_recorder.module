@@ -112,7 +112,7 @@ function template_preprocess_media_recorder(&$variables) {
       );
       $js_settings = array();
       $js_settings['opts'] = array();
-      $js_settings['controls'] = (bool)$settings['controls'];
+      $js_settings['controls'] = (bool) $settings['controls'];
       $js_settings['opts']['audioWidth'] = '100%';
       $js_settings['opts']['audioHeight'] = 30;
       $class = 'mediaelement_audio' . $variables['id'];
@@ -151,7 +151,7 @@ function media_recorder_record() {
   global $user;
   // Get filename.
   $filename = arg(2);
-    // File data is sent using XHR.
+  // File data is sent using XHR.
   if (isset($_FILES['mediaRecorder']['tmp_name'])) {
     $url = $_FILES['mediaRecorder']['tmp_name'];
   }
@@ -183,7 +183,7 @@ function media_recorder_access($account = NULL) {
 }
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function media_recorder_permission() {
   return array(
@@ -289,7 +289,7 @@ function media_recorder_add_validate($form, &$form_state) {
     }
     // Report file validation errors.
     else {
-      form_set_error('fid', t(implode('<br />', $file_validate_size_errors)));
+      form_set_error('fid', implode('<br />', $file_validate_size_errors));
       return;
     }
   }
@@ -334,7 +334,7 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
   foreach (element_children($elements) as $delta) {
     $fields[] = $delta;
     $elements[$delta]['#delta'] = $delta;
-    // Add a hidden filepath input
+    // Add a hidden filepath input.
     if (empty($elements[$delta]['#default_value']['fid'])) {
       $elements[$delta]['media_recorder_filepath']['#type'] = 'hidden';
       $elements[$delta]['#process'][] = 'media_recorder_widget_form_process';
@@ -361,7 +361,6 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
   $field_name = $element['#field_name'];
   $langcode = $element['#language'];
   // Iterate through field and process values.
-  // TODO: Improve validation to check input array rather than just values array.
   foreach ($form_state['values'][$field_name][$langcode] as $key => $values) {
     $title = '';
     $fid = !empty($values['fid']) ? $values['fid'] : 0;
@@ -433,7 +432,7 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
       }
       // Report file validation errors.
       else {
-        form_set_error('media_recorder_upload', t(implode('<br />', $file_validate_size_errors)));
+        form_set_error('media_recorder_upload', implode('<br />', $file_validate_size_errors));
         return;
       }
     }
@@ -460,9 +459,9 @@ function media_recorder_process_file(&$element, &$form_state) {
   $field_name = isset($element['#field_name']) ? $element['#field_name'] : 'media_recorder';
   $language = isset($element['#language']) ? $element['#language'] : 'und';
   $delta = isset($element['#delta']) ? $element['#delta'] : 0;
-  $filename = $user->sid . '.wav'; // Temporary filename.
-  $recordpath = url('media_recorder/record'); // Recording menu path.
-  $filepath = 'public://media_recorder';  // Temporary recording directory.
+  $filename = $user->sid . '.wav';
+  $recordpath = url('media_recorder/record');
+  $filepath = 'public://media_recorder';
   $url = file_create_url($filepath);
   // Add recorder.
   $media_recorder = variable_get('media_recorder', array());

@@ -38,10 +38,11 @@ function media_recorder_admin_form() {
     '#default_value' => variable_get('media_recorder_height', 100),
   );
   // Recorder time limit.
+  $time_limit = gmdate('i:s', variable_get('media_recorder_timelimit', 300));
   $form['media_recorder_timelimit'] = array(
     '#type' => 'textfield',
     '#title' => t('Media recorder time limit'),
-    '#description' => t('Enter a time limit for recordings in seconds. Currently set to @time minutes.', array('@time' => gmdate('i:s', variable_get('media_recorder_timelimit', 300)))),
+    '#description' => t('Enter a time limit for recordings in seconds. Currently set to @time minutes.', array('@time' => $time_limit)),
     '#default_value' => variable_get('media_recorder_timelimit', 300),
   );
   // Recorder upload directory.

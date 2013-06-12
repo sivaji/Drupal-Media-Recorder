@@ -13,7 +13,6 @@
   background: -o-linear-gradient(top,  #4a4c4d 0%,#2b2d2d 100%); /* Opera 11.10+ */
   background: -ms-linear-gradient(top,  #4a4c4d 0%,#2b2d2d 100%); /* IE10+ */
   background: linear-gradient(to bottom,  #4a4c4d 0%,#2b2d2d 100%); /* W3C */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#4a4c4d', endColorstr='#2b2d2d',GradientType=0 ); /* IE6-9 */
   border-radius: 3px;
 }
 
@@ -206,12 +205,12 @@
 
 /* Recording styles for a single meter bar. */
 .media-recorder.WAMI .meter-bar .inner.record {
-  background: #FF0000;
+  background: #ff0000;
   vertical-align: middle;
 }
 
 /* Playing styles for a single meter bar. */
 .media-recorder.WAMI .meter-bar .inner.play {
-  background: #33CC33;
+  background: #33cc33;
   vertical-align: middle;
 }

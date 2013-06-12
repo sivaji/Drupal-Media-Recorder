@@ -20,7 +20,7 @@
           $('#media-recorder-toggle-' + fieldID).remove();
           return;
         }
-        
+
         // Hide original field.
         $(this).find('.form-managed-file input').hide();
         $(this).find('.description').hide();
@@ -28,7 +28,7 @@
         // Iterate through all media recorders.
         $(this).find('.media-recorder-wrapper').each(function() {
           var mediaRecorderWrapper = $(this);
-          
+
           // Show media recorder wrapper.
           $(mediaRecorderWrapper).show();
 
@@ -46,7 +46,7 @@
               $(mediaRecorderWrapper).toggle();
             });
           }
-          
+
           // Instantiate media recorder.
           $(this).mediaRecorder({
             'timeLimit': 300000,
@@ -60,7 +60,7 @@
             'drupalDelta': Drupal.settings.mediaRecorder.delta,
           });
         });
-      });        
+      });
     }
   };
 })(jQuery);

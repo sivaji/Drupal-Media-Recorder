@@ -12,7 +12,7 @@
  */
 ?>
 
-<div id="<? print $cssid; ?>" class="media-recorder-wrapper js-hide" style="width:<? print $width; ?>px; height:<? print $height + 30; ?>px;">
+<div id="<?php print $cssid; ?>" class="media-recorder-wrapper js-hide" style="width:<?php print $width; ?>px; height:<?php print $height + 30; ?>px;">
   <div class="media-recorder-audio" style="width:<? print $width; ?>px; height: 30px;">
     <?php print $audio; ?>
   </div>
