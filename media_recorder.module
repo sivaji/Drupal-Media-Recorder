@@ -459,7 +459,7 @@ function media_recorder_process_file(&$element, &$form_state) {
   $field_name = isset($element['#field_name']) ? $element['#field_name'] : 'media_recorder';
   $language = isset($element['#language']) ? $element['#language'] : 'und';
   $delta = isset($element['#delta']) ? $element['#delta'] : 0;
-  $filename = $user->sid . '.wav';
+  $filename = uniqid() . '.wav';
   $recordpath = url('media_recorder/record');
   $filepath = 'public://media_recorder';
   $url = file_create_url($filepath);
