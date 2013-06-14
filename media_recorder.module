@@ -41,22 +41,21 @@ function media_recorder_library() {
  */
 function media_recorder_menu() {
   $items = array();
-  // Adds a tab to the media browser.
   $items['file/add/record'] = array(
     'title' => 'Voice Recorder',
     'description' => 'Add internet files to your media library.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_recorder_add'),
-    'access callback' => 'media_recorder_access',
+    'access callback' => 'file_entity_access',
+    'access arguments' => array('create'),
     'type' => MENU_LOCAL_TASK,
   );
-  // Callback that process the php://input from Wami.swf.
   $items['media_recorder/record/%'] = array(
     'title' => 'Record',
     'description' => 'Record a video or audio file.',
     'page callback' => 'media_recorder_record',
-    'access callback' => 'media_recorder_access',
-    'callback arguments' => array(1),
+    'access callback' => 'file_entity_access',
+    'access arguments' => array('create'),
     'type' => MENU_CALLBACK,
   );
   $items['admin/config/media/mediarecorder'] = array(
@@ -64,7 +63,7 @@ function media_recorder_menu() {
     'description' => 'Configure the media recorder.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_recorder_admin_form'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer files'),
     'file' => 'media_recorder.admin.inc',
   );
   return $items;
@@ -173,25 +172,6 @@ function media_recorder_record() {
   else {
     echo FALSE;
   }
-}
-
-/**
- * Access callback for the media_recorder media browser plugin.
- */
-function media_recorder_access($account = NULL) {
-  return user_access('add media from media recorder');
-}
-
-/**
- * Implements hook_permission().
- */
-function media_recorder_permission() {
-  return array(
-    'add media from media recorder' => array(
-      'title' => t('Add media using the media recorder.'),
-      'description' => t('Add media using a the media recorder widget.'),
-    ),
-  );
 }
 
 /**
