@@ -189,10 +189,10 @@ function media_recorder_add($form, &$form_state = array(), $types = NULL) {
   $form['media_recorder']['media_recorder_title']['#type'] = 'textfield';
   $form['media_recorder']['media_recorder_title']['#title'] = t('Title');
   // Add hidden fid field.
-  $form['media_recorder']['und'][0]['fid']['#type'] = 'hidden';
+  $form['media_recorder'][LANGUAGE_NONE][0]['fid']['#type'] = 'hidden';
   $form['media_recorder']['#process'] = array('media_recorder_add_form_process');
   // Add a hidden filepath field.
-  $form['media_recorder']['und'][0]['media_recorder_filepath']['#type'] = 'hidden';
+  $form['media_recorder'][LANGUAGE_NONE][0]['media_recorder_filepath']['#type'] = 'hidden';
   // Add a submit button.
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit']['#type'] = 'submit';
@@ -207,8 +207,8 @@ function media_recorder_add($form, &$form_state = array(), $types = NULL) {
 function media_recorder_add_validate($form, &$form_state) {
   global $user;
   $title = isset($form_state['values']['media_recorder']['media_recorder_title']) ? $form_state['values']['media_recorder']['media_recorder_title'] : '';
-  $fid = !empty($form_state['values']['media_recorder']['und'][0]['fid']) ? $form_state['values']['media_recorder']['und'][0]['fid'] : 0;
-  $filepath = isset($form_state['values']['media_recorder']['und'][0]['media_recorder_filepath']) ? $form_state['values']['media_recorder']['und'][0]['media_recorder_filepath'] : '';
+  $fid = !empty($form_state['values']['media_recorder'][LANGUAGE_NONE][0]['fid']) ? $form_state['values']['media_recorder'][LANGUAGE_NONE][0]['fid'] : 0;
+  $filepath = isset($form_state['values']['media_recorder'][LANGUAGE_NONE][0]['media_recorder_filepath']) ? $form_state['values']['media_recorder'][LANGUAGE_NONE][0]['media_recorder_filepath'] : '';
   $file = NULL;
   // Check file exists.
   if ($fid == 0 && empty($filepath)) {
@@ -260,10 +260,10 @@ function media_recorder_add_validate($form, &$form_state) {
       $file->status = FILE_STATUS_PERMANENT;
       $file = file_save($file);
       // Set file element to saved file.
-      $form_state['input']['media_recorder']['und'][0]['fid'] = $file->fid;
-      $form_state['input']['media_recorder']['und'][0]['media_recorder_filepath'] = $file->uri;
-      $form_state['values']['media_recorder']['und'][0]['fid'] = $file->fid;
-      $form_state['values']['media_recorder']['und'][0]['media_recorder_filepath'] = $file->uri;
+      $form_state['input']['media_recorder'][LANGUAGE_NONE][0]['fid'] = $file->fid;
+      $form_state['input']['media_recorder'][LANGUAGE_NONE][0]['media_recorder_filepath'] = $file->uri;
+      $form_state['values']['media_recorder'][LANGUAGE_NONE][0]['fid'] = $file->fid;
+      $form_state['values']['media_recorder'][LANGUAGE_NONE][0]['media_recorder_filepath'] = $file->uri;
       // Notify user of successful upload.
       drupal_set_message(t('The file @name was uploaded', array('@name' => $file->filename)));
     }
@@ -437,7 +437,7 @@ function media_recorder_widget_form_process($element, &$form_state, &$form) {
 function media_recorder_process_file(&$element, &$form_state) {
   global $user;
   $field_name = isset($element['#field_name']) ? $element['#field_name'] : 'media_recorder';
-  $language = isset($element['#language']) ? $element['#language'] : 'und';
+  $language = isset($element['#language']) ? $element['#language'] : LANGUAGE_NONE;
   $delta = isset($element['#delta']) ? $element['#delta'] : 0;
   $filename = uniqid() . '.wav';
   $recordpath = url('media_recorder/record');
@@ -445,7 +445,7 @@ function media_recorder_process_file(&$element, &$form_state) {
   $url = file_create_url($filepath);
   // Add recorder.
   $media_recorder = variable_get('media_recorder', array());
-  $media_recorder_fid = isset($media_recorder['und'][0]['fid']) ? $media_recorder['und'][0]['fid'] : '';
+  $media_recorder_fid = isset($media_recorder[$language][0]['fid']) ? $media_recorder[$language][0]['fid'] : '';
   $variables = array(
     'cssid' => 'media-recorder-' . $field_name . '-' . $language . '-' . $delta,
     'width' => variable_get('media_recorder_width', 300),

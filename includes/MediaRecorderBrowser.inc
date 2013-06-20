@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @file media_recorder/includes/MediaRecorderBrowser.inc
+ * @file
  * Definition of MediaRecorderBrowser.
  */
 

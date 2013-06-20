@@ -63,10 +63,10 @@ function media_recorder_admin_form() {
   // Add default audio field based on media_recorder_add form.
   $media_recorder = variable_get('media_recorder', array());
   $media_recorder_title = isset($media_recorder['media_recorder_title']) ? $media_recorder['media_recorder_title'] : '';
-  if (isset($media_recorder['und'][0]['fid']) && !empty($media_recorder['und'][0]['fid'])) {
-    $fid = $media_recorder['und'][0]['fid'];
+  if (isset($media_recorder[LANGUAGE_NONE][0]['fid']) && !empty($media_recorder[LANGUAGE_NONE][0]['fid'])) {
+    $fid = $media_recorder[LANGUAGE_NONE][0]['fid'];
   }
-  elseif (isset($media_recorder['und'][0]['media_recorder_filepath']) && !empty($media_recorder['und'][0]['media_recorder_filepath'])) {
+  elseif (isset($media_recorder[LANGUAGE_NONE][0]['media_recorder_filepath']) && !empty($media_recorder[LANGUAGE_NONE][0]['media_recorder_filepath'])) {
     $file = file_uri_to_object($filepath);
     $fid = $file->fid;
   }
@@ -84,11 +84,11 @@ function media_recorder_admin_form() {
   $form['media_recorder']['media_recorder_title']['#title'] = t('Title');
   $form['media_recorder']['media_recorder_title']['#default_value'] = $media_recorder_title;
   // Add hidden fid field.
-  $form['media_recorder']['und'][0]['fid']['#type'] = 'hidden';
-  $form['media_recorder']['und'][0]['fid']['#default_value'] = $fid;
+  $form['media_recorder'][LANGUAGE_NONE][0]['fid']['#type'] = 'hidden';
+  $form['media_recorder'][LANGUAGE_NONE][0]['fid']['#default_value'] = $fid;
   $form['media_recorder']['#process'] = array('media_recorder_add_form_process');
   // Add a hidden filepath field.
-  $form['media_recorder']['und'][0]['media_recorder_filepath']['#type'] = 'hidden';
+  $form['media_recorder'][LANGUAGE_NONE][0]['media_recorder_filepath']['#type'] = 'hidden';
   // Add custom validation handler for upload default audio.
   $form['#validate'][] = 'media_recorder_add_validate';
   return system_settings_form($form);
