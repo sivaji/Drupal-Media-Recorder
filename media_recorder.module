@@ -360,7 +360,6 @@ function media_recorder_field_widget_form_validate($element, &$form_state) {
     // in all browsers.
     if (is_string($filepath) && !empty($filepath)) {
       $file = file_uri_to_object($filepath);
-      $file = file_load($file->fid);
     }
     // Load file from fid (files saved using XHR).
     else {
