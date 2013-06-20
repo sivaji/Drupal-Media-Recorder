@@ -260,8 +260,6 @@ function media_recorder_add_validate($form, &$form_state) {
       $file->status = FILE_STATUS_PERMANENT;
       $file = file_save($file);
       // Set file element to saved file.
-      $form_state['input']['media_recorder'][LANGUAGE_NONE][0]['fid'] = $file->fid;
-      $form_state['input']['media_recorder'][LANGUAGE_NONE][0]['media_recorder_filepath'] = $file->uri;
       $form_state['values']['media_recorder'][LANGUAGE_NONE][0]['fid'] = $file->fid;
       $form_state['values']['media_recorder'][LANGUAGE_NONE][0]['media_recorder_filepath'] = $file->uri;
       // Notify user of successful upload.
