@@ -1,19 +1,19 @@
 <?php
 
 /**
- * @file
- * Definition of MediaBrowserInternet.
+ * @file media_recorder/includes/MediaRecorderBrowser.inc
+ * Definition of MediaRecorderBrowser.
  */
 
 /**
- * Media browser plugin for Media Internet sources.
+ * Media browser plugin for Media Recorder.
  */
-class MediaBrowserRecorder extends MediaBrowserPlugin {
+class MediaRecorderBrowser extends MediaBrowserPlugin {
   /**
    * Implements MediaBrowserPluginInterface::access().
    */
   public function access($account = NULL) {
-    return media_internet_access($account);
+    return media_access('create', $account);
   }
 
   /**

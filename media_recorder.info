@@ -8,4 +8,4 @@ dependencies[] = libraries
 dependencies[] = modernizr
 dependencies[] = transliteration
 
-files[] = includes/MediaBrowserRecorder.inc
+files[] = includes/MediaRecorderBrowser.inc
