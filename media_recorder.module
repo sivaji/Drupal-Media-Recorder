@@ -70,6 +70,16 @@ function media_recorder_menu() {
 }
 
 /**
+ * Implements hook_help().
+ */
+function media_recorder_help($path, $arg) {
+  if ($path == 'admin/help#media_recorder') {
+    $output = file_get_contents(drupal_get_path('module', 'media_recorder') . '/README.txt');
+    return nl2br($output);
+  }
+}
+
+/**
  * Implements hook_theme().
  */
 function media_recorder_theme() {
