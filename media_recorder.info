@@ -11,3 +11,5 @@ dependencies[] = modernizr
 dependencies[] = transliteration
 
 files[] = includes/MediaRecorderBrowser.inc
+
+configure = admin/config/media/mediarecorder
