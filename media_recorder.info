@@ -3,6 +3,8 @@ description = "Adds a recording option to the Media module."
 package = "Media"
 core = 7.x
 
+dependencies[] = ctools
+dependencies[] = file_entity
 dependencies[] = media
 dependencies[] = libraries
 dependencies[] = modernizr
