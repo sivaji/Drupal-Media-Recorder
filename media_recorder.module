@@ -673,10 +673,7 @@ function media_recorder_field_widget_form_youtube_validate($element, &$form_stat
 
   // Try saving the youtube file using media_internet_get_provider().
   try {
-    // Save the remote file
     $provider = media_internet_get_provider($embed_code);
-    // Providers decide if they need to save locally or somewhere else.
-    // This method returns a file object
     $file = $provider->save();
   }
   catch (Exception $e) {
