@@ -42,8 +42,8 @@ function media_recorder_library() {
 function media_recorder_menu() {
   $items = array();
   $items['file/add/record'] = array(
-    'title' => 'Voice Recorder',
-    'description' => 'Add internet files to your media library.',
+    'title' => 'Record',
+    'description' => 'Add recordings to your media library.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_recorder_add'),
     'access callback' => 'file_entity_access',
