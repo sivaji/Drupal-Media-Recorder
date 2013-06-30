@@ -345,8 +345,7 @@
       // Update audio player.
       updateAudio(element, options);
       // Set audio and file input values.
-      var elementName = fieldFormatter(element, options, 'media_recorder_filepath');
-      console.log(elementName);
+      var elementName = fieldFormatter(element, options, 'filepath');
       $('input[name="' + elementName + '"]').val(options.drupalFilePath + '/' + options.drupalFileName);
       $(element).find('.media-recorder-status').html('00:00 / 05:00');
       $(element).find('.media-recorder-record').removeClass('record-on').addClass('record-off')
@@ -432,7 +431,7 @@
     function transferComplete(evt) {
       var file = JSON.parse(req.response);
       var fidInput = fieldFormatter(element, options, 'fid');
-      var filepathInput = fieldFormatter(element, options, 'media_recorder_filepath');
+      var filepathInput = fieldFormatter(element, options, 'filepath');
       $('input[name="' + fidInput + '"]').val(file.fid);
       $('input[name="' + filepathInput + '"]').val(options.drupalFilePath + '/' + options.drupalFileName);
       $(element).find('.media-recorder-status').html('00:00 / 05:00');
