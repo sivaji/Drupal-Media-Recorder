@@ -329,6 +329,9 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
   // Add toggle buttons if youtube is a provider.
   if ($youtube) {
     // Toggle record.
+    $element[$delta]['toggle']['#prefix'] = '<div class="media-recorder-toggle">';
+    $element[$delta]['toggle']['#suffix'] = '</div>';
+
     $element[$delta]['toggle']['record']['#type'] = 'button';
     $element[$delta]['toggle']['record']['#value'] = t('Recorder');
     $element[$delta]['toggle']['record']['#executes_submit_callback'] = FALSE;
@@ -345,6 +348,9 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
 
   // Use the HTML5/Wami recorder.
   if ($toggle == 'Recorder') {
+
+    // Add active class.
+    $element[$delta]['toggle']['record']['#attributes']['class'][] = 'active';
 
     // Add hidden fields for wami recorder.
     $element[$delta]['filepath']['#type'] = 'hidden';
@@ -379,6 +385,9 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
 
   // Use the youtube upload widget.
   if ($toggle == 'Youtube') {
+
+    // Add active class.
+    $element[$delta]['toggle']['youtube']['#attributes']['class'][] = 'active';
 
     // Add hidden fields for youtube.
     $element[$delta]['youtube']['#type'] = 'hidden';
