@@ -157,7 +157,6 @@ function template_preprocess_media_recorder(&$variables) {
  * Menu callback for recording a media file.
  */
 function media_recorder_record() {
-  global $user;
   // Get filename.
   $filename = arg(2);
   // File data is sent using XHR.
@@ -188,7 +187,6 @@ function media_recorder_record() {
  * Provides a form for adding media items using the Wami Recorder.
  */
 function media_recorder_add($form, &$form_state) {
-  global $user;
 
   // Set field variables.
   $field_name = 'field_media_recorder';
@@ -429,7 +427,6 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
  * @see media_recorder_field_widget_form()
  */
 function media_recorder_field_widget_form_file_validate($element, &$form_state) {
-  global $user;
 
   // Get field information.
   $field_name = $element['#parents'][0];
@@ -527,7 +524,6 @@ function media_recorder_field_widget_form_file_validate($element, &$form_state) 
  * @see media_recorder_field_widget_form()
  */
 function media_recorder_field_widget_form_record_validate($element, &$form_state) {
-  global $user;
 
   // Get field information.
   $field_name = $element['#parents'][0];
@@ -629,7 +625,6 @@ function media_recorder_field_widget_form_record_validate($element, &$form_state
  * @see media_recorder_field_widget_form()
  */
 function media_recorder_field_widget_form_youtube_validate($element, &$form_state) {
-  global $user;
 
   // Get field information.
   $field_name = $element['#parents'][0];
