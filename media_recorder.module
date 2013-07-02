@@ -509,9 +509,7 @@ function media_recorder_field_widget_form_file_validate($element, &$form_state) 
       $form_state['values'][$field_name][$langcode][$delta]['fid'] = $file->fid;
       $form_state['values'][$field_name][$langcode][$delta]['display'] = 1;
 
-      // Display a message.
-      drupal_set_message(t('File successfully saved.'));
-
+      // Delete the old file if it exists.
       if ($fid !== $file->fid) {
         $file = file_load($fid);
         file_delete($file);
@@ -620,9 +618,6 @@ function media_recorder_field_widget_form_record_validate($element, &$form_state
         // Set file field values if needed.
         $form_state['values'][$field_name][$langcode][$delta]['fid'] = $file->fid;
         $form_state['values'][$field_name][$langcode][$delta]['display'] = 1;
-
-        // Display a message.
-        drupal_set_message(t('File successfully saved.'));
       }
     }
 
@@ -721,8 +716,5 @@ function media_recorder_field_widget_form_youtube_validate($element, &$form_stat
     // Set file field values if needed.
     $form_state['values'][$field_name][$langcode][$delta]['fid'] = $file->fid;
     $form_state['values'][$field_name][$langcode][$delta]['display'] = 1;
-
-    // Display a message.
-    drupal_set_message(t('Youtube video successfully saved.'));
   }
 }
