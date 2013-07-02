@@ -463,9 +463,16 @@ function media_recorder_field_widget_form_file_validate($element, &$form_state) 
   }
 
   // Add custom logic for comments.
-  elseif (isset($form_state['comment']) && is_object($form_state['comment']) && isset($form_state['values']['nid']) && is_numeric($form_state['values']['nid'])) {
-    $node = node_load($form_state['values']['nid']);
-    $title = 'Comment on ' . $node->title;
+  elseif (isset($form_state['comment']) && is_object($form_state['comment'])) {
+    // Use the comment subject value if present.
+    if (isset($form_state['values']['subject']) && !empty($form_state['values']['subject'])) {
+      $title = $form_state['values']['subject'];
+    }
+    // Otherwise use the node title.
+    elseif (isset($form_state['comment']->nid) && is_numeric($form_state['comment']->nid)) {
+      $node = node_load($form_state['values']['nid']);
+      $title = t('Comment on @title', array('@title' => $node->title));
+    }
   }
 
   // Check title exists.
@@ -565,9 +572,16 @@ function media_recorder_field_widget_form_record_validate($element, &$form_state
   }
 
   // Add custom logic for comments.
-  elseif (isset($form_state['comment']) && is_object($form_state['comment']) && isset($form_state['values']['nid']) && is_numeric($form_state['values']['nid'])) {
-    $node = node_load($form_state['values']['nid']);
-    $title = 'Comment on ' . $node->title;
+  elseif (isset($form_state['comment']) && is_object($form_state['comment'])) {
+    // Use the comment subject value if present.
+    if (isset($form_state['values']['subject']) && !empty($form_state['values']['subject'])) {
+      $title = $form_state['values']['subject'];
+    }
+    // Otherwise use the node title.
+    elseif (isset($form_state['comment']->nid) && is_numeric($form_state['comment']->nid)) {
+      $node = node_load($form_state['values']['nid']);
+      $title = t('Comment on @title', array('@title' => $node->title));
+    }
   }
 
   // Check title exists.
@@ -664,9 +678,16 @@ function media_recorder_field_widget_form_youtube_validate($element, &$form_stat
   }
 
   // Add custom logic for comments.
-  elseif (isset($form_state['comment']) && is_object($form_state['comment']) && isset($form_state['values']['nid']) && is_numeric($form_state['values']['nid'])) {
-    $node = node_load($form_state['values']['nid']);
-    $title = 'Comment on ' . $node->title;
+  elseif (isset($form_state['comment']) && is_object($form_state['comment'])) {
+    // Use the comment subject value if present.
+    if (isset($form_state['values']['subject']) && !empty($form_state['values']['subject'])) {
+      $title = $form_state['values']['subject'];
+    }
+    // Otherwise use the node title.
+    elseif (isset($form_state['comment']->nid) && is_numeric($form_state['comment']->nid)) {
+      $node = node_load($form_state['values']['nid']);
+      $title = t('Comment on @title', array('@title' => $node->title));
+    }
   }
 
   // Check title exists.
