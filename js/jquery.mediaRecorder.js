@@ -225,6 +225,15 @@
       // Generate general recorder markup.
       var element = $(this.element);
       var options = this.options;
+
+      // Check flash version.
+      var flashVersion = swfobject.getFlashPlayerVersion();
+      if (flashVersion.major < 10) {
+        element.prepend($('<div class="messages error"><span class="message-text"><a target="_blank" href="https://get.adobe.com/flashplayer">Flash 10</a> or higher must be installed in order to record.</span></div>'));
+        return;
+      }
+
+      // Build recorder.
       element.recorder = $('<div class="media-recorder" style="width: 300px; height:100px;"></div>');
       element.recorder.controls = $('<div class="controls"></div>');
       element.recorder.canvas = $('<div class="media-recorder-analyser"></div>');
