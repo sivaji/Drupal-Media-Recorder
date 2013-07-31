@@ -335,6 +335,7 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
     $element[$delta]['toggle']['record']['#executes_submit_callback'] = FALSE;
     $element[$delta]['toggle']['record']['#limit_validation_errors'] = array();
     $element[$delta]['toggle']['record']['#attributes']['class'][] = 'button';
+    $element[$delta]['toggle']['record']['#attributes']['title'] = t('Record using the HTML5 or Flash recorder.');
 
     // Toggle youtube upload widget.
     $element[$delta]['toggle']['youtube']['#type'] = 'button';
@@ -342,6 +343,7 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
     $element[$delta]['toggle']['youtube']['#executes_submit_callback'] = FALSE;
     $element[$delta]['toggle']['youtube']['#limit_validation_errors'] = array();
     $element[$delta]['toggle']['youtube']['#attributes']['class'][] = 'button';
+    $element[$delta]['toggle']['youtube']['#attributes']['title'] = t('Record using the Youtube Upload Widget.');
   }
 
   // Use the HTML5/Wami recorder.

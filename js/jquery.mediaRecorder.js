@@ -110,13 +110,13 @@
       element.recorder.audioContext = null;
 
       // Add button handlers.
-      element.recorder.controls.record = $('<div class="media-recorder-record record-off"><span>Record</span></div>')
+      element.recorder.controls.record = $('<div class="media-recorder-record record-off" title="Click the mic to record and to stop recording."><span>Record</span></div>')
         .click(function(){
           mediaRecorder.prototype.record(element, options);
         });
 
       // Set HTML5 variables.
-      element.recorder.volume = $('<div class="volume"></div>')
+      element.recorder.volume = $('<div class="volume" title="Adjust the mic volume."></div>')
         .slider({
           orientation: "vertical",
           range: "min",
@@ -243,14 +243,14 @@
       element.recorder.progressInterval = 0;
 
       // Add button handlers.
-      element.recorder.controls.record = $('<div class="media-recorder-record record-off"><span>Record</span></div>')
+      element.recorder.controls.record = $('<div class="media-recorder-record record-off" title="Click the mic to record and to stop recording.">Record</div>')
         .click(function(){
           mediaRecorder.prototype.flashRecord(element, options);
         });
 
       // Add Wami related markup.
       element.wami = $('<div id="wami-' + $(element).attr('id') + '" class="wami"></div>');
-      element.recorder.micSettings = $('<div class="media-recorder-mic-settings"><span>Settings</span></div>')
+      element.recorder.micSettings = $('<div class="media-recorder-mic-settings" title="Adjust microphone settings.">Settings</div>')
         .click(function() {
           Wami.showSecurity("microphone");
         });
