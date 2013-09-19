@@ -294,15 +294,17 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
   }
 
   // If this is a mobile device, only show a file field.
-  if (isset($browser) && $browser['ismobiledevice'] == 'true') {
-    $element[$delta]['file'] = array(
-      '#type' => 'file',
-      '#required' => $element['#required'],
-      '#title' => t('File'),
-      '#title_display' => 'invisible',
-    );
-    $element['#element_validate'][] = 'media_recorder_field_widget_form_file_validate';
-    return $element;
+  if (isset($browser)) {
+    if ($browser['ismobiledevice'] == 'true' || $browser['ismobiledevice'] == TRUE) {
+      $element[$delta]['file'] = array(
+        '#type' => 'file',
+        '#required' => $element['#required'],
+        '#title' => t('File'),
+        '#title_display' => 'invisible',
+      );
+      $element['#element_validate'][] = 'media_recorder_field_widget_form_file_validate';
+      return $element;
+    }
   }
 
   // Set current toggle state and options.
