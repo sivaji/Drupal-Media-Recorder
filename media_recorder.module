@@ -310,24 +310,8 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
   // Set current toggle state and options.
   $toggle = isset($form_state['values']['op']) ? $form_state['values']['op'] : 'Recorder';
 
-  // Test if youtube is an available provider for the media module.
-  // This currently doesn't work for the media_youtube module, it only
-  // works for oembed.
-  $youtube = TRUE;
-  try {
-    media_internet_get_provider('http://youtube.com/watch');
-  }
-  catch (Exception $e) {
-    $youtube = FALSE;
-  }
-
-  // Manually check if media_youtube has been installed.
-  if (module_exists('media_youtube')) {
-    $youtube = TRUE;
-  }
-
   // Add toggle buttons if youtube is a provider.
-  if ($youtube) {
+  if (module_exists('media_youtube')) {
     // Toggle record.
     $element[$delta]['toggle']['#prefix'] = '<div class="media-recorder-toggle">';
     $element[$delta]['toggle']['#suffix'] = '</div>';
