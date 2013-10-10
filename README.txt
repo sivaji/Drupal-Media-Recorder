@@ -13,6 +13,13 @@ REQUIREMENTS
  * SWFObject library - http://code.google.com/p/swfobject
  * WAMI recorder library - http://code.google.com/p/wami-recorder
 
+INTEGRATION
+-----------
+ * MediaElement - https://drupal.org/project/mediaelement
+   Replaces playback HTML5 audio element with mediaelement player.
+ * Media: Youtube - https://drupal.org/project/media
+   Adds an option to record using the Youtube Upload Widget.
+
 INSTALLATION
 ------------
 1. Install the RecorderJS library in sites/all/libraries. The recorder.js file
