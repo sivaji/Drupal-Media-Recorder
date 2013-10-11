@@ -5,34 +5,80 @@
  */
 
 /**
- * Implements hook_library().
+ * Implements hook_requirements().
  */
-function media_recorder_library() {
+function media_recorder_requirements($phase) {
+  $requirements = array();
+
+  // Check requirements during the runtime phase
+  if ($phase == 'runtime') {
+    // Check that all libraries exist.
+    $required_libraries = array('swfobject', 'wami', 'Recorderjs');
+    foreach ($required_libraries as $name) {
+      $library = libraries_detect($name);
+      if ($library['installed']) {
+        $requirements['media_recorder_' . $name] = array(
+          'title' => t('Media Recorder: %library', array('%library' => $library['name'])),
+          'value' => t('Installed %version', array('%version' => $library['version'])),
+          'severity' => REQUIREMENT_OK,
+        );
+      }
+      else {
+        $requirements['media_recorder_' . $name] = array(
+          'title' => t('Media Recorder: %library', array('%library' => $library['name'])),
+          'value' => t('Not installed'),
+          'description' => $library['error message'],
+          'severity' => REQUIREMENT_ERROR,
+        );
+      }
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function media_recorder_libraries_info() {
   $libraries = array();
+
   $libraries['swfobject'] = array(
-    'title' => 'SWFObject',
-    'version' => '2.2',
-    'website' => 'http://code.google.com/p/swfobject/',
-    'js' => array(
-      libraries_get_path('swfobject') . '/swfobject.js' => array('group' => JS_LIBRARY, 'preprocess' => FALSE),
+    'name' => 'SWFObject',
+    'description' => 'SWFObject is an easy-to-use and standards-friendly method to embed Flash content, which utilizes one small JavaScript file.',
+    'vendor url' => 'http://code.google.com/p/swfobject',
+    'download url' => 'http://swfobject.googlecode.com/files/swfobject_2_2.zip',
+    'version arguments' => array(
+      'file' => 'swfobject.js',
+      'pattern' => '@v([0-9a-zA-Z\.-]+)@',
+    ),
+    'files' => array(
+      'js' => array('swfobject.js'),
     ),
   );
   $libraries['wami'] = array(
-    'title' => 'WAMI Recorder',
+    'name' => 'WAMI Recorder',
+    'description' => 'A JavaScript / Flash solution to recording audio from a browser.',
+    'vendor url' => 'http://code.google.com/p/wami-recorder/',
     'version' => '',
-    'website' => 'http://code.google.com/p/wami-recorder/',
-    'js' => array(
-      libraries_get_path('wami') . '/recorder.js' => array('group' => JS_LIBRARY, 'preprocess' => FALSE),
+    'dependencies' => array(
+      'swfobject (>=2.2)'
+    ),
+    'files' => array(
+      'js' => array('recorder.js'),
     ),
   );
   $libraries['Recorderjs'] = array(
-    'title' => 'Recorderjs',
+    'name' => 'Recorderjs',
+    'description' => 'A plugin for recording/exporting the output of Web Audio API nodes',
+    'vendor url' => 'https://github.com/mattdiamond/Recorderjs',
+    'download url' => 'https://github.com/mattdiamond/Recorderjs/zipball/master',
     'version' => '',
-    'website' => 'https://github.com/mattdiamond/Recorderjs/',
-    'js' => array(
-      libraries_get_path('Recorderjs') . '/recorder.js' => array('group' => JS_LIBRARY, 'preprocess' => FALSE),
+    'files' => array(
+      'js' => array('recorder.js'),
     ),
   );
+
   return $libraries;
 }
 
@@ -358,9 +404,9 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
     // Add javascript and css files.
     $element[$delta]['media_recorder']['#attached']['library'][] = array('system', 'ui.progressbar');
     $element[$delta]['media_recorder']['#attached']['library'][] = array('system', 'ui.slider');
-    $element[$delta]['media_recorder']['#attached']['library'][] = array('media_recorder', 'swfobject');
-    $element[$delta]['media_recorder']['#attached']['library'][] = array('media_recorder', 'wami');
-    $element[$delta]['media_recorder']['#attached']['library'][] = array('media_recorder', 'Recorderjs');
+    $element[$delta]['media_recorder']['#attached']['libraries_load'][] = array('swfobject');
+    $element[$delta]['media_recorder']['#attached']['libraries_load'][] = array('wami');
+    $element[$delta]['media_recorder']['#attached']['libraries_load'][] = array('Recorderjs');
     $element[$delta]['media_recorder']['#attached']['css'][] = drupal_get_path('module', 'media_recorder') . '/css/media_recorder.css';
     $element[$delta]['media_recorder']['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/media_recorder.js';
     $element[$delta]['media_recorder']['#attached']['js'][] = drupal_get_path('module', 'media_recorder') . '/js/jquery.mediaRecorder.js';

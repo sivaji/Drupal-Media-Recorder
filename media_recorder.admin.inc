@@ -10,20 +10,12 @@
  */
 function media_recorder_admin_form($form, $form_state) {
 
-  // Prepares upload directory for current user.
-  $upload_directory = 'public://' . token_replace(variable_get('media_recorder_upload_directory', ''));
-  file_prepare_directory($upload_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
-
   // Check that all libraries exist.
   $required_libraries = array('swfobject', 'wami', 'Recorderjs');
   foreach ($required_libraries as $name) {
-    $library = drupal_get_library('media_recorder', $name);
-    if (!file_exists(key($library['js']))) {
-      $message = '';
-      $link = l(t('README.txt'), drupal_get_path('module', 'media_recorder') . '/README.txt');
-      $message = t('The %title library is not installed.', array('%title' => $library['title']));
-      $message .= t('Please view the !link for download instructions.', array('!link' => $link));
-      drupal_set_message($message, 'error');
+    $library = libraries_detect($name);
+    if (!$library['installed']) {
+      drupal_set_message($library['error message'], 'error');
     }
   }
 
