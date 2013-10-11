@@ -11,5 +11,6 @@ dependencies[] = modernizr
 dependencies[] = transliteration
 
 files[] = includes/MediaRecorderBrowser.inc
+files[] = media_recorder.drush.inc
 
 configure = admin/config/media/mediarecorder
