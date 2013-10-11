@@ -5,6 +5,22 @@
  * Install, update and uninstall functions for the Media Recorder module.
  */
 
+
+/**
+ * Implements hook_enable().
+ */
+function media_recorder_enable() {
+  // Check that all libraries exist.
+  $required_libraries = array('modernizr', 'swfobject', 'wami', 'Recorderjs');
+  foreach ($required_libraries as $name) {
+    $library = libraries_detect($name);
+    if (!$library['installed']) {
+      $drush_msg = t('You can use the drush command \'drush @site mrdl\' to automatically install all required libraries.');
+      drupal_set_message($library['error message'] . ' ' . $drush_msg, 'error');
+    }
+  }
+}
+
 /**
  * Implements hook_uninstall().
  */
