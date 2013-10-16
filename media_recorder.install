@@ -11,7 +11,7 @@
  */
 function media_recorder_enable() {
   // Check that all libraries exist.
-  $required_libraries = array('modernizr', 'swfobject', 'wami', 'Recorderjs');
+  $required_libraries = array('swfobject', 'wami', 'Recorderjs');
   foreach ($required_libraries as $name) {
     $library = libraries_detect($name);
     if (!$library['installed']) {

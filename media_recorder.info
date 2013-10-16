@@ -4,13 +4,10 @@ package = "Media"
 core = 7.x
 
 dependencies[] = ctools
-dependencies[] = file_entity
-dependencies[] = media
+dependencies[] = file_entity (>=2)
+dependencies[] = media (>=2)
 dependencies[] = libraries (>=2)
-dependencies[] = modernizr
-dependencies[] = transliteration
 
 files[] = includes/MediaRecorderBrowser.inc
-files[] = media_recorder.drush.inc
 
 configure = admin/config/media/mediarecorder

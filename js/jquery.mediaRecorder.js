@@ -16,10 +16,6 @@
     'timeLimit': 300000
   };
 
-  // Audio analyzer variables.
-  var analyserNode = null;
-  var analyserContext = null;
-
   // Normalize features.
   navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
   window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext;
@@ -29,27 +25,9 @@
   var browser = $.browser;
   var getUserMediaCheck = typeof(navigator.getUserMedia) === 'function';
   var webAudioCheck = typeof(window.AudioContext) === 'function';
-  var wamiCheck = typeof(window.Wami) === 'object';
-  var canvasCheck = Modernizr.canvas;
-  var wavCheck = Modernizr.audio.wav;
-  var touchCheck = Modernizr.touch;
-
-  // Only enable for Chrome Canary at this point, due to Chrome showing
-  // AudioContext as enabled, even though it's disabled.
-  if (browser.webkit === true && browser.version >= 537.36) {
-    getUserMediaCheck = true;
-  } else {
-    getUserMediaCheck = false;
-  }
-
-  // Feature Debugging.
-  //console.log(browser);
-  //console.log('getUserMedia: ' + getUserMediaCheck);
-  //console.log('Web Audio: ' + webAudioCheck);
-  //console.log('Wami: ' + wamiCheck);
-  //console.log('Canvas: ' + canvasCheck);
-  //console.log('WAV: ' + wavCheck);
-  //console.log('Touch: ' + touchCheck);
+  var flashVersion = swfobject.getFlashPlayerVersion();
+  var canvas = document.createElement('canvas');
+  var canvasCheck = !!(canvas.getContext && canvas.getContext('2d'));
 
   // ********************************************************************
   // * jQuery Plugin Functions.
@@ -63,15 +41,39 @@
     // Check for existing recorder.
     if (typeof this.element.recorder != 'undefined') {
       return this.element.mediaRecorder;
-    } else {
-      // Attach recorder to DOM node for reference
+    }
+    // Otherwise attach recorder to DOM node for reference
+    else {
       this.element.mediaRecorder = this;
     }
 
+    // Run webRTC recorder.
     if (getUserMediaCheck && webAudioCheck) {
+      // Hide specific file related elements.
+      $(this.element).parent().children('span.file, span.file-size, input.media-recorder-upload, input.media-recorder-upload-button').hide();
+      // Set audio player width to recorder width.
+      $(this.element).parent().children('div.file-audio').width(options.width);
+      // Initialize webRTC recorder.
       this.init();
-    } else {
+    }
+    // Run flash recorder.
+    else if (flashVersion.major >= 10) {
+      // Hide all file input related elements.
+      $(this.element).parent().children('span.file, span.file-size, input.media-recorder-upload, input.media-recorder-upload-button').hide();
+      // Set audio player width to recorder width.
+      $(this.element).parent().children('div.file-audio').width(options.width);
+      // Initialize flash recorder.
       this.flashInit();
+    }
+    // Display flash warning if not newer version.
+    else if (flashVersion.major < 10 && flashVersion.major > 0) {
+      $(this.element).prepend($('<div class="messages error"><span class="message-text"><a target="_blank" href="https://get.adobe.com/flashplayer">Flash 10</a> or higher must be installed in order to record.</span></div>'));
+    }
+    // Show file element.
+    else {
+      // Hide all media recorder related elements.
+      $(this.element).parent().children('.media-recorder-toggle').hide();
+      $(this.element).hide();
     }
 
     return this;
@@ -99,7 +101,7 @@
       // Generate general recorder markup.
       var element = $(this.element);
       var options = this.options;
-      element.recorder = $('<div class="media-recorder" style="width: 300px; height:100px;"></div>');
+      element.recorder = $('<div class="media-recorder"></div>').width(options.width).height(options.height);
       element.recorder.controls = $('<div class="controls"></div>');
       element.recorder.canvas = $('<canvas class="media-recorder-analyser"></canvas>');
       element.recorder.status = $('<div class="media-recorder-status">00:00 / ' + millisecondsToTime(options.timeLimit) + '</div>');
@@ -125,7 +127,7 @@
           max: 1,
           value: 0.8,
           slide: function(event, ui) {
-            inputPoint.gain.value = ui.value;
+            gainNode.gain.value = ui.value;
           }
         });
 
@@ -207,9 +209,6 @@
       clearInterval(element.recorder.statusInterval);
       element.recorder.HTML5Recorder.stop();
       element.recorder.HTML5Recorder.exportWAV(function(blob) {
-        var url = URL.createObjectURL(blob);
-        var audio = $(element).find('.media-recorder-audio audio');
-        $(audio).attr('src', url);
         $(element).find('.media-recorder-status').html('<div class="progressbar"></div>');
         sendBlob(element, options, blob);
       });
@@ -225,13 +224,6 @@
       // Generate general recorder markup.
       var element = $(this.element);
       var options = this.options;
-
-      // Check flash version.
-      var flashVersion = swfobject.getFlashPlayerVersion();
-      if (flashVersion.major < 10) {
-        element.prepend($('<div class="messages error"><span class="message-text"><a target="_blank" href="https://get.adobe.com/flashplayer">Flash 10</a> or higher must be installed in order to record.</span></div>'));
-        return;
-      }
 
       // Build recorder.
       element.recorder = $('<div class="media-recorder" style="width: 300px; height:100px;"></div>');
@@ -268,21 +260,8 @@
       // Initiate Wami.
       Wami.setup({
         id: 'wami-' + $(element).attr('id'),
-        swfUrl: options.swfURL
+        swfUrl: options.swfurl
       });
-
-      // Test that html5 audio tags can play wav files (not possible in IE9-).
-      if (!wavCheck && browser.msie) {
-        var audio = element.find('.media-recorder-audio');
-        var url = '';
-        if (audio.children('audio').length) {
-          url = audio.children('audio').attr('src');
-        } else if (audio.children('embed').length) {
-          url = audio.children('embed').attr('src');
-        }
-        audio.css('position', 'static');
-        audio.detach().insertBefore(element);
-      }
     },
 
     // ********************************************************************
@@ -290,7 +269,7 @@
     // ********************************************************************
     flashRecord: function(element, options) {
       Wami.startRecording(
-        options.recordingPath + '/' + options.drupalFileName,
+        options.recordingPath + '/' + options.fileName,
         Wami.nameCallback(function() {
           mediaRecorder.prototype.flashRecordStart(element, options);
         }),
@@ -351,16 +330,9 @@
     flashRecordFinish: function(element, options) {
       // Clear all progress intervals.
       clearInterval(element.recorder.progressInterval);
-      // Update audio player.
-      updateAudio(element, options);
       // Set audio and file input values.
-      var elementName = fieldFormatter(element, options, 'filepath');
-      $('input[name="' + elementName + '"]').val(options.drupalFilePath + '/' + options.drupalFileName);
-      $(element).find('.media-recorder-status').html('00:00 / 05:00');
-      $(element).find('.media-recorder-record').removeClass('record-on').addClass('record-off')
-      .unbind('click').click(function() {
-        mediaRecorder.prototype.flashRecord(element, options);
-      });
+      $(element).parent().children('input.media-recorder-filepath').val(options.filePath + '/' + options.fileName);
+      $(element).parent().children('input.media-recorder-refresh').trigger('mousedown');
     },
 
     // ********************************************************************
@@ -390,21 +362,80 @@
   // ********************************************************************
   function startUserMedia(element, options, stream) {
     if (webAudioCheck) {
+
+      // Audio analyzer variables.
+      var analyserNode = null;
+      var analyserContext = null;
+      var canvas = $("canvas.media-recorder-analyser");
+      var canvasWidth = canvas[0].width;
+      var canvasHeight = canvas[0].height;
+
+      // Create an audio context.
       element.recorder.audioContext = new AudioContext();
-      inputPoint = element.recorder.audioContext.createGainNode();
-      realAudioInput = element.recorder.audioContext.createMediaStreamSource(stream);
-      audioInput = realAudioInput;
-      audioInput.connect(inputPoint);
-      inputPoint.gain.value = 0.8;
+
+      // Create a source node.
+      mediaStreamSourceNode = element.recorder.audioContext.createMediaStreamSource(stream);
+
+      // Create a default gain node.
+      gainNode = element.recorder.audioContext.createGain();
+      gainNode.gain.value = 0.8;
+
+      // Send media stream through gain node.
+      mediaStreamSourceNode.connect(gainNode);
+
+      // Create analyser node.
       analyserNode = element.recorder.audioContext.createAnalyser();
       analyserNode.fftSize = 2048;
-      inputPoint.connect(analyserNode);
-      element.recorder.HTML5Recorder = new Recorder(inputPoint, {workerPath:Drupal.settings.basePath + 'sites/all/libraries/Recorderjs/recorderWorker.js'});
-      zeroGain = element.recorder.audioContext.createGainNode();
-      zeroGain.gain.value = 0.0;
-      inputPoint.connect(zeroGain);
-      zeroGain.connect(element.recorder.audioContext.destination);
+
+      // Send gain node data to analyser node.
+      gainNode.connect(analyserNode);
+
+      // Create a recorder using the gain node.
+      element.recorder.HTML5Recorder = new Recorder(gainNode, {workerPath:Drupal.settings.basePath + 'sites/all/libraries/Recorderjs/recorderWorker.js'});
+
+      // Create a muted gain node.
+      zeroGainNode = element.recorder.audioContext.createGain();
+      zeroGainNode.gain.value = 0.0;
+
+      // Send gain node data through zero gain node.
+      gainNode.connect(zeroGainNode);
+
+      // Send zero gain data to audio context destination.
+      zeroGainNode.connect(element.recorder.audioContext.destination);
+
+      // Update audio canvas.
       updateAudioCanvas(element, options);
+    }
+
+    // ********************************************************************
+    // * Update Audio Canvas.
+    // ********************************************************************
+    function updateAudioCanvas() {
+      if (!analyserContext) {
+        analyserContext = canvas[0].getContext('2d');
+      }
+      var spacing = 1;
+      var barWidth = 1;
+      var numBars = Math.round(canvasWidth / spacing);
+      var freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
+      analyserNode.getByteFrequencyData(freqByteData);
+      analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
+      analyserContext.fillStyle = '#F6D565';
+      analyserContext.lineCap = 'round';
+      var multiplier = analyserNode.frequencyBinCount / numBars;
+      // Draw rectangle for each frequency bin.
+      for (var i = 0; i < numBars; ++i) {
+        var magnitude = 0;
+        var offset = Math.floor(i * multiplier);
+        for (var j = 0; j < multiplier; j++) {
+          magnitude += freqByteData[offset + j];
+        }
+        magnitude = magnitude / multiplier;
+        var magnitude2 = freqByteData[i * multiplier];
+        analyserContext.fillStyle = "hsl( " + Math.round((i * 360) / numBars) + ", 100%, 50%)";
+        analyserContext.fillRect(i * spacing, canvasHeight, barWidth, -magnitude);
+      }
+      rafID = window.requestAnimationFrame(updateAudioCanvas);
     }
   }
 
@@ -421,7 +452,7 @@
     req.addEventListener("load", transferComplete, false);
     req.addEventListener("error", transferFailed, false);
     req.addEventListener("abort", transferCanceled, false);
-    req.open("POST", options.recordingPath + '/' + options.drupalFileName, true);
+    req.open("POST", options.recordingPath + '/' + options.fileName, true);
     req.send(formData);
 
     function updateProgress(evt) {
@@ -430,7 +461,8 @@
         $(element).find('.progressbar').progressbar({
           value: percentComplete
         });
-      } else {
+      }
+      else {
         $(element).find('.progressbar').progressbar({
           value: 100
         });
@@ -439,11 +471,9 @@
 
     function transferComplete(evt) {
       var file = JSON.parse(req.response);
-      var fidInput = fieldFormatter(element, options, 'fid');
-      var filepathInput = fieldFormatter(element, options, 'filepath');
-      $('input[name="' + fidInput + '"]').val(file.fid);
-      $('input[name="' + filepathInput + '"]').val(options.drupalFilePath + '/' + options.drupalFileName);
-      $(element).find('.media-recorder-status').html('00:00 / 05:00');
+      $(element).parent().children('input.media-recorder-filepath').val(options.filePath + '/' + options.fileName);
+      $(element).parent().children('input.media-recorder-fid').val(file.fid);
+      $(element).parent().children('input.media-recorder-refresh').trigger('mousedown');
     }
 
     function transferFailed(evt) {
@@ -456,63 +486,8 @@
   }
 
   // ********************************************************************
-  // * Update Audio Canvas.
+  // * Convert milliseconds to time.
   // ********************************************************************
-  function updateAudioCanvas(element, options) {
-    if (!analyserContext) {
-      canvasWidth = element.recorder.canvas[0].width;
-      canvasHeight = element.recorder.canvas[0].height;
-      analyserContext = element.recorder.canvas[0].getContext('2d');
-    }
-    var SPACING = 1;
-    var BAR_WIDTH = 1;
-    var numBars = Math.round(canvasWidth / SPACING);
-    var freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
-    analyserNode.getByteFrequencyData(freqByteData);
-    analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
-    analyserContext.fillStyle = '#F6D565';
-    analyserContext.lineCap = 'round';
-    var multiplier = analyserNode.frequencyBinCount / numBars;
-    // Draw rectangle for each frequency bin.
-    for (var i = 0; i < numBars; ++i) {
-      var magnitude = 0;
-      var offset = Math.floor(i * multiplier);
-      for (var j = 0; j < multiplier; j++) {
-        magnitude += freqByteData[offset + j];
-      }
-      magnitude = magnitude / multiplier;
-      var magnitude2 = freqByteData[i * multiplier];
-      analyserContext.fillStyle = "hsl( " + Math.round((i * 360) / numBars) + ", 100%, 50%)";
-      analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
-    }
-    rafID = window.webkitRequestAnimationFrame(updateAudioCanvas);
-  }
-
-  // ********************************************************************
-  // * Update Audio Element.
-  // ********************************************************************
-  function updateAudio(element, options) {
-    // Adds time to audio url to disable caching.
-    var time = new Date().getTime();
-    var url = options.drupalURL + '/' + options.drupalFileName;
-    // Using hack to support IE9 and below browsers.
-    if (wavCheck) {
-      $(element).find('.media-recorder-audio audio').attr('src', url + '?' + time);
-    } else {
-      var embed = '<embed width="300" height="30" autostart="false" src="' + url + '?' + time + '" />';
-      $(element).parent().find('.media-recorder-audio').html(embed);
-    }
-  }
-
-  // ********************************************************************
-  // * Format Input Field Helper.
-  // ********************************************************************
-  function fieldFormatter(element, options, name) {
-    var language = options.drupalLanguage ? '[' + options.drupalLanguage + ']' : '';
-    var delta = (options.drupalDelta !== null) ? '[' + options.drupalDelta + ']' : '';
-    return options.drupalFieldName + language + delta + '[' + name + ']';
-  }
-
   function millisecondsToTime(milliSeconds) {
     // Format Current Time
     var milliSecondsDate = new Date(milliSeconds);

@@ -208,3 +208,27 @@
   background: #33cc33;
   vertical-align: middle;
 }
+
+div.media-recorder-toggle .form-item {
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+}
+
+div.media-recorder-toggle input {
+  display: none;
+}
+
+div.media-recorder-toggle input:checked + label.option {
+  background: #323232;
+}
+
+div.media-recorder-toggle label.option {
+  background: #555555;
+  border: #ccc;
+  border-radius: 3px 3px 0px 0px;
+  color: #ffffff;
+  margin: 0 5px 0 0;
+  padding: 5px 10px;
+  cursor: pointer;
+}

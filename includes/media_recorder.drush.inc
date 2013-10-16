@@ -72,17 +72,16 @@ function drush_media_recorder_download_libraries() {
 
     // Wami doesn't have a tarball, so we download individually.
     elseif (empty($download_url) && $name == 'wami') {
-      drush_mkdir($library_path);
-      drush_op('chdir', $library_path);
-      drush_shell_exec('wget %s', 'https://wami-recorder.googlecode.com/hg/example/client/Wami.swf');
-      drush_shell_exec('wget %s', 'https://wami-recorder.googlecode.com/hg/example/client/recorder.js');
+      drush_mkdir($name);
+      drush_op('chdir', $name);
+      drush_download_file('https://wami-recorder.googlecode.com/hg/example/client/Wami.swf');
+      drush_download_file('https://wami-recorder.googlecode.com/hg/example/client/recorder.js');
+      drush_op('chdir', '..');
+      drush_copy_dir($name, $library_path);
       drush_log(dt('The @name library has been downloaded to @path', array('@name' => $name, '@path' => $library_path)), 'success');
     }
 
     // Return to base path.
     drush_op('chdir', $base_path);
   }
-
-  // Make sure Modernizr is installed.
-  drush_op('_modernizr_drush_download_dev');
 }
