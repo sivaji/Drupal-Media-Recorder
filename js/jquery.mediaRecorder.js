@@ -224,6 +224,7 @@
       // Generate general recorder markup.
       var element = $(this.element);
       var options = this.options;
+      var wrapperID = $(element).parent().attr('id');
 
       // Build recorder.
       element.recorder = $('<div class="media-recorder" style="width: 300px; height:100px;"></div>');
@@ -241,7 +242,7 @@
         });
 
       // Add Wami related markup.
-      element.wami = $('<div id="wami-' + $(element).attr('id') + '" class="wami"></div>');
+      element.wami = $('<div id="wami-' + wrapperID + '" class="wami"></div>');
       element.recorder.micSettings = $('<div class="media-recorder-mic-settings" title="Adjust microphone settings.">Settings</div>')
         .click(function() {
           Wami.showSecurity("microphone");
@@ -259,7 +260,7 @@
 
       // Initiate Wami.
       Wami.setup({
-        id: 'wami-' + $(element).attr('id'),
+        id: 'wami-' + wrapperID,
         swfUrl: options.swfurl
       });
     },
