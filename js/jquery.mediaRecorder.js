@@ -1,12 +1,12 @@
 /********************************************************************
  * Project: Drupal Media Recorder jQuery Plugin
- * Description: Adds a media recorder to the drupal media module.
+ * Description: Adds a media recorder to the drupal media module
  * Author: Norman Kerr
- * License: GPL.
+ * License: GPL 2.0 (http://www.gnu.org/licenses/gpl-2.0.html)
  *******************************************************************/
 
 (function($, window, document, undefined) {
-
+  
   // ********************************************************************
   // * Global variables.
   // ********************************************************************
@@ -53,7 +53,12 @@
       $(this.element).parent().children('span.file, span.file-size, input.media-recorder-upload, input.media-recorder-upload-button').hide();
       // Set audio player width to recorder width.
       $(this.element).parent().children('div.file-audio').width(options.width);
-      // Initialize webRTC recorder.
+      // Load Recorderjs library and initialize recorder.
+      $.ajax({
+        url: Drupal.settings.basePath + 'sites/all/libraries/Recorderjs/recorder.js',
+        async: false,
+        dataType: "script",
+      });
       this.init();
     }
     // Run flash recorder.
@@ -62,7 +67,12 @@
       $(this.element).parent().children('span.file, span.file-size, input.media-recorder-upload, input.media-recorder-upload-button').hide();
       // Set audio player width to recorder width.
       $(this.element).parent().children('div.file-audio').width(options.width);
-      // Initialize flash recorder.
+      // Load recorder.js library and initialize recorder.
+      $.ajax({
+        url: Drupal.settings.basePath + 'sites/all/libraries/recorder.js/recorder.js',
+        async: false,
+        dataType: "script",
+      });
       this.flashInit();
     }
     // Display flash warning if not newer version.
@@ -227,7 +237,7 @@
       var wrapperID = $(element).parent().attr('id');
 
       // Build recorder.
-      element.recorder = $('<div class="media-recorder" style="width: 300px; height:100px;"></div>');
+      element.recorder = $('<div class="media-recorder"></div>').width(options.width).height(options.height);
       element.recorder.controls = $('<div class="controls"></div>');
       element.recorder.canvas = $('<div class="media-recorder-analyser"></div>');
       element.recorder.status = $('<div class="media-recorder-status">00:00 / ' + millisecondsToTime(options.timeLimit) + '</div>');
@@ -241,27 +251,27 @@
           mediaRecorder.prototype.flashRecord(element, options);
         });
 
-      // Add Wami related markup.
-      element.wami = $('<div id="wami-' + wrapperID + '" class="wami"></div>');
+      // Add flash recorder markup.
+      element.flash = $('<div id="flashRecorder-' + wrapperID + '" class="flashRecorder"></div>');
       element.recorder.micSettings = $('<div class="media-recorder-mic-settings" title="Adjust microphone settings.">Settings</div>')
         .click(function() {
-          Wami.showSecurity("microphone");
+          Recorder.flashInterface().showFlash();
         });
 
       // Add markup.
+      element.append(element.flash);
       element.prepend(element.recorder);
-      element.prepend(element.wami);
-      element.recorder.addClass('WAMI');
+      element.recorder.addClass('flash');
       element.recorder.append(element.recorder.controls);
       element.recorder.controls.append(element.recorder.controls.record);
       element.recorder.append(element.recorder.canvas);
       element.recorder.append(element.recorder.micSettings);
       element.recorder.append(element.recorder.status);
 
-      // Initiate Wami.
-      Wami.setup({
-        id: 'wami-' + wrapperID,
-        swfUrl: options.swfurl
+      // Initialize flash recorder.
+      Recorder.initialize({
+        swfSrc: 'http://d7:8082/sites/all/libraries/recorder.js/recorder.swf',
+        flashContainer: document.getElementById('flashRecorder-' + wrapperID),
       });
     },
 
@@ -269,16 +279,10 @@
     // * Flash Record Callback.
     // ********************************************************************
     flashRecord: function(element, options) {
-      Wami.startRecording(
-        options.recordingPath + '/' + options.fileName,
-        Wami.nameCallback(function() {
-          mediaRecorder.prototype.flashRecordStart(element, options);
-        }),
-        Wami.nameCallback(function() {
-          mediaRecorder.prototype.flashRecordFinish(element, options);
-        }),
-        Wami.nameCallback(onError)
-      );
+      Recorder.record({
+        start: mediaRecorder.prototype.flashRecordStart(element, options),
+        progress: mediaRecorder.prototype.flashRecordDuring(element, options),
+      });
     },
 
     // ********************************************************************
@@ -289,8 +293,7 @@
       .unbind('click').click(function() {
         mediaRecorder.prototype.flashStop(element, options);
       });
-      $(element).find('.media-recorder-analyser').html('');
-      mediaRecorder.prototype.flashRecordDuring(element, options);
+      $(element).find('.media-recorder-analyser').html('<p style="height: ' + options.height / 2 + 'px; line-height: ' + options.height / 2 + 'px">Recording<span>.</span><span>.</span><span>.</span></p>');
     },
 
     // ********************************************************************
@@ -311,28 +314,16 @@
         // Refresh time display with current time.
         $(element).find('.media-recorder-status').html(time + ' / 05:00');
       }, 1000);
-      // Update meter interval.
-      element.recorder.meterInterval = window.setInterval(function() {
-        // Refresh meter bar.
-        var level = Wami.getRecordingLevel();
-        var marginTop = Math.round((100 - level) / 2.5);
-        if (level === 0) { level = 2; }
-        $(element).find('.media-recorder-analyser').append('<div class="meter-bar"><div class="inner record" style="height:' + level + '%; margin-top: ' + marginTop + 'px"></div></div>');
-        var barsNumber = $(element).find('.media-recorder-analyser').children().size();
-        if (barsNumber >= 100) {
-          $(element).find('.media-recorder-analyser').children().first().remove();
-        }
-      }, 50);
     },
 
     // ********************************************************************
     // * Flash Finished Recording Callback.
     // ********************************************************************
-    flashRecordFinish: function(element, options) {
+    flashRecordFinish: function(element, options, file) {
       // Clear all progress intervals.
       clearInterval(element.recorder.progressInterval);
       // Set audio and file input values.
-      $(element).parent().children('input.media-recorder-filepath').val(options.filePath + '/' + options.fileName);
+      $(element).parent().children('input.media-recorder-fid').val(file.fid);
       $(element).parent().children('input.media-recorder-refresh').trigger('mousedown');
     },
 
@@ -341,8 +332,15 @@
     // ********************************************************************
     flashStop: function(element, options) {
       clearInterval(element.recorder.statusInterval);
-      clearInterval(element.recorder.meterInterval);
-      Wami.stopRecording();
+      Recorder.stop();
+      Recorder.upload({
+        url: options.recordingPath + '/' + options.fileName,
+        audioParam: 'mediaRecorder',
+        success: function(response) {
+          var file = JSON.parse(response);
+          mediaRecorder.prototype.flashRecordFinish(element, options, file);
+        },
+      });
       var progressCount = 0;
       var progressIndicator = '';
       element.recorder.progressInterval = setInterval(function() {
@@ -472,7 +470,6 @@
 
     function transferComplete(evt) {
       var file = JSON.parse(req.response);
-      $(element).parent().children('input.media-recorder-filepath').val(options.filePath + '/' + options.fileName);
       $(element).parent().children('input.media-recorder-fid').val(file.fid);
       $(element).parent().children('input.media-recorder-refresh').trigger('mousedown');
     }

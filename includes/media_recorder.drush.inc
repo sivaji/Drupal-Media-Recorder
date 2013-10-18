@@ -28,7 +28,7 @@ function drush_media_recorder_download_libraries() {
   drush_mkdir($base_path . '/sites/all/libraries');
 
   // Check that all libraries exist.
-  $required_libraries = array('swfobject', 'wami', 'Recorderjs');
+  $required_libraries = array('swfobject', 'recorder.js', 'Recorderjs');
   foreach ($required_libraries as $name) {
 
     // Get library info for each library.
@@ -67,17 +67,6 @@ function drush_media_recorder_download_libraries() {
       elseif (is_dir($extract[1])) {
         drush_move_dir($extract[1], $library_path);
       }
-      drush_log(dt('The @name library has been downloaded to @path', array('@name' => $name, '@path' => $library_path)), 'success');
-    }
-
-    // Wami doesn't have a tarball, so we download individually.
-    elseif (empty($download_url) && $name == 'wami') {
-      drush_mkdir($name);
-      drush_op('chdir', $name);
-      drush_download_file('https://wami-recorder.googlecode.com/hg/example/client/Wami.swf');
-      drush_download_file('https://wami-recorder.googlecode.com/hg/example/client/recorder.js');
-      drush_op('chdir', '..');
-      drush_copy_dir($name, $library_path);
       drush_log(dt('The @name library has been downloaded to @path', array('@name' => $name, '@path' => $library_path)), 'success');
     }
 

@@ -8,12 +8,8 @@
   padding: 0;
   background: #323232;
   border-radius: 3px;
-}
-
-.media-recorder-audio {
-  position: absolute;
-  bottom: 0;
-  left: 0;
+  display: inline-block;
+  vertical-align: bottom;
 }
 
 .media-recorder.HTML5 .controls {
@@ -96,7 +92,7 @@
   padding: 2%;
 }
 
-.media-recorder.WAMI .controls {
+.media-recorder.flash .controls {
   position: absolute;
   top: 10%;
   left: 5%;
@@ -111,8 +107,13 @@
   box-shadow: inset 0px 0px 50px #000;
 }
 
+.media-recorder-wrapper .flashRecorder {
+  background: transparent;
+  display: inline-block;
+}
+
 /* Styling applicable to all buttons */
-.media-recorder.WAMI .controls .media-recorder-record {
+.media-recorder.flash .controls .media-recorder-record {
   background-image: url('../images/mic.png');
   background-size: 80%;
   background-repeat: no-repeat;
@@ -127,17 +128,17 @@
 }
 
 /* Styling for when the record button hasn't been pressed. */
-.media-recorder.WAMI .record-off {
+.media-recorder.flash .record-off {
   opacity: 1;
 }
 
 /* Styling for when the record button has been pressed. */
-.media-recorder.WAMI .record-on {
+.media-recorder.flash .record-on {
   background: #552020;
   border-radius: 50%;
 }
 
-.media-recorder.WAMI .media-recorder-analyser {
+.media-recorder.flash .media-recorder-analyser {
   position: absolute;
   top: 10%;
   left: 35%;
@@ -149,14 +150,14 @@
   border-radius: 5px 5px 5px 0;
 }
 
-.media-recorder.WAMI .volume {
+.media-recorder.flash .volume {
   position: absolute;
   top: 10%;
   left: 4%;
   height: 80%;
 }
 
-.media-recorder.WAMI .media-recorder-status {
+.media-recorder.flash .media-recorder-status {
   position: absolute;
   bottom: 10%;
   left: 35%;
@@ -172,7 +173,7 @@
   padding: 2%;
 }
 
-.media-recorder.WAMI .media-recorder-mic-settings {
+.media-recorder.flash .media-recorder-mic-settings {
   position: absolute;
   top: 10%;
   right: 5%;
@@ -190,7 +191,7 @@
 }
 
 /* A single meter bar - animation is created by subtracting margin on all bars every 50ms  */
-.media-recorder.WAMI .meter-bar {
+.media-recorder.flash .meter-bar {
   width: 1%;
   height: 100%;
   float: left;
@@ -198,15 +199,50 @@
 }
 
 /* Recording styles for a single meter bar. */
-.media-recorder.WAMI .meter-bar .inner.record {
+.media-recorder.flash .meter-bar .inner.record {
   background: #ff0000;
   vertical-align: middle;
 }
 
 /* Playing styles for a single meter bar. */
-.media-recorder.WAMI .meter-bar .inner.play {
+.media-recorder.flash .meter-bar .inner.play {
   background: #33cc33;
   vertical-align: middle;
+}
+
+@-webkit-keyframes opacity {
+	0% { opacity: 1; }
+	100% { opacity: 0; }
+}
+@-moz-keyframes opacity {
+	0% { opacity: 1; }
+	100% { opacity: 0; }
+}
+
+.media-recorder.flash .media-recorder-analyser p {
+	text-align: center;
+	color: #fff;
+	vertical-align: middle;
+}
+
+.media-recorder.flash .media-recorder-analyser p  span {
+	-webkit-animation-name: opacity;
+	-webkit-animation-duration: 1s;
+	-webkit-animation-iteration-count: infinite;
+	
+	-moz-animation-name: opacity;
+	-moz-animation-duration: 1s;
+	-moz-animation-iteration-count: infinite;
+}
+
+.media-recorder.flash .media-recorder-analyser p  span:nth-child(2) {
+	-webkit-animation-delay: 100ms;
+	-moz-animation-delay: 100ms;
+}
+
+.media-recorder.flash .media-recorder-analyser p  span:nth-child(3) {
+	-webkit-animation-delay: 300ms;
+	-moz-animation-delay: 300ms;
 }
 
 div.media-recorder-toggle .form-item {
