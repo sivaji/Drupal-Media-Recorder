@@ -270,7 +270,7 @@
 
       // Initialize flash recorder.
       Recorder.initialize({
-        swfSrc: 'http://d7:8082/sites/all/libraries/recorder.js/recorder.swf',
+        swfSrc: Drupal.settings.basePath + 'sites/all/libraries/recorder.js/recorder.swf',
         flashContainer: document.getElementById('flashRecorder-' + wrapperID),
       });
     },
