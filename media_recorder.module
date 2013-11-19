@@ -5,39 +5,6 @@
  */
 
 /**
- * Implements hook_requirements().
- */
-function media_recorder_requirements($phase) {
-  $requirements = array();
-
-  // Check requirements during the runtime phase
-  if ($phase == 'runtime') {
-    // Check that all libraries exist.
-    $required_libraries = array('swfobject', 'recorder.js', 'Recorderjs');
-    foreach ($required_libraries as $name) {
-      $library = libraries_detect($name);
-      if ($library['installed']) {
-        $requirements['media_recorder_' . $name] = array(
-          'title' => t('Media Recorder: %library', array('%library' => $library['name'])),
-          'value' => t('Installed %version', array('%version' => $library['version'])),
-          'severity' => REQUIREMENT_OK,
-        );
-      }
-      else {
-        $requirements['media_recorder_' . $name] = array(
-          'title' => t('Media Recorder: %library', array('%library' => $library['name'])),
-          'value' => t('Not installed'),
-          'description' => $library['error message'],
-          'severity' => REQUIREMENT_ERROR,
-        );
-      }
-    }
-  }
-
-  return $requirements;
-}
-
-/**
  * Implements hook_libraries_info().
  */
 function media_recorder_libraries_info() {
@@ -53,11 +20,13 @@ function media_recorder_libraries_info() {
       'pattern' => '@v([0-9a-zA-Z\.-]+)@',
     ),
     'files' => array(
-      'js' => array('swfobject.js' => array(
-        'type' => 'file',
-        'scope' => 'header',
-        'group' => JS_LIBRARY,
-      )),
+      'js' => array(
+        'swfobject.js' => array(
+          'type' => 'file',
+          'scope' => 'header',
+          'group' => JS_LIBRARY,
+        ),
+      ),
     ),
   );
   $libraries['recorder.js'] = array(
@@ -70,7 +39,7 @@ function media_recorder_libraries_info() {
       'pattern' => '@version: ([0-9a-zA-Z\.-]+),@',
     ),
     'dependencies' => array(
-      'swfobject (>=2.2)'
+      'swfobject (>=2.2)',
     ),
     'files' => array(
       'js' => array('recorder.js'),
@@ -217,7 +186,7 @@ function media_recorder_add($form, &$form_state) {
   $element['#title'] = t('Media Recorder');
   $element['#description'] = '';
   $element['#required'] = TRUE;
-  $element['#upload_location'] =  'public://' . variable_get('media_recorder_upload_directory', '');
+  $element['#upload_location'] = 'public://' . variable_get('media_recorder_upload_directory', '');
   $element['#upload_validators']['file_validate_extensions'][] = 'wav';
 
   // Add title field.
@@ -249,7 +218,7 @@ function media_recorder_add($form, &$form_state) {
 
 /**
  * Submit handler for media_recorder_add form.
- * @see media_recorder_add().
+ * @see media_recorder_add()
  */
 function media_recorder_add_submit($form, &$form_state) {
   $fid = $form_state['values']['field_media_recorder'][LANGUAGE_NONE][0]['fid'];
@@ -316,7 +285,7 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
 
 /**
  * An element #process callback.
- * @see media_recorder_field_widget_form().
+ * @see media_recorder_field_widget_form()
  */
 function media_recorder_field_widget_form_process($element, &$form_state, $form) {
 
@@ -401,7 +370,7 @@ function media_recorder_field_widget_form_process($element, &$form_state, $form)
     // Add youtube recorder markup.
     $element['youtube_upload']['#markup'] = '<div id="youtube-upload-widget"><div id="youtube-player-wrapper"><div id="youtube-player"></div></div><div id="youtube-upload-wrapper"><div id="youtube-upload"></div></div></div>';
 
-    // Add validation handler while overwritting normal file validation handlers.
+    // Add validation handler while overwriting normal file validation handlers.
     $element['#element_validate'] = array('media_recorder_field_widget_form_process_youtube_validate');
 
     // Remove file element upload validators.
@@ -449,7 +418,7 @@ function media_recorder_field_widget_form_process($element, &$form_state, $form)
 
 /**
  * Ajax callback for form element rebuild.
- * @see media_recorder_field_widget_form_process().
+ * @see media_recorder_field_widget_form_process()
  */
 function media_recorder_field_widget_form_process_ajax_refresh($form, &$form_state) {
 
@@ -531,8 +500,24 @@ function media_recorder_field_widget_form_process_record_validate(&$element, &$f
         $file = file_move($file, $upload_location);
 
         // Set file field input & values.
-        drupal_array_set_nested_value($form_state['input'], $element['#parents'], array('fid' => $file->fid, 'display' => TRUE, 'toggle' => 'record'));
-        drupal_array_set_nested_value($form_state['values'], $element['#parents'], array('fid' => $file->fid, 'display' => TRUE, 'toggle' => 'record'));
+        drupal_array_set_nested_value(
+          $form_state['input'],
+          $element['#parents'],
+          array(
+            'fid' => $file->fid,
+            'display' => TRUE,
+            'toggle' => 'record',
+          ),
+        );
+        drupal_array_set_nested_value(
+          $form_state['values'],
+          $element['#parents'],
+          array(
+            'fid' => $file->fid,
+            'display' => TRUE,
+            'toggle' => 'record',
+          ),
+        );
       }
     }
 
@@ -607,8 +592,24 @@ function media_recorder_field_widget_form_process_youtube_validate($element, &$f
       $file = file_save($file);
 
       // Set file field input & values.
-      drupal_array_set_nested_value($form_state['input'], $element['#parents'], array('fid' => $file->fid, 'display' => TRUE, 'toggle' => 'youtube'));
-      drupal_array_set_nested_value($form_state['values'], $element['#parents'], array('fid' => $file->fid, 'display' => TRUE, 'toggle' => 'youtube'));
+      drupal_array_set_nested_value(
+        $form_state['input'],
+        $element['#parents'],
+        array(
+          'fid' => $file->fid,
+          'display' => TRUE,
+          'toggle' => 'youtube',
+        ),
+      );
+      drupal_array_set_nested_value(
+        $form_state['values'],
+        $element['#parents'],
+        array(
+          'fid' => $file->fid,
+          'display' => TRUE,
+          'toggle' => 'youtube',
+        ),
+      );
     }
   }
 }

@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_drush_command().
+ * Implements hook_drush_command().
  */
 function media_recorder_drush_command() {
   $items['media-recorder-download-libraries'] = array(
@@ -19,7 +19,7 @@ function media_recorder_drush_command() {
 
 /**
  * Drush command callback.
- * @see media_recorder_drush_command().
+ * @see media_recorder_drush_command()
  */
 function drush_media_recorder_download_libraries() {
   $base_path = drush_get_context('DRUSH_DRUPAL_CORE');
@@ -52,13 +52,13 @@ function drush_media_recorder_download_libraries() {
 
     // Download and unzip into libraries.
     if (!empty($download_url)) {
-      // Download the zip archive
+      // Download the zip archive.
       $filename = drush_download_file($download_url);
 
       if (!file_exists($filename)) {
         return drush_set_error(dt('Unable to download @url', array('@url' => $download_url)));
       }
-      // Decompress the zip archive
+      // Decompress the zip archive.
       $extract = drush_tarball_extract($filename, FALSE, TRUE);
       // Move directory.
       if (is_dir($extract[0])) {
