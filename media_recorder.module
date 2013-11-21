@@ -507,7 +507,7 @@ function media_recorder_field_widget_form_process_record_validate(&$element, &$f
             'fid' => $file->fid,
             'display' => TRUE,
             'toggle' => 'record',
-          ),
+          )
         );
         drupal_array_set_nested_value(
           $form_state['values'],
@@ -516,7 +516,7 @@ function media_recorder_field_widget_form_process_record_validate(&$element, &$f
             'fid' => $file->fid,
             'display' => TRUE,
             'toggle' => 'record',
-          ),
+          )
         );
       }
     }
@@ -599,7 +599,7 @@ function media_recorder_field_widget_form_process_youtube_validate($element, &$f
           'fid' => $file->fid,
           'display' => TRUE,
           'toggle' => 'youtube',
-        ),
+        )
       );
       drupal_array_set_nested_value(
         $form_state['values'],
@@ -608,7 +608,7 @@ function media_recorder_field_widget_form_process_youtube_validate($element, &$f
           'fid' => $file->fid,
           'display' => TRUE,
           'toggle' => 'youtube',
-        ),
+        )
       );
     }
   }
