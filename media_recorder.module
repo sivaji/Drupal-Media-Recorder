@@ -170,7 +170,6 @@ function media_recorder_record_stream_start() {
   catch (Exception $e) {
     header('HTTP/1.0 419 Custom Error');
     echo drupal_json_output($e->getMessage());
-    exit;
   }
 
   // Get file format.
@@ -183,7 +182,6 @@ function media_recorder_record_stream_start() {
   catch (Exception $e) {
     header('HTTP/1.0 419 Custom Error');
     echo drupal_json_output($e->getMessage());
-    exit;
   }
 }
 
@@ -212,12 +210,10 @@ function media_recorder_record_stream_record() {
     catch (Exception $e) {
       header('HTTP/1.0 419 Custom Error');
       echo drupal_json_output($e->getMessage());
-      echo drupal_json_output($url);
-      exit;
     }
 
     try {
-      $fp = fopen($_SESSION['media_recorder']['tempnam'], 'a');
+      $fp = fopen($_SESSION['media_recorder']['tempnam'] . $_REQUEST['mediaRecorderCount'], 'a');
       if (!$fp) {
         throw new Exception("Unable to open temporary file. Please check that your file permissions are set correctly.");
       }
@@ -225,7 +221,6 @@ function media_recorder_record_stream_record() {
     catch (Exception $e) {
       header('HTTP/1.0 419 Custom Error');
       echo drupal_json_output($e->getMessage());
-      exit;
     }
 
     if ($data && $fp) {
@@ -236,18 +231,24 @@ function media_recorder_record_stream_record() {
       catch (Exception $e) {
         header('HTTP/1.0 419 Custom Error');
         echo drupal_json_output($e->getMessage());
-        exit;
       }
     }
 
-    echo drupal_json_output($_FILES['mediaRecorder']);
+    $_SESSION['media_recorder']['files'][$_REQUEST['mediaRecorderCount']] = $_SESSION['media_recorder']['tempnam'] . $_REQUEST['mediaRecorderCount'];
+
+    $response = array(
+      'count' => $_REQUEST['mediaRecorderCount'],
+      'blob' => $_FILES['mediaRecorder'],
+      'tempnam' => $_SESSION['media_recorder']['tempnam'] . $_REQUEST['mediaRecorderCount'],
+    );
+
+    echo drupal_json_output($response);
   }
 
   else {
     header('HTTP/1.0 419 Custom Error');
     echo drupal_json_output('Temporary file not found.');
     echo drupal_json_output($url);
-    exit;
   }
 }
 
@@ -255,6 +256,59 @@ function media_recorder_record_stream_record() {
  * Menu callback for recording a media file.
  */
 function media_recorder_record_stream_finish() {
+  $files = (isset($_REQUEST['files']) && count($_REQUEST['files'])) ? $_REQUEST['files'] : NULL;
+
+  if (!$files) {
+    header('HTTP/1.0 419 Custom Error');
+    echo drupal_json_output("No files received.");
+  }
+
+  usort($files, function($a, $b) { return($a['count'] > $b['count']); });
+
+  try {
+    $fp = fopen($_SESSION['media_recorder']['tempnam'], 'a');
+    if (!$fp) {
+      throw new Exception("Unable to open temporary file. Please check that your file permissions are set correctly.");
+    }
+  }
+  catch (Exception $e) {
+    header('HTTP/1.0 419 Custom Error');
+    echo drupal_json_output($e->getMessage());
+  }
+
+  foreach ($files as $file_info) {
+
+    // Check that file exists.
+    if (file_exists($file_info['tempnam'])) {
+
+      try {
+        $data = file_get_contents($file_info['tempnam']);
+        if (!$data) {
+          throw new Exception("Streaming data file is empty.");
+        }
+      }
+      catch (Exception $e) {
+        header('HTTP/1.0 419 Custom Error');
+        echo drupal_json_output($e->getMessage());
+      }
+
+      try {
+        fwrite($fp, $data);
+      }
+      catch (Exception $e) {
+        header('HTTP/1.0 419 Custom Error');
+        echo drupal_json_output($e->getMessage());
+      }
+    }
+  }
+
+  try {
+    fclose($fp);
+  }
+  catch (Exception $e) {
+    header('HTTP/1.0 419 Custom Error');
+    echo drupal_json_output($e->getMessage());
+  }
 
   // Check that file exists.
   if (file_exists($_SESSION['media_recorder']['tempnam'])) {
@@ -280,7 +334,6 @@ function media_recorder_record_stream_finish() {
   else {
     header('HTTP/1.0 419 Custom Error');
     echo drupal_json_output(t('File is empty.'));
-    exit;
   }
 }
 
