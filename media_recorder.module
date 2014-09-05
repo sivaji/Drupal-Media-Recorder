@@ -263,7 +263,10 @@ function media_recorder_record_stream_finish() {
     echo drupal_json_output("No files received.");
   }
 
-  usort($files, function($a, $b) { return($a['count'] > $b['count']); });
+  usort($files, 'media_recorder_sortfiles');
+  function media_recorder_sortfiles($a, $b) {
+    return($a['count'] > $b['count']);
+  }
 
   try {
     $fp = fopen($_SESSION['media_recorder']['tempnam'], 'a');
