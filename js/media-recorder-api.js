@@ -113,38 +113,42 @@
           if (Drupal.mediaRecorder.stream) {
             stopStream();
           }
-          navigator.getUserMedia(constraints, function(stream) {
-            Drupal.mediaRecorder.stream = stream;
-            Drupal.mediaRecorder.format = constraints.video ? 'webm' : 'ogg';
-            Drupal.mediaRecorder.mimetype = constraints.video ? 'video/webm' : 'audio/ogg';
-            Drupal.mediaRecorder.audioContext = new AudioContext();
-            Drupal.mediaRecorder.analyser = Drupal.mediaRecorder.audioContext.createAnalyser();
-            Drupal.mediaRecorder.microphone = Drupal.mediaRecorder.audioContext.createMediaStreamSource(stream);
-            Drupal.mediaRecorder.analyser.smoothingTimeConstant = 0.75;
-            Drupal.mediaRecorder.analyser.fftSize = 512;
+          navigator.getUserMedia(
+            constraints,
+            function(stream) {
+              Drupal.mediaRecorder.stream = stream;
+              Drupal.mediaRecorder.recorder = new MediaRecorder(Drupal.mediaRecorder.stream);
+              Drupal.mediaRecorder.format = constraints.video ? 'webm' : 'ogg';
+              Drupal.mediaRecorder.mimetype = constraints.video ? 'video/webm' : 'audio/ogg';
+              Drupal.mediaRecorder.audioContext = new AudioContext();
+              Drupal.mediaRecorder.analyser = Drupal.mediaRecorder.audioContext.createAnalyser();
+              Drupal.mediaRecorder.microphone = Drupal.mediaRecorder.audioContext.createMediaStreamSource(stream);
+              Drupal.mediaRecorder.analyser.smoothingTimeConstant = 0.75;
+              Drupal.mediaRecorder.analyser.fftSize = 512;
 
-            $previewWrapper.show();
-            $controlsWrapper.show();
-            $stopButton.hide();
+              $previewWrapper.show();
+              $controlsWrapper.show();
+              $stopButton.hide();
 
-            $(Drupal.mediaRecorder).trigger('status', 'Press record to start recording.');
+              $(Drupal.mediaRecorder).trigger('status', 'Press record to start recording.');
 
-            if (constraints.video) {
-              var video = $('<video muted autoplay src="' + URL.createObjectURL(Drupal.mediaRecorder.stream) + '"></video>');
-              var volumeMeter = $(createVolumeMeter());
-              video.appendTo($previewWrapper).height($previewWrapper.height());
-              volumeMeter.appendTo($previewWrapper).height($previewWrapper.height());
-              video[0].play();
-              $previewWrapper.addClass('video').removeClass('audio');
-            } else {
-              var audioVisualizer = $(createAudioVisualizer());
-              audioVisualizer.appendTo($previewWrapper).height($previewWrapper.height());
-              $previewWrapper.addClass('audio').removeClass('video');
+              if (constraints.video) {
+                var video = $('<video muted autoplay src="' + URL.createObjectURL(Drupal.mediaRecorder.stream) + '"></video>');
+                var volumeMeter = $(createVolumeMeter());
+                video.appendTo($previewWrapper).height($previewWrapper.height());
+                volumeMeter.appendTo($previewWrapper).height($previewWrapper.height());
+                video[0].play();
+                $previewWrapper.addClass('video').removeClass('audio');
+              } else {
+                var audioVisualizer = $(createAudioVisualizer());
+                audioVisualizer.appendTo($previewWrapper).height($previewWrapper.height());
+                $previewWrapper.addClass('audio').removeClass('video');
+              }
+            },
+            function(error) {
+              alert("There was a problem accessing your camera or mic. Please click 'Allow' at the top of the page.");
             }
-          },
-          function(error) {
-            alert("There was a problem accessing your camera or mic. Please click 'Allow' at the top of the page.");
-          });
+          );
         }
 
         /**
@@ -254,9 +258,6 @@
         Drupal.mediaRecorder.blobs = [];
         Drupal.mediaRecorder.blobCount = 0;
 
-        // Create a new MediaRecorder.
-        Drupal.mediaRecorder.recorder = new MediaRecorder(Drupal.mediaRecorder.stream);
-
         // Triggered on data available.
         Drupal.mediaRecorder.recorder.ondataavailable = function (e) {
           var blob = new Blob([e.data], {
@@ -273,11 +274,13 @@
             type: 'POST',
             data: {
               files: Drupal.mediaRecorder.blobs
+            },
+            success: function (data) {
+              $(Drupal.mediaRecorder).trigger('recordStop', data);
+            },
+            error: function (data) {
+              alert('There was an issue saving your recording, please try again.');
             }
-          }).success(function (data) {
-            $(Drupal.mediaRecorder).trigger('recordStop', data);
-          }).error(function (data) {
-            alert('There was an issue saving your recording, please try again.');
           });
         };
 
@@ -288,11 +291,11 @@
           data: {
             format: Drupal.mediaRecorder.format
           },
-          async: false
-        })
-        .success(function (data) {
-          Drupal.mediaRecorder.recorder.start(1000);
-          $(Drupal.mediaRecorder).trigger('recordStart');
+          async: false,
+          success: function (data) {
+            Drupal.mediaRecorder.recorder.start(1000);
+            $(Drupal.mediaRecorder).trigger('recordStart');
+          }
         });
       };
 
@@ -300,31 +303,32 @@
        * Stop recording and trigger stopped event.
        */
       Drupal.mediaRecorder.stop = function () {
-        Drupal.mediaRecorder.recorder.stop();
+        setTimeout(Drupal.mediaRecorder.recorder.stop(), 2000);
       };
 
       /**
        * Send a blob as form data to the server.
+       * Note: We use XMLHttpRequest since jQuery 1.4 $.ajax is buggy with blob/data combo requests.
        */
       Drupal.mediaRecorder.sendBlob = function (blob, count) {
+
+        // Create formData object.
         var formData = new FormData();
         formData.append("mediaRecorder", blob);
         formData.append("mediaRecorderCount", count);
 
-        $.ajax({
-          url: Drupal.mediaRecorder.origin + Drupal.settings.basePath + 'media_recorder/record/stream/record',
-          type: 'POST',
-          data: formData,
-          processData: false,
-          contentType: false
-        })
-        .success(function (data) {
-          Drupal.mediaRecorder.blobs.push(data);
-        })
-        .error(function (data) {
-          console.log("FAILED");
-        });
+        // Create the XMLHttpRequest object.
+        var req = new XMLHttpRequest();
+        req.open('POST', Drupal.mediaRecorder.origin + Drupal.settings.basePath + 'media_recorder/record/stream/record', true);
 
+        // Add a success handler.
+        req.addEventListener("load", function (e) {
+          var data = JSON.parse(req.response);
+          Drupal.mediaRecorder.blobs.push(data);
+        }, false);
+
+        // Send form data.
+        req.send(formData);
       };
     }
   };
