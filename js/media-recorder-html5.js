@@ -112,11 +112,12 @@
         // Initial state.
         $previewWrapper.hide();
         $controlsWrapper.hide();
-        $(Drupal.mediaRecorder).trigger('status', 'Select audio or video to begin recording.');
+        //$(Drupal.mediaRecorder).trigger('status', 'Select audio or video to begin recording.');
 
-        // Disable video.
-        $videoConstraintButton[0].disabled = true;
-        $videoConstraintButton[0].title = 'Video is only enabled on Firefox nightly builds';
+        // Disable video for now.
+        $videoConstraintButton.hide();
+        $audioConstraintButton.text('Start');
+        $(Drupal.mediaRecorder).trigger('status', 'Click \'Start\' to enable your microphone.');
 
         /**
          * Start user media stream.
