@@ -86,15 +86,19 @@
         });
 
         // Listen for the stop event.
-        $(Drupal.mediaRecorder).bind('recordStop', function (event, data) {
-          $recordButton.show();
+        $(Drupal.mediaRecorder).bind('recordStop', function (event) {
+          $recordButton.show()[0].disabled = true;
           $stopButton.hide();
           clearInterval(Drupal.mediaRecorder.statusInterval);
-          $(Drupal.mediaRecorder).trigger('status', 'Press record to start recording.');
+          $(Drupal.mediaRecorder).trigger('status', 'Processing file...');
+        });
 
-          // Append file object data.
+        // Append file object data.
+        $(Drupal.mediaRecorder).bind('refreshData', function (event, data) {
           $element.find('.media-recorder-fid').val(data.fid);
           $element.find('.media-recorder-refresh').trigger('mousedown');
+          $recordButton[0].disabled = false;
+          $(Drupal.mediaRecorder).trigger('status', 'Press record to start recording.');
         });
 
         $(Drupal.mediaRecorder).bind('status', function (event, msg) {
@@ -133,7 +137,8 @@
               $(Drupal.mediaRecorder).trigger('status', 'Press record to start recording.');
 
               if (constraints.video) {
-                var video = $('<video muted autoplay src="' + URL.createObjectURL(Drupal.mediaRecorder.stream) + '"></video>');
+                var video = $('<video autoplay muted src="' + URL.createObjectURL(Drupal.mediaRecorder.stream) + '"></video>');
+                video[0].muted = 'muted'; // Firefox isn't muting as expected.
                 var volumeMeter = $(createVolumeMeter());
                 video.appendTo($previewWrapper).height($previewWrapper.height());
                 volumeMeter.appendTo($previewWrapper).height($previewWrapper.height());
@@ -260,27 +265,32 @@
 
         // Triggered on data available.
         Drupal.mediaRecorder.recorder.ondataavailable = function (e) {
-          var blob = new Blob([e.data], {
-            type: e.data.type || Drupal.mediaRecorder.mimetype
-          });
-          Drupal.mediaRecorder.blobCount++;
-          Drupal.mediaRecorder.sendBlob(blob, Drupal.mediaRecorder.blobCount);
+          var blob = new Blob([e.data], { type: e.data.type || Drupal.mediaRecorder.mimetype });
+          if (blob.size > 0) {
+            Drupal.mediaRecorder.blobCount++;
+            Drupal.mediaRecorder.sendBlob(blob, Drupal.mediaRecorder.blobCount);
+          }
         };
 
         // Triggered when recording is stopped.
         Drupal.mediaRecorder.recorder.onstop = function (e) {
-          $.ajax({
-            url: Drupal.mediaRecorder.origin + Drupal.settings.basePath + 'media_recorder/record/stream/finish',
-            type: 'POST',
-            data: {
-              files: Drupal.mediaRecorder.blobs
-            },
-            success: function (data) {
-              $(Drupal.mediaRecorder).trigger('recordStop', data);
-            },
-            error: function (data) {
-              alert('There was an issue saving your recording, please try again.');
-            }
+          $(document).ajaxStop(function () {
+            $(this).unbind("ajaxStop");
+              $.ajax({
+              url: Drupal.mediaRecorder.origin + Drupal.settings.basePath + 'media_recorder/record/stream/finish',
+              type: 'POST',
+              async: true,
+              data: {
+                count: Drupal.mediaRecorder.blobs.length,
+                files: Drupal.mediaRecorder.blobs
+              },
+              success: function (data) {
+                $(Drupal.mediaRecorder).trigger('refreshData', data);
+              },
+              error: function (data) {
+                alert('There was an issue saving your recording, please try again.');
+              }
+            });
           });
         };
 
@@ -303,7 +313,8 @@
        * Stop recording and trigger stopped event.
        */
       Drupal.mediaRecorder.stop = function () {
-        setTimeout(Drupal.mediaRecorder.recorder.stop(), 2000);
+        Drupal.mediaRecorder.recorder.stop();
+        $(Drupal.mediaRecorder).trigger('recordStop');
       };
 
       /**
@@ -314,22 +325,23 @@
 
         // Create formData object.
         var formData = new FormData();
-        formData.append("mediaRecorder", blob);
-        formData.append("mediaRecorderCount", count);
+        formData.append("blob", blob);
+        formData.append("count", count);
 
-        // Create the XMLHttpRequest object.
-        var req = new XMLHttpRequest();
-        req.open('POST', Drupal.mediaRecorder.origin + Drupal.settings.basePath + 'media_recorder/record/stream/record', true);
-
-        // Add a success handler.
-        req.addEventListener("load", function (e) {
-          var data = JSON.parse(req.response);
-          Drupal.mediaRecorder.blobs.push(data);
-        }, false);
-
-        // Send form data.
-        req.send(formData);
-      };
+        // Return ajax promise.
+        $.ajax({
+          url: Drupal.mediaRecorder.origin + Drupal.settings.basePath + 'media_recorder/record/stream/record',
+          type: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function (data) {
+            Drupal.mediaRecorder.blobs.push(data);
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+          }
+        });
+      }
     }
   };
 })(jQuery);

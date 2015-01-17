@@ -196,7 +196,8 @@ function media_recorder_record_stream_record() {
   }
 
   // Get file blob url.
-  $url = isset($_FILES['mediaRecorder']['tmp_name']) ? $_FILES['mediaRecorder']['tmp_name'] : '';
+  $url = isset($_FILES['blob']['tmp_name']) ? $_FILES['blob']['tmp_name'] : '';
+  $tempnam = $_SESSION['media_recorder']['tempnam'] . $_REQUEST['count'];
 
   // Append streaming data to temporary file while recording is not finished.
   if (!empty($url)) {
@@ -213,7 +214,7 @@ function media_recorder_record_stream_record() {
     }
 
     try {
-      $fp = fopen($_SESSION['media_recorder']['tempnam'] . $_REQUEST['mediaRecorderCount'], 'a');
+      $fp = fopen($tempnam, 'a');
       if (!$fp) {
         throw new Exception("Unable to open temporary file. Please check that your file permissions are set correctly.");
       }
@@ -234,12 +235,10 @@ function media_recorder_record_stream_record() {
       }
     }
 
-    $_SESSION['media_recorder']['files'][$_REQUEST['mediaRecorderCount']] = $_SESSION['media_recorder']['tempnam'] . $_REQUEST['mediaRecorderCount'];
-
     $response = array(
-      'count' => $_REQUEST['mediaRecorderCount'],
-      'blob' => $_FILES['mediaRecorder'],
-      'tempnam' => $_SESSION['media_recorder']['tempnam'] . $_REQUEST['mediaRecorderCount'],
+      'count' => $_REQUEST['count'],
+      'blob' => $_FILES['blob'],
+      'tempnam' => $tempnam,
     );
 
     echo drupal_json_output($response);
@@ -263,10 +262,10 @@ function media_recorder_record_stream_finish() {
     echo drupal_json_output("No files received.");
   }
 
-  usort($files, 'media_recorder_sortfiles');
   function media_recorder_sortfiles($a, $b) {
     return($a['count'] > $b['count']);
   }
+  usort($files, 'media_recorder_sortfiles');
 
   try {
     $fp = fopen($_SESSION['media_recorder']['tempnam'], 'a');
@@ -297,6 +296,14 @@ function media_recorder_record_stream_finish() {
 
       try {
         fwrite($fp, $data);
+      }
+      catch (Exception $e) {
+        header('HTTP/1.0 419 Custom Error');
+        echo drupal_json_output($e->getMessage());
+      }
+
+      try {
+        unlink($file_info['tempnam']);
       }
       catch (Exception $e) {
         header('HTTP/1.0 419 Custom Error');
