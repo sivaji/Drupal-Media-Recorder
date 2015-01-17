@@ -19,6 +19,15 @@ function media_recorder_admin_form($form, $form_state) {
     }
   }
 
+  $form['media_recorder_time_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Time Limit'),
+    '#description' => t('Time limit in seconds. Defaults to 300 seconds (5 minutes).'),
+    '#default_value' => variable_get('media_recorder_time_limit', 300),
+    '#element_validate' => array('element_validate_integer_positive'),
+    '#required' => TRUE,
+  );
+
   // Recorder upload directory.
   $form['media_recorder_upload_directory'] = array(
     '#type' => 'textfield',

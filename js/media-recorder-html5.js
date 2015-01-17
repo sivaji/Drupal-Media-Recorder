@@ -59,30 +59,35 @@
 
         // Listen for the record event.
         $(Drupal.mediaRecorder).bind('recordStart', function (event, data) {
+          var currentSeconds = 0;
+          var timeLimit = millisecondsToTime(new Date(parseInt(Drupal.mediaRecorder.settings.time_limit, 10) * 1000));
+
           $recordButton.hide();
           $stopButton.show();
+          $(Drupal.mediaRecorder).trigger('status', 'Recording 00:00 (Time Limit: ' + timeLimit + ')');
 
-          $(Drupal.mediaRecorder).trigger('status', 'Recording 00:00');
+          function millisecondsToTime(milliSeconds) {
+            var milliSecondsDate = new Date(milliSeconds);
+            var mm = milliSecondsDate.getMinutes();
+            var ss = milliSecondsDate.getSeconds();
+            if (mm < 10) {
+              mm = "0" + mm;
+            }
+            if (ss < 10) {
+              ss = "0" + ss;
+            }
+            return mm + ':' + ss;
+          }
 
-          var currentSeconds = 0;
           Drupal.mediaRecorder.statusInterval = setInterval(function () {
             currentSeconds = currentSeconds + 1;
             var currentMilliSeconds = new Date(currentSeconds * 1000);
             var time = millisecondsToTime(currentMilliSeconds);
-            function millisecondsToTime(milliSeconds) {
-              var milliSecondsDate = new Date(milliSeconds);
-              var mm = milliSecondsDate.getMinutes();
-              var ss = milliSecondsDate.getSeconds();
-              if (mm < 10) {
-                mm = "0" + mm;
-              }
-              if (ss < 10) {
-                ss = "0" + ss;
-              }
-              return mm + ':' + ss;
-            }
-            $(Drupal.mediaRecorder).trigger('status', 'Recording ' + time);
+            $(Drupal.mediaRecorder).trigger('status', 'Recording ' + time + ' (Time Limit: ' + timeLimit + ')');
 
+            if (currentSeconds >= Drupal.mediaRecorder.settings.time_limit) {
+              Drupal.mediaRecorder.stop();
+            }
           }, 1000);
         });
 

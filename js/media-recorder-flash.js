@@ -52,12 +52,10 @@
         $(Drupal.mediaRecorder).bind('recordStart', function (event, data) {
           $recordButton.hide();
           $stopButton.show();
-          $statusWrapper.html('Recording 00:00');
         });
 
         // Listen for the progress event.
         $(Drupal.mediaRecorder).bind('progress', function (event, data) {
-          var time = millisecondsToTime(data);
           function millisecondsToTime(milliSeconds) {
             // Format Current Time
             var milliSecondsDate = new Date(milliSeconds);
@@ -71,7 +69,14 @@
             }
             return mm + ':' + ss;
           }
-          $statusWrapper.html('Recording ' + time);
+          var time = millisecondsToTime(data);
+          var timeLimit = millisecondsToTime(new Date(parseInt(Drupal.mediaRecorder.settings.time_limit, 10) * 1000));
+
+          $statusWrapper.html('Recording ' + time + ' (Time Limit: ' + timeLimit + ')');
+
+          if (data / 1000 >= Drupal.mediaRecorder.settings.time_limit) {
+            Drupal.mediaRecorder.stop();
+          }
         });
 
         // Listen for the stop event.

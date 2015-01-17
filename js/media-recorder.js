@@ -9,6 +9,7 @@
 
   // Add mediaRecorder object to Drupal.
   Drupal.mediaRecorder = Drupal.mediaRecorder || {};
+  Drupal.mediaRecorder.settings = Drupal.settings.mediaRecorder.settings;
 
   // Normalize features.
   navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;

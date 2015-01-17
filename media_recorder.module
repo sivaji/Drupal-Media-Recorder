@@ -478,6 +478,7 @@ function media_recorder_add($form, &$form_state) {
     'widget' => array(
       'settings' => array(
         'progress_indicator' => 'throbber',
+        'time_limit' => variable_get('media_recorder_time_limit', 300),
       ),
     ),
   );
@@ -564,9 +565,20 @@ function media_recorder_field_widget_info() {
  * Implements hook_field_widget_settings_form().
  */
 function media_recorder_field_widget_settings_form($field, $instance) {
+  $widget = $instance['widget'];
+  $settings = $widget['settings'];
 
   // Get default file widget settings form.
   $form = file_field_widget_settings_form($field, $instance);
+
+  $form['time_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Time Limit'),
+    '#description' => t('Time limit in seconds. Defaults to 300 seconds (5 minutes).'),
+    '#default_value' => isset($settings['time_limit']) ? $settings['time_limit'] : 300,
+    '#element_validate' => array('element_validate_integer_positive'),
+    '#required' => TRUE,
+  );
 
   return $form;
 }
@@ -582,6 +594,7 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
   // Alter process callbacks.
   foreach (element_children($elements) as $delta) {
     $elements[$delta]['#process'][] = 'media_recorder_field_widget_form_process';
+    $elements[$delta]['#settings'] = $instance['widget']['settings'];
   }
 
   return $elements;
@@ -663,6 +676,7 @@ function media_recorder_field_widget_form_process($element, &$form_state, $form)
             'swfurl' => libraries_get_path('recorder.js'),
             'html5url' => libraries_get_path('Recorderjs'),
             'modulePath' => drupal_get_path('module', 'media_recorder') . '/js',
+            'settings' => $element['#settings'],
           ),
         ),
         'scope' => 'header',
