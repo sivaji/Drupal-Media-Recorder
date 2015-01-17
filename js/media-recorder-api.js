@@ -87,7 +87,6 @@
 
         // Listen for the stop event.
         $(Drupal.mediaRecorder).bind('recordStop', function (event) {
-          $recordButton.show()[0].disabled = true;
           $stopButton.hide();
           clearInterval(Drupal.mediaRecorder.statusInterval);
           $(Drupal.mediaRecorder).trigger('status', 'Processing file...');
@@ -99,6 +98,7 @@
           $element.find('.media-recorder-refresh').trigger('mousedown');
           $recordButton[0].disabled = false;
           $(Drupal.mediaRecorder).trigger('status', 'Press record to start recording.');
+          $recordButton.show();
         });
 
         $(Drupal.mediaRecorder).bind('status', function (event, msg) {
@@ -272,17 +272,16 @@
           }
         };
 
-        // Triggered when recording is stopped.
+        // Triggered when recording is stopped. Requires ajax 1.5+.
         Drupal.mediaRecorder.recorder.onstop = function (e) {
           $(document).ajaxStop(function () {
             $(this).unbind("ajaxStop");
-              $.ajax({
+            $.ajax({
               url: Drupal.mediaRecorder.origin + Drupal.settings.basePath + 'media_recorder/record/stream/finish',
               type: 'POST',
               async: true,
               data: {
-                count: Drupal.mediaRecorder.blobs.length,
-                files: Drupal.mediaRecorder.blobs
+                count: Drupal.mediaRecorder.blobs.length
               },
               success: function (data) {
                 $(Drupal.mediaRecorder).trigger('refreshData', data);
@@ -318,8 +317,7 @@
       };
 
       /**
-       * Send a blob as form data to the server.
-       * Note: We use XMLHttpRequest since jQuery 1.4 $.ajax is buggy with blob/data combo requests.
+       * Send a blob as form data to the server. Requires jQuery 1.5+.
        */
       Drupal.mediaRecorder.sendBlob = function (blob, count) {
 
@@ -339,6 +337,7 @@
             Drupal.mediaRecorder.blobs.push(data);
           },
           error: function (jqXHR, textStatus, errorThrown) {
+            console.log(jqXHR, textStatus, errorThrown);
           }
         });
       }
