@@ -4,9 +4,9 @@ package = "Media"
 core = 7.x
 
 dependencies[] = ctools
-dependencies[] = file_entity (>=2)
-dependencies[] = media (>=2)
-dependencies[] = libraries (>=2)
+dependencies[] = file_entity (>=2.x)
+dependencies[] = media (>=2.x)
+dependencies[] = libraries (>=2.x)
 
 files[] = includes/MediaRecorderBrowser.inc
 
