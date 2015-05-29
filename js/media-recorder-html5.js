@@ -3,319 +3,426 @@
  * Adds an interface between the media recorder jQuery plugin and the drupal media module.
  */
 
-(function($) {
+(function ($) {
   'use strict';
 
-  Drupal.behaviors.mediaRecorder = {
-    attach: function(context, settings) {
-      $('.field-widget-media-recorder').once().each(function (key, element) {
+  Drupal.MediaRecorderHTML5 = (function () {
+    var settings = Drupal.settings.mediaRecorder.settings;
+    var origin = window.location.origin || window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+    var audioContext;
+    var canvasContext;
+    var visualizerProcessor;
+    var freqData;
+    var volume;
+    var barWidth;
+    var level;
+    var meterProcessor;
+    var constraints;
+    var localStream;
+    var recorder;
+    var recordURL;
+    var playbackURL;
+    var mimetype;
+    var analyser;
+    var microphone;
+    var blobs;
+    var statusInterval;
+    var $element;
+    var $statusWrapper;
+    var $previewWrapper;
+    var $video;
+    var $audio;
+    var $meter;
+    var $startButton;
+    var $recordButton;
+    var $playButton;
+    var $stopButton;
+    var $settingsButton;
+    var $videoButton;
+    var $audioButton;
 
-        // Hide all file field related elements.
-        $(element).find('span.file, span.file-size, .media-recorder-upload, .media-recorder-upload-button, .media-recorder-remove-button').hide();
+    /**
+     * Set status message.
+     */
+    function setStatus(message) {
+      $element.trigger('status', message);
+    }
 
-        // Declare DOM elements.
-        var $element = $(element);
-        var $audioConstraintButton = $element.find('.media-recorder-enable-audio');
-        var $videoConstraintButton = $element.find('.media-recorder-enable-video');
-        var $previewWrapper = $element.find('.media-recorder-preview');
-        var $statusWrapper = $element.find('.media-recorder-status');
-        var $controlsWrapper = $element.find('.media-recorder-controls');
-        var $recordButton = $element.find('.media-recorder-record');
-        var $stopButton = $element.find('.media-recorder-stop');
+    /**
+     * Create volume meter canvas element that uses getUserMedia stream.
+     */
+    function createVolumeMeter() {
+      canvasContext = $meter[0].getContext("2d");
+      meterProcessor = audioContext.createScriptProcessor(1024, 1, 1);
+      microphone.connect(analyser);
+      analyser.connect(meterProcessor);
+      meterProcessor.connect(audioContext.destination);
+      meterProcessor.onaudioprocess = function () {
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(freqData);
+        level = Math.max.apply(Math, freqData);
+        canvasContext.clearRect(0, 0, $meter[0].width, $meter[0].height);
+        canvasContext.fillStyle = '#00ff00';
+        canvasContext.fillRect(0, 0, $meter[0].width * (level / 255), $meter[0].height);
+      };
+    }
 
-        // Click handler for enable audio button.
-        $audioConstraintButton.bind('click', function (event) {
-          event.preventDefault();
-          $audioConstraintButton.addClass('active');
-          $videoConstraintButton.removeClass('active');
-          startStream({
-            audio: true,
-            video: false
-          });
-        });
+    /**
+     * Create audio visualizer canvas element that uses getUserMedia stream.
+     */
+    function createAudioVisualizer() {
 
-        // Click handler for enable video button.
-        $videoConstraintButton.bind('click', function (event) {
-          event.preventDefault();
-          $audioConstraintButton.removeClass('active');
-          $videoConstraintButton.addClass('active');
-          startStream({
-            audio: true,
-            video: true
-          });
-        });
+      // Private function for determining current volume.
+      function getVolume() {
+        var values = 0;
+        var length = freqData.length;
 
-        // Click handler for record button.
-        $recordButton.bind('click', function (event) {
-          event.preventDefault();
-          Drupal.mediaRecorder.record();
-        });
+        for (var i = 0; i < length; i++) {
+          values += freqData[i];
+        }
 
-        // Click handler for stop button.
-        $stopButton.bind('click', function (event) {
-          event.preventDefault();
-          Drupal.mediaRecorder.stop();
-        });
+        return values / length;
+      }
 
-        // Listen for the record event.
-        $(Drupal.mediaRecorder).bind('recordStart', function (event, data) {
-          var currentSeconds = 0;
-          var timeLimit = millisecondsToTime(new Date(parseInt(Drupal.mediaRecorder.settings.time_limit, 10) * 1000));
+      canvasContext = $meter[0].getContext("2d");
 
-          $recordButton.hide();
-          $stopButton.show();
-          $(Drupal.mediaRecorder).trigger('status', 'Recording 00:00 (Time Limit: ' + timeLimit + ')');
+      visualizerProcessor = audioContext.createScriptProcessor(1024, 1, 1);
+      microphone.connect(analyser);
+      analyser.connect(visualizerProcessor);
+      visualizerProcessor.connect(audioContext.destination);
 
-          function millisecondsToTime(milliSeconds) {
-            var milliSecondsDate = new Date(milliSeconds);
-            var mm = milliSecondsDate.getMinutes();
-            var ss = milliSecondsDate.getSeconds();
-            if (mm < 10) {
-              mm = "0" + mm;
-            }
-            if (ss < 10) {
-              ss = "0" + ss;
-            }
-            return mm + ':' + ss;
+      visualizerProcessor.onaudioprocess = function (audioProcessingEvent) {
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(freqData);
+        volume = getVolume();
+
+        if (volume === 0) {
+          $meter.addClass('muted');
+        }
+        else {
+          $meter.removeClass('muted');
+        }
+
+        barWidth = Math.ceil($meter[0].width / (analyser.frequencyBinCount * 0.5));
+        canvasContext.clearRect(0, 0, $meter[0].width, $meter[0].height);
+        for (var i = 0; i < analyser.frequencyBinCount; i++) {
+          canvasContext.fillStyle = 'hsl(' + i / analyser.frequencyBinCount * 360 + ', 100%, 50%)';
+          if ((barWidth * i) + barWidth < $meter[0].width) {
+            canvasContext.fillRect(barWidth * i, $meter[0].height, barWidth - 1, -(Math.floor((freqData[i] / 255) * $meter[0].height)));
           }
+        }
+      };
+    }
 
-          Drupal.mediaRecorder.statusInterval = setInterval(function () {
-            currentSeconds = currentSeconds + 1;
-            var currentMilliSeconds = new Date(currentSeconds * 1000);
-            var time = millisecondsToTime(currentMilliSeconds);
-            $(Drupal.mediaRecorder).trigger('status', 'Recording ' + time + ' (Time Limit: ' + timeLimit + ')');
+    /**
+     * Toggle to recording preview.
+     */
+    function recordingPreview() {
+      if (constraints.video) {
+        $video.show();
+        $audio.hide();
+        $video[0].src = recordURL;
+        $video[0].muted = 'muted';
+        $video[0].controls = '';
+        $video[0].load();
+        $video[0].play();
+        $meter.height(10);
+      }
+      else {
+        $video.hide();
+        $audio.hide();
+        $meter.height($meter.width() / 2);
+      }
+    }
 
-            if (currentSeconds >= Drupal.mediaRecorder.settings.time_limit) {
-              Drupal.mediaRecorder.stop();
-            }
-          }, 1000);
-        });
+    /**
+     * Toggle to recording preview.
+     */
+    function playbackPreview() {
+      if (blobs.length === 0) {
+        return;
+      }
+      if (constraints.video) {
+        playbackURL = URL.createObjectURL(new Blob(blobs, {type: mimetype}));
+        $video.show();
+        $audio.hide();
+        $video[0].src = playbackURL;
+        $video[0].muted = '';
+        $video[0].controls = 'controls';
+        $video[0].load();
+      }
+      else {
+        playbackURL = URL.createObjectURL(new Blob(blobs, {type: mimetype}));
+        $audio.show();
+        $audio[0].src = playbackURL;
+        $audio[0].load();
+      }
+    }
 
-        // Listen for the stop event.
-        $(Drupal.mediaRecorder).bind('recordStop', function (event) {
+    /**
+     * Send a blob as form data to the server. Requires jQuery 1.5+.
+     */
+    function sendBlob(blob, count) {
+
+      // Create formData object.
+      var formData = new FormData();
+      var req = new XMLHttpRequest();
+      formData.append("mediaRecorder", blob);
+      blobs = [blob];
+
+      // Send file.
+      req.addEventListener("load", transferComplete, false);
+      req.open('POST', origin + Drupal.settings.basePath + 'media_recorder/record/file', true);
+      req.send(formData);
+      function transferComplete(evt) {
+        var file = JSON.parse(req.response);
+        $element.trigger('uploadFinished', file);
+      }
+    }
+
+    /**
+     * Stop user media stream.
+     */
+    function stopStream() {
+      analyser.disconnect();
+      microphone.disconnect();
+      localStream.stop();
+      $previewWrapper.hide();
+      $startButton.show();
+      $recordButton.hide();
+      $stopButton.hide();
+    }
+
+    /**
+     * Start user media stream.
+     */
+    function startStream() {
+      if (localStream) {
+        stopStream();
+      }
+      navigator.getUserMedia(
+        constraints,
+        function (stream) {
+          localStream = stream;
+          recordURL = URL.createObjectURL(localStream);
+          mimetype = settings.constraints.video ? 'video/webm' : 'audio/ogg';
+          audioContext = new AudioContext();
+          analyser = audioContext.createAnalyser();
+          analyser.smoothingTimeConstant = 0.75;
+          analyser.fftSize = 512;
+          microphone = audioContext.createMediaStreamSource(stream);
+          recorder = new Recorder(microphone, {workerPath: Drupal.settings.basePath + Drupal.settings.mediaRecorder.html5url + '/recorderWorker.js'});
+
+          $previewWrapper.show();
+          $meter.show();
+          $startButton.hide();
           $recordButton.show();
           $stopButton.hide();
-          clearInterval(Drupal.mediaRecorder.statusInterval);
-        });
+          recordingPreview();
 
-        $(Drupal.mediaRecorder).bind('uploadStarted', function (event) {
-          $(Drupal.mediaRecorder).trigger('status', 'Uploading, please wait...');
-        });
-
-        $(Drupal.mediaRecorder).bind('uploadFinished', function (event, data) {
-          $(Drupal.mediaRecorder).trigger('status', 'Press record to start recording.');
-
-          // Append file object data.
-          $element.find('.media-recorder-fid').val(data.fid);
-          $element.find('.media-recorder-refresh').trigger('mousedown');
-        });
-
-        $(Drupal.mediaRecorder).bind('status', function (event, msg) {
-          $statusWrapper.text(msg);
-        });
-
-        // Initial state.
-        $previewWrapper.hide();
-        $controlsWrapper.hide();
-        //$(Drupal.mediaRecorder).trigger('status', 'Select audio or video to begin recording.');
-
-        // Disable video for now.
-        $videoConstraintButton.hide();
-        $audioConstraintButton.text('Start');
-        $(Drupal.mediaRecorder).trigger('status', 'Click \'Start\' to enable your microphone.');
-
-        /**
-         * Start user media stream.
-         */
-        function startStream (constraints) {
-          if (Drupal.mediaRecorder.stream) {
-            stopStream();
+          if (constraints.video) {
+            createVolumeMeter();
           }
-          navigator.getUserMedia(constraints,
-            function(stream) {
-              Drupal.mediaRecorder.stream = stream;
-              Drupal.mediaRecorder.format = constraints.video ? 'webm' : 'ogg';
-              Drupal.mediaRecorder.mimetype = constraints.video ? 'video/webm' : 'audio/ogg';
-              Drupal.mediaRecorder.audioContext = new AudioContext();
-              Drupal.mediaRecorder.analyser = Drupal.mediaRecorder.audioContext.createAnalyser();
-              Drupal.mediaRecorder.microphone = Drupal.mediaRecorder.audioContext.createMediaStreamSource(stream);
-              Drupal.mediaRecorder.analyser.smoothingTimeConstant = 0.75;
-              Drupal.mediaRecorder.analyser.fftSize = 512;
-
-              $previewWrapper.show();
-              $controlsWrapper.show();
-              $stopButton.hide();
-
-              $(Drupal.mediaRecorder).trigger('status', 'Press record to start recording.');
-
-              if (constraints.video) {
-                var video = $('<video muted autoplay src="' + URL.createObjectURL(Drupal.mediaRecorder.stream) + '"></video>');
-                var volumeMeter = $(createVolumeMeter());
-                video.appendTo($previewWrapper).height($previewWrapper.height());
-                volumeMeter.appendTo($previewWrapper).height($previewWrapper.height());
-                video[0].play();
-                $previewWrapper.addClass('video').removeClass('audio');
-              } else {
-                var audioVisualizer = $(createAudioVisualizer());
-                audioVisualizer.appendTo($previewWrapper).height($previewWrapper.height());
-                $previewWrapper.addClass('audio').removeClass('video');
-              }
-            },
-            function(error) {
-            }
-          );
-        }
-
-        /**
-         * Stop user media stream.
-         */
-        function stopStream () {
-          Drupal.mediaRecorder.analyser.disconnect();
-          Drupal.mediaRecorder.microphone.disconnect();
-          Drupal.mediaRecorder.stream.stop();
-          $previewWrapper.text('');
-          $previewWrapper.hide();
-        }
-
-        /**
-         * Create volume meter canvas element that uses getUserMedia stream.
-         */
-        function createVolumeMeter () {
-          var canvas = document.createElement('canvas');
-          var canvasContext = canvas.getContext("2d");
-
-          Drupal.mediaRecorder.meterProcessor = Drupal.mediaRecorder.audioContext.createScriptProcessor(2048, 1, 1);
-          Drupal.mediaRecorder.microphone.connect(Drupal.mediaRecorder.analyser);
-          Drupal.mediaRecorder.analyser.connect(Drupal.mediaRecorder.meterProcessor);
-          Drupal.mediaRecorder.meterProcessor.connect(Drupal.mediaRecorder.audioContext.destination);
-
-          Drupal.mediaRecorder.meterProcessor.onaudioprocess = function() {
-            var freqData = new Uint8Array(Drupal.mediaRecorder.analyser.frequencyBinCount);
-            Drupal.mediaRecorder.analyser.getByteFrequencyData(freqData);
-            var level = Math.max.apply(Math, freqData);
-            canvasContext.clearRect(0, 0, canvas.width, canvas.clientHeight);
-            canvasContext.fillStyle = '#00ff00';
-            canvasContext.fillRect(0, canvas.height - (canvas.height * (level / 255)), canvas.width, canvas.height * (level / 255));
-          };
-
-          canvas.className = 'media-recorder-meter';
-
-          return canvas;
-        }
-
-        /**
-         * Create audio visualizer canvas element that uses getUserMedia stream.
-         */
-        function createAudioVisualizer () {
-          var canvas = document.createElement('canvas');
-          var canvasContext = canvas.getContext("2d");
-          var micStatus = false;
-
-          if (!Drupal.mediaRecorder.audioContext || !Drupal.mediaRecorder.microphone || !Drupal.mediaRecorder.analyser) {
-            var textWidth, textString = 'Audio visualizer unable to initialize';
-
-            canvasContext.font = 'bold 1em Arial';
-            canvasContext.fillStyle = '#ffffff';
-            textWidth = canvasContext.measureText(textString).width;
-            canvasContext.fillText(textString, (canvas.width / 2) - (textWidth / 2), canvas.height / 2);
-
-            return canvas;
+          else {
+            createAudioVisualizer();
           }
 
-          Drupal.mediaRecorder.visualizerProcessor = Drupal.mediaRecorder.audioContext.createScriptProcessor(2048, 1, 1);
-          Drupal.mediaRecorder.microphone.connect(Drupal.mediaRecorder.analyser);
-          Drupal.mediaRecorder.analyser.connect(Drupal.mediaRecorder.visualizerProcessor);
-          Drupal.mediaRecorder.visualizerProcessor.connect(Drupal.mediaRecorder.audioContext.destination);
-
-          Drupal.mediaRecorder.visualizerProcessor.onaudioprocess = function() {
-            var freqData = new Uint8Array(Drupal.mediaRecorder.analyser.frequencyBinCount);
-            Drupal.mediaRecorder.analyser.getByteFrequencyData(freqData);
-            var volume = getVolume();
-
-            if (volume === 0) {
-              micStatus = false;
-              $(Drupal.mediaRecorder).trigger('status', 'Your mic has a problem. Check your browser or computer audio settings.');
-            } else if (volume && !micStatus) {
-              micStatus = true;
-              $(Drupal.mediaRecorder).trigger('status', 'Press record to start recording.');
-            }
-
-            var barWidth = Math.ceil(canvas.width / (Drupal.mediaRecorder.analyser.frequencyBinCount * 0.5));
-            canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-            for (var i = 0; i < Drupal.mediaRecorder.analyser.frequencyBinCount; i++) {
-              canvasContext.fillStyle = 'hsl(' + i / Drupal.mediaRecorder.analyser.frequencyBinCount * 360 + ', 100%, 50%)';
-              if ((barWidth * i) + barWidth < canvas.width) {
-                canvasContext.fillRect(barWidth * i, canvas.height, barWidth - 1, -(Math.floor((freqData[i] / 255) * canvas.height) + 1));
-              }
-            }
-
-            // Private function for determining current volume.
-            function getVolume() {
-              var values = 0;
-              var length = freqData.length;
-              for (var i = 0; i < length; i++) {
-                values += freqData[i];
-              }
-              return values / length;
-            }
-          };
-
-          canvas.className = 'media-recorder-visualizer';
-
-          return canvas;
+          setStatus('Press record to start recording.');
+        },
+        function (error) {
+          stopStream();
+          alert("There was a problem accessing your camera or mic. Please click 'Allow' at the top of the page.");
         }
+      );
+    }
+
+    /**
+     * Stop recording and trigger stopped event.
+     */
+    function start() {
+      constraints = {
+        audio: true,
+        video: false
+      };
+
+      startStream();
+    }
+
+    /**
+     * Stop recording and trigger stopped event.
+     */
+    function stop() {
+      recorder.stop();
+      recorder.exportWAV(function (blob) {
+        sendBlob(blob);
+      });
+      recorder.clear();
+      $element.trigger('recordStop');
+    }
+
+    /**
+     * Start recording and trigger recording event.
+     */
+    function record() {
+      recorder.record();
+      $element.trigger('recordStart');
+    }
+
+    /**
+     * Initialize all control buttons.
+     */
+    function initializeButtons() {
+
+      // Click handler for enable audio button.
+      $startButton.bind('click', function (event) {
+        event.preventDefault();
+        $startButton[0].disabled = true;
+        start();
+        setStatus('Allow access at top of page.');
       });
 
-      /**
-       * Start recording and trigger recording event.
-       */
-      Drupal.mediaRecorder.record = function () {
+      // Click handler for record button.
+      $recordButton.bind('click', function (event) {
+        event.preventDefault();
+        $recordButton[0].disabled = true;
+        $recordButton.hide();
+        $stopButton.show();
+        record();
+      });
 
-        // Create a recorder using the gain node.
-        Drupal.mediaRecorder.recorder = new Recorder(Drupal.mediaRecorder.microphone, {workerPath:settings.basePath + settings.mediaRecorder.html5url + '/recorderWorker.js'});
-        Drupal.mediaRecorder.recorder.record();
+      // Click handler for stop button.
+      $stopButton.bind('click', function (event) {
+        event.preventDefault();
+        $stopButton.hide();
+        $recordButton.show();
+        stop();
+      });
+    }
 
-        // Trigger recording event.
-        $(Drupal.mediaRecorder).trigger('recordStart');
-      };
+    /**
+     * Initialize recorder.
+     */
+    function initializeEvents() {
 
-      /**
-       * Stop recording and trigger stopped event.
-       */
-      Drupal.mediaRecorder.stop = function () {
+      // Listen for the record event.
+      $element.bind('recordStart', function (event, data) {
+        var currentSeconds = 0;
+        var timeLimitFormatted = millisecondsToTime(new Date(parseInt(settings.time_limit, 10) * 1000));
 
-        // Stop MediaRecorder and delete object (is deletion needed?).
-        Drupal.mediaRecorder.recorder.stop();
+        recordingPreview();
+        setStatus('Recording 00:00 (Time Limit: ' + timeLimitFormatted + ')');
 
-        // Export the wav and send to server.
-        Drupal.mediaRecorder.recorder.exportWAV(function(blob) {
-          Drupal.mediaRecorder.sendBlob(blob);
-        });
+        statusInterval = setInterval(function () {
+          currentSeconds = currentSeconds + 1;
+          var currentMilliSeconds = new Date(currentSeconds * 1000);
+          var time = millisecondsToTime(currentMilliSeconds);
+          setStatus('Recording ' + time + ' (Time Limit: ' + timeLimitFormatted + ')');
 
-        // Clear the recorder.
-        Drupal.mediaRecorder.recorder.clear();
+          if (currentSeconds >= settings.time_limit) {
+            stop();
+          }
+        }, 1000);
+      });
 
-        // Trigger stopped event.
-        $(Drupal.mediaRecorder).trigger('recordStop');
-      };
+      // Listen for the stop event.
+      $element.bind('recordStop', function (event) {
+        clearInterval(statusInterval);
+        setStatus('Uploading, please wait...');
+      });
 
-      Drupal.mediaRecorder.sendBlob = function (blob) {
-        var formData = new FormData();
-        var req = new XMLHttpRequest();
-        formData.append("mediaRecorder", blob);
+      $element.bind('uploadFinished', function (event, data) {
+        $element.find('.media-recorder-fid').val(data.fid);
+        $recordButton[0].disabled = false;
+        playbackPreview();
+        setStatus('Press record to start recording.');
+      });
 
-        // Trigger uploading event.
-        $(Drupal.mediaRecorder).trigger('uploadStarted');
+      $element.bind('status', function (event, msg) {
+        $statusWrapper.text(msg);
+      });
+    }
 
-        // Send file.
-        req.addEventListener("load", transferComplete, false);
-        req.open('POST', Drupal.mediaRecorder.origin + Drupal.settings.basePath + 'media_recorder/record/file', true);
-        req.send(formData);
-        function transferComplete(evt) {
-          var file = JSON.parse(req.response);
-          $(Drupal.mediaRecorder).trigger('uploadFinished', file);
+    /**
+     * Convert milliseconds to time format.
+     */
+    function millisecondsToTime(milliSeconds) {
+      var milliSecondsDate = new Date(milliSeconds);
+      var mm = milliSecondsDate.getMinutes();
+      var ss = milliSecondsDate.getSeconds();
+      if (mm < 10) {
+        mm = "0" + mm;
+      }
+      if (ss < 10) {
+        ss = "0" + ss;
+      }
+      return mm + ':' + ss;
+    }
+
+    /**
+     * Initialize recorder.
+     */
+    function init(element) {
+      $element = $(element);
+      $statusWrapper = $element.find('.media-recorder-status');
+      $previewWrapper = $element.find('.media-recorder-preview');
+      $video = $element.find('.media-recorder-video');
+      $audio = $element.find('.media-recorder-audio');
+      $meter = $element.find('.media-recorder-meter');
+      $startButton = $element.find('.media-recorder-enable');
+      $recordButton = $element.find('.media-recorder-record');
+      $stopButton = $element.find('.media-recorder-stop');
+      $playButton = $element.find('.media-recorder-play');
+      $settingsButton = $element.find('.media-recorder-settings');
+      $videoButton = $element.find('.media-recorder-enable-video');
+      $audioButton = $element.find('.media-recorder-enable-audio');
+
+      // Initial state.
+      $recordButton.hide();
+      $stopButton.hide();
+      $playButton.hide();
+      $settingsButton.hide();
+      $video.hide();
+      $audio.hide();
+      $meter.hide();
+      $videoButton.hide();
+      $audioButton.hide();
+      $previewWrapper.hide();
+
+      // Show file preview if file exists.
+      if (Drupal.settings.mediaRecorder.file) {
+        var file = Drupal.settings.mediaRecorder.file;
+        switch (file.type) {
+          case 'video':
+            $previewWrapper.show();
+            $video.show();
+            $audio.hide();
+            $video[0].src = Drupal.settings.mediaRecorder.file.url;
+            $video[0].muted = '';
+            $video[0].controls = 'controls';
+            $video[0].load();
+            break;
+          case 'audio':
+            $previewWrapper.show();
+            $audio.show();
+            $video.hide();
+            $audio[0].src = Drupal.settings.mediaRecorder.file.url;
+            $audio[0].muted = '';
+            $audio[0].controls = 'controls';
+            $audio[0].load();
+            break;
         }
-      };
-    },
-  };
+      }
+
+      initializeButtons();
+      initializeEvents();
+      setStatus('Click \'Start\' to enable your mic & camera.');
+    }
+
+    return {
+      init: init,
+      start: start,
+      record: record,
+      stop: stop
+    };
+  })();
 })(jQuery);

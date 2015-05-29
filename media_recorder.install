@@ -18,7 +18,7 @@ function media_recorder_requirements($phase) {
     // Check that all libraries exist.
     $required_libraries = array(
       'swfobject',
-      'recorder.js',
+      'FlashWavRecorder',
       'Recorderjs',
     );
     foreach ($required_libraries as $name) {
@@ -53,7 +53,7 @@ function media_recorder_enable() {
   foreach ($required_libraries as $name) {
     $library = libraries_detect($name);
     if (!$library['installed']) {
-      $drush_msg = t('You can use the drush command "drush @site mrdl" to automatically install all required libraries.');
+      $drush_msg = t('You can use the drush command "drush mrdl" to automatically install all required libraries.');
       drupal_set_message($library['error message'] . ' ' . $drush_msg, 'error');
     }
   }
@@ -63,8 +63,8 @@ function media_recorder_enable() {
  * Implements hook_uninstall().
  */
 function media_recorder_uninstall() {
-  variable_del('media_recorder_width');
-  variable_del('media_recorder_height');
-  variable_del('media_recorder_timelimit');
+  variable_del('media_recorder_constraints');
+  variable_del('media_recorder_time_limit');
   variable_del('media_recorder_upload_directory');
+  variable_del('media_recorder_css');
 }

@@ -13,15 +13,15 @@ function media_recorder_libraries_info() {
   $libraries['swfobject'] = array(
     'name' => 'SWFObject',
     'description' => 'SWFObject is an easy-to-use and standards-friendly method to embed Flash content, which utilizes one small JavaScript file.',
-    'vendor url' => 'http://code.google.com/p/swfobject',
-    'download url' => 'http://swfobject.googlecode.com/files/swfobject_2_2.zip',
+    'vendor url' => 'https://github.com/swfobject/swfobject',
+    'download url' => 'https://github.com/swfobject/swfobject/zipball/master',
     'version arguments' => array(
-      'file' => 'swfobject.js',
+      'file' => 'swfobject/swfobject.js',
       'pattern' => '@v([0-9a-zA-Z\.-]+)@',
     ),
     'files' => array(
       'js' => array(
-        'swfobject.js' => array(
+        'swfobject/swfobject.js' => array(
           'type' => 'file',
           'scope' => 'header',
           'group' => JS_LIBRARY,
@@ -29,20 +29,23 @@ function media_recorder_libraries_info() {
       ),
     ),
   );
-  $libraries['recorder.js'] = array(
-    'name' => 'recorder.js',
-    'description' => 'JavaScript library to record audio in browsers as used in the SoundCloud Javascript SDK.',
-    'vendor url' => 'https://github.com/jwagener/recorder.js',
-    'download url' => 'https://github.com/jwagener/recorder.js/zipball/master',
-    'version arguments' => array(
-      'file' => 'recorder.js',
-      'pattern' => '@version: ([0-9a-zA-Z\.-]+),@',
-    ),
+  $libraries['FlashWavRecorder'] = array(
+    'name' => 'FlashWavRecorder',
+    'description' => 'Simple flash file for recording audio and saving as a WAV.',
+    'vendor url' => 'https://github.com/michalstocki/FlashWavRecorder',
+    'download url' => 'https://github.com/michalstocki/FlashWavRecorder/zipball/master',
+    'version' => '0.9.0',
     'dependencies' => array(
       'swfobject (>=2.2)',
     ),
     'files' => array(
-      'js' => array('recorder.js'),
+      'js' => array(
+        'html/js/recorder.js' => array(
+          'type' => 'file',
+          'scope' => 'header',
+          'group' => JS_LIBRARY,
+        ),
+      ),
     ),
   );
   $libraries['Recorderjs'] = array(
@@ -127,6 +130,7 @@ function media_recorder_help($path, $arg) {
       $output = file_get_contents(drupal_get_path('module', 'media_recorder') . '/README.txt');
       return nl2br($output);
   }
+  return NULL;
 }
 
 /**
@@ -274,7 +278,8 @@ function media_recorder_record_stream_finish() {
   }
 
   // Sort files in case they are out of order.
-  ksort($files, SORT_NATURAL);
+  $files = array_keys($files);
+  natsort($files);
 
   // Open temp file.
   try {
@@ -290,7 +295,7 @@ function media_recorder_record_stream_finish() {
   }
 
   // Iterate over file list and append to temp file.
-  foreach (array_keys($files) as $filename) {
+  foreach ($files as $filename) {
 
     // Get data from file.
     try {
@@ -338,8 +343,10 @@ function media_recorder_record_stream_finish() {
 
   // Change the file name and save as temporary managed file.
   try {
-    file_unmanaged_move($_SESSION['media_recorder']['tempnam'], $_SESSION['media_recorder']['tempnam'] . '.' . $_SESSION['media_recorder']['format']);
-    $file = file_uri_to_object($_SESSION['media_recorder']['tempnam'] . '.' . $_SESSION['media_recorder']['format']);
+    $uri = $_SESSION['media_recorder']['tempnam'];
+    $extension = '.' . $_SESSION['media_recorder']['format'];
+    file_unmanaged_move($uri, $uri . $extension);
+    $file = file_uri_to_object($uri . $extension);
     $file->status = 0;
     file_save($file);
   }
@@ -422,8 +429,9 @@ function media_recorder_record_file() {
 
   // Change the file name and save as temporary managed file.
   try {
-    file_unmanaged_move($uri, $uri . '.wav');
-    $file = file_uri_to_object($uri . '.wav');
+    $extension = '.wav';
+    file_unmanaged_move($uri, $uri . $extension);
+    $file = file_uri_to_object($uri . $extension);
     $file->status = 0;
     file_save($file);
   }
@@ -432,9 +440,6 @@ function media_recorder_record_file() {
     drupal_json_output($e->getMessage());
     return;
   }
-
-  // Close session.
-  unset($_SESSION['media_recorder']);
 
   // Return file information.
   drupal_json_output($file);
@@ -455,7 +460,7 @@ function media_recorder_media_browser_plugin_info() {
 /**
  * Provides a form for adding media items using the media recorder.
  */
-function media_recorder_add($form, &$form_state) {
+function media_recorder_add($form, &$form_state, $types = array(), $multiselect = FALSE) {
 
   // Set field variables.
   $field_name = 'field_media_recorder';
@@ -479,6 +484,11 @@ function media_recorder_add($form, &$form_state) {
       'settings' => array(
         'progress_indicator' => 'throbber',
         'time_limit' => variable_get('media_recorder_time_limit', 300),
+        'constraints' => variable_get('media_recorder_constraints', array(
+          'audio' => TRUE,
+          'video' => TRUE,
+          'video_resolution' => 320,
+        )),
       ),
     ),
   );
@@ -512,8 +522,10 @@ function media_recorder_add($form, &$form_state) {
   $key = array_search('file_field_widget_process', $form[$field_name][$langcode][0]['#process']);
   unset($form[$field_name][$langcode][0]['#process'][$key]);
 
-  // Add media browser javascript and CSS.
-  drupal_add_js(drupal_get_path('module', 'media_recorder') . '/js/media-recorder.browser.js');
+  // Add javascript if this is the media browser.
+  if ($types) {
+    drupal_add_js(drupal_get_path('module', 'media_recorder') . '/js/media-recorder.browser.js');
+  }
 
   // Add a submit button.
   $form['actions']['submit']['#type'] = 'submit';
@@ -534,7 +546,7 @@ function media_recorder_add_submit($form, &$form_state) {
       $file->status = FILE_STATUS_PERMANENT;
       $file = file_save($file);
     }
-    drupal_set_message(t('The file <em>!filename</em> was successfully loaded.', array('!filename' => l(check_plain($file->filename), 'file/' . $file->fid))), 'status');
+    drupal_set_message(t('The file <em>!filename</em> was successfully saved.', array('!filename' => l(check_plain($file->filename), 'file/' . $file->fid))), 'status');
   }
   else {
     drupal_set_message(t('An unrecoverable error occurred. Try reloading the page and submitting again.'), 'error');
@@ -552,6 +564,12 @@ function media_recorder_field_widget_info() {
       'settings' => array(
         'progress_indicator' => 'throbber',
         'allowed_schemes' => array('public', 'private'),
+        'time_limit' => 300,
+        'constraints' => array(
+          'audio' => TRUE,
+          'video' => TRUE,
+          'video_resolution' => 320,
+        ),
       ),
       'behaviors' => array(
         'multiple values' => FIELD_BEHAVIOR_CUSTOM,
@@ -575,9 +593,36 @@ function media_recorder_field_widget_settings_form($field, $instance) {
     '#type' => 'textfield',
     '#title' => t('Time Limit'),
     '#description' => t('Time limit in seconds. Defaults to 300 seconds (5 minutes).'),
-    '#default_value' => isset($settings['time_limit']) ? $settings['time_limit'] : 300,
+    '#default_value' => $settings['time_limit'],
     '#element_validate' => array('element_validate_integer_positive'),
     '#required' => TRUE,
+  );
+  $form['constraints'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Media Constraints'),
+    '#description' => t('Select which recording options will be available.'),
+  );
+  $form['constraints']['audio'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Audio'),
+    '#default_value' => $settings['constraints']['audio'],
+  );
+  $form['constraints']['video'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Video'),
+    '#default_value' => $settings['constraints']['video'],
+  );
+  $form['constraints']['video_resolution'] = array(
+    '#type' => 'radios',
+    '#title' => t('Video Resolution'),
+    '#default_value' => $settings['constraints']['video_resolution'],
+    '#options' => array(
+      640 => t('640 x 480'),
+      480 => t('480 x 360'),
+      320 => t('320 x 240'),
+      240 => t('240 x 180'),
+      180 => t('180 x 135'),
+    ),
   );
 
   return $form;
@@ -606,6 +651,73 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
  */
 function media_recorder_field_widget_form_process($element, &$form_state, $form) {
 
+  // Get current file if it exists.
+  $fid = isset($element['#value']['fid']) ? $element['#value']['fid'] : (isset($form_state['values'][$element['#field_name']][$element['#language']][$element['#delta']]['fid']) ? $form_state['values'][$element['#field_name']][$element['#language']][$element['#delta']]['fid'] : 0);
+  $file = NULL;
+  if ($fid) {
+    $file = file_load($fid);
+    $file->url = file_create_url($file->uri);
+  }
+
+  // Add media recorder.
+  $element['record'] = array(
+    '#theme' => 'media_recorder',
+    '#title' => 'Record',
+  );
+
+  // Add libraries.
+  $element['#attached']['libraries_load'] = array(
+    array('swfobject'),
+    array('FlashWavRecorder'),
+    array('Recorderjs'),
+  );
+
+  // Add custom js.
+  $element['#attached']['js'] = array(
+    array(
+      'type' => 'file',
+      'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-api.js',
+      'scope' => 'footer',
+    ),
+    array(
+      'type' => 'file',
+      'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-html5.js',
+      'scope' => 'footer',
+    ),
+    array(
+      'type' => 'file',
+      'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-flash.js',
+      'scope' => 'footer',
+    ),
+    array(
+      'type' => 'file',
+      'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder.js',
+      'scope' => 'footer',
+    ),
+    array(
+      'type' => 'setting',
+      'data' => array(
+        'mediaRecorder' => array(
+          'settings' => $element['#settings'],
+          'flashurl' => libraries_get_path('FlashWavRecorder'),
+          'html5url' => libraries_get_path('Recorderjs'),
+          'file' => $file,
+        ),
+      ),
+      'scope' => 'header',
+    ),
+  );
+
+  // Add custom css.
+  if (variable_get('media_recorder_css', TRUE)) {
+    $element['#attached']['css'] = array(
+      array(
+        'type' => 'file',
+        'data' => drupal_get_path('module', 'media_recorder') . '/css/media-recorder.css',
+      ),
+    );
+  }
+
   // Alter file elements.
   $element['fid']['#attributes']['class'][] = 'media-recorder-fid';
   $element['upload']['#attributes']['class'][] = 'media-recorder-upload';
@@ -614,107 +726,16 @@ function media_recorder_field_widget_form_process($element, &$form_state, $form)
   $element['remove_button']['#weight'] = 100;
 
   // Add validation handler to beginning of validation handler stack.
-  array_unshift($element['#element_validate'], 'media_recorder_field_widget_form_process_record_validate');
-
-  // Add media recorder.
-  $element['record'] = array(
-    '#theme' => 'media_recorder',
-    '#title' => 'Record',
-  );
-
-  // Add hidden refresh submit, which is triggered on record finish.
-  // This will rebuild the form with new file preview.
-  $element['refresh'] = array(
-    '#type' => 'submit',
-    '#executes_submit_callback' => FALSE,
-    '#limit_validation_errors' => array(),
-    '#value' => t('Refresh'),
-    '#ajax' => array(
-      'callback' => 'media_recorder_field_widget_form_process_ajax_refresh',
-      'wrapper' => $element['#id'] . '-file-preview-ajax-wrapper',
-    ),
-    '#attributes' => array(
-      'style' => 'display: none;',
-      'class' => array('media-recorder-refresh'),
-    ),
-  );
-
-  // Add file preview to render array.
-  $element['preview'] = array(
-    '#type' => 'container',
-    '#weight' => 50,
-    '#attributes' => array(
-      'class' => array('media-recorder-file-preview'),
-    ),
-    '#id' => $element['#id'] . '-file-preview-ajax-wrapper',
-  );
-
-  // Only display file if fid exists.
-  $fid = isset($element['#value']['fid']) ? $element['#value']['fid'] : (isset($form_state['values'][$element['#field_name']][$element['#language']][$element['#delta']]['fid']) ? $form_state['values'][$element['#field_name']][$element['#language']][$element['#delta']]['fid'] : 0);
-  if ($fid) {
-    $file = file_load($fid);
-    $element['preview']['file'] = file_view($file);
-    $element['preview']['#type'] = 'fieldset';
-    $element['preview']['#title'] = 'File Preview';
-  }
-
-  // Add attached files and settings.
-  $element['#attached'] = array(
-    'libraries_load' => array(
-      array('swfobject'),
-    ),
-    'js' => array(
-      array(
-        'type' => 'file',
-        'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder.js',
-        'scope' => 'footer',
-      ),
-      array(
-        'type' => 'setting',
-        'data' => array(
-          'mediaRecorder' => array(
-            'swfurl' => libraries_get_path('recorder.js'),
-            'html5url' => libraries_get_path('Recorderjs'),
-            'modulePath' => drupal_get_path('module', 'media_recorder') . '/js',
-            'settings' => $element['#settings'],
-          ),
-        ),
-        'scope' => 'header',
-      ),
-    ),
-    'css' => array(
-      array(
-        'type' => 'file',
-        'data' => drupal_get_path('module', 'media_recorder') . '/css/media-recorder.css',
-      ),
-    ),
-  );
+  array_unshift($element['#element_validate'], 'media_recorder_field_widget_form_process_validate');
 
   return $element;
-}
-
-/**
- * Ajax callback for form element rebuild.
- * @see media_recorder_field_widget_form_process()
- */
-function media_recorder_field_widget_form_process_ajax_refresh($form, &$form_state) {
-
-  // Rebuild the form.
-  $form_state['rebuild'] = TRUE;
-
-  // Get the file field element.
-  $parents = $form_state['triggering_element']['#array_parents'];
-  array_pop($parents);
-  $element = drupal_array_get_nested_value($form, $parents);
-
-  return $element['preview'];
 }
 
 /**
  * Custom validation callback.
  * @see media_recorder_field_widget_form_process()
  */
-function media_recorder_field_widget_form_process_record_validate(&$element, &$form_state) {
+function media_recorder_field_widget_form_process_validate(&$element, &$form_state, $form) {
 
   // Get field information.
   $field_name = $element['#parents'][0];

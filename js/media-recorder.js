@@ -4,70 +4,59 @@
  * libraries.
  */
 
-(function($) {
+(function ($) {
   'use strict';
-
-  // Add mediaRecorder object to Drupal.
-  Drupal.mediaRecorder = Drupal.mediaRecorder || {};
-  Drupal.mediaRecorder.settings = Drupal.settings.mediaRecorder.settings;
 
   // Normalize features.
   navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
   window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext;
   window.URL = window.URL || window.webkitURL;
-  Drupal.mediaRecorder.origin = window.location.origin || window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
 
   // Feature detection.
-  var getUserMediaCheck = typeof(navigator.getUserMedia) === 'function';
-  var mediaRecorderCheck = typeof(window.MediaRecorder) === 'function';
-  var webAudioCheck = typeof(window.AudioContext) === 'function';
-  var swfobjectCheck = typeof(window.swfobject) === 'object';
+  var getUserMediaCheck = typeof (navigator.getUserMedia) === 'function';
+  var mediaRecorderCheck = typeof (window.MediaRecorder) === 'function';
+  var webAudioCheck = typeof (window.AudioContext) === 'function';
+  var swfobjectCheck = typeof (window.swfobject) === 'object';
   var flashVersionCheck = swfobjectCheck ? (swfobject.getFlashPlayerVersion().major >= 10) : false;
 
-  // Check to see that browser can use the recorder.
-  if ((getUserMediaCheck && webAudioCheck) || (flashVersionCheck && swfobjectCheck)) {
+  Drupal.behaviors.mediaRecorder = {
+    attach: function () {
 
-    // Use the MediaRecorder API. Currently only works in firefox.
-    if (getUserMediaCheck && webAudioCheck && mediaRecorderCheck) {
-      $.ajax({
-        url: Drupal.settings.basePath + Drupal.settings.mediaRecorder.modulePath + '/media-recorder-api.js',
-        async: false,
-        dataType: 'script'
-      });
+      // Check to see that browser can use the recorder.
+      if ((getUserMediaCheck && webAudioCheck) || (flashVersionCheck && swfobjectCheck)) {
+
+        $('.field-widget-media-recorder').once().each(function (key, element) {
+
+          // Add Drupal MediaRecorder module and initialize.
+          if (getUserMediaCheck && webAudioCheck && mediaRecorderCheck) {
+            element.recorder = Drupal.MediaRecorder;
+          }
+          else if (getUserMediaCheck && webAudioCheck && !mediaRecorderCheck) {
+            element.recorder = Drupal.MediaRecorderHTML5;
+          }
+          else if (flashVersionCheck) {
+
+            // Check for IE9+.
+            if (!document.addEventListener) {
+              alert("The media recorder is not available on versions of Internet Explorer earlier than IE9.");
+              $('.field-widget-media-recorder').find('.media-recorder-wrapper').hide();
+              return;
+            }
+            element.recorder = Drupal.MediaRecorderFlash;
+          }
+
+          // Hide the normal file input.
+          $(element).find('span.file, span.file-size, .media-recorder-upload, .media-recorder-upload-button, .media-recorder-remove-button').hide();
+
+          // Initialize the recorder.
+          element.recorder.init(element);
+        });
+      }
+
+      // Otherwise just use the basic file field.
+      else {
+        $('.field-widget-media-recorder').find('.media-recorder-wrapper').hide();
+      }
     }
-
-    // Use HTML5 features (Web Audio API).
-    else if (getUserMediaCheck && webAudioCheck && !mediaRecorderCheck) {
-      $.ajax({
-        url: Drupal.settings.basePath + Drupal.settings.mediaRecorder.html5url + '/recorder.js',
-        async: false,
-        dataType: 'script'
-      });
-      $.ajax({
-        url: Drupal.settings.basePath + Drupal.settings.mediaRecorder.modulePath + '/media-recorder-html5.js',
-        async: false,
-        dataType: 'script'
-      });
-    }
-
-    // Use Flash.
-    else if (flashVersionCheck) {
-      $.ajax({
-        url: Drupal.settings.basePath + Drupal.settings.mediaRecorder.swfurl + '/recorder.js',
-        async: false,
-        dataType: 'script'
-      });
-      $.ajax({
-        url: Drupal.settings.basePath + Drupal.settings.mediaRecorder.modulePath + '/media-recorder-flash.js',
-        async: false,
-        dataType: 'script'
-      });
-    }
-  }
-
-  // Otherwise just use the basic file field.
-  else {
-    $('.field-widget-media-recorder').find('.media-recorder-wrapper').hide();
-  }
-
+  };
 })(jQuery);
