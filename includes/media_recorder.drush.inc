@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Drush Integration.
+ * Drush Integration for the media_recorder module.
  */
 
 /**
@@ -42,17 +41,23 @@ function drush_media_recorder_download_libraries() {
     // Get library info for each library.
     $library = libraries_detect($name);
 
-    // Don't process if it's already installed.
-    if ($library['installed']) {
-      drush_log(dt('@name is already installed.', array('@name' => $name)), 'ok');
-      continue;
-    }
-
     // Creates a temp directory an change directory.
     drush_op('chdir', drush_tempdir());
 
     // Get library path and download link from library info.
     $library_path = $base_path . '/' . $site_path . '/libraries/' . $name;
+
+    // Ask to overwrite if library already exists.
+    if (file_prepare_directory($library_path)) {
+      $confirm = drush_confirm(dt('A version of @name already exists. Do you want to overwrite it?', array('@name' => $name, '@path' => $library_path)));
+      if ($confirm) {
+        drush_delete_dir($library_path, TRUE);
+      }
+      else {
+        drush_log(dt('Skip installation of @name to @path.', array('@name' => $name, '@path' => $library_path)), 'warning');
+        continue;
+      }
+    }
 
     $download_url = '';
     if (!empty($library['download url'])) {
