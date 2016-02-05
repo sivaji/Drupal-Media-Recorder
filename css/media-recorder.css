@@ -1,9 +1,15 @@
+/**
+ * @file
+ * Default CSS for the media recorder element.
+ */
+
 .media-recorder-wrapper {
   padding: 10px;
   margin: 0;
   background: #323232;
   border: none;
   color: #fff;
+  max-width: 300px;
 }
 
 .media-recorder {
@@ -61,6 +67,10 @@
   border-radius: 2px;
   padding: 5px 10px;
   cursor: pointer;
+}
+
+.media-recorder-enable {
+  background: #00b33c;
 }
 
 .media-recorder-settings {
