@@ -55,7 +55,7 @@ function media_recorder_libraries_info() {
     'download url' => 'https://github.com/mattdiamond/Recorderjs/zipball/master',
     'version' => '',
     'files' => array(
-      'js' => array('recorder.js'),
+      'js' => array('dist/recorder.js'),
     ),
   );
 

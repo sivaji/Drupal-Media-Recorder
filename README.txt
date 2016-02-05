@@ -5,7 +5,8 @@ for use with the media module.
 
 REQUIREMENTS
 ------------
- * Media module - https://drupal.org/project/media
+ * File Entity module (2.x) - https://drupal.org/project/file_entity
+ * Media module (2.x) - https://drupal.org/project/media
  * Libraries module - https://drupal.org/project/libraries
  * RecorderJS library - https://github.com/mattdiamond/Recorderjs
  * FlashWavRecorder library - https://github.com/michalstocki/FlashWavRecorder
@@ -16,7 +17,7 @@ INSTALLATION
 ** Use the drush command 'drush mrdl' to automatically download the libraries.
 
 1. Install the RecorderJS library in sites/all/libraries. The recorder.js file
-   should be located at sites/all/libraries/Recorderjs/recorder.js.
+   should be located at sites/{site}/libraries/Recorderjs/dist/recorder.js.
 
 2. Install the SWFObject & FlashWavRecorder libraries in sites/all/libraries. The
    files swfobject.js and recorder.js should be at:
@@ -26,8 +27,7 @@ INSTALLATION
 3. Install dependencies and media recorder module as per:
    https://drupal.org/documentation/install/modules-themes/modules-7
 
-4. Visit the media recorder configuration page to set file path,
-   etc, at admin/config/media/mediarecorder.
+4. Visit the media recorder configuration page: admin/config/media/mediarecorder.
 
 CREDITS
 -------
