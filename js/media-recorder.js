@@ -1,7 +1,10 @@
 /**
  * @file
- * Loads correct javascript files based on browser features. We do this because of namespace conflicts with external
- * libraries.
+ * Provides JavaScript additions to the media recorder element.
+ *
+ * This file loads the correct media recorder javascript based on detected
+ * features, such as the MediaRecorder API and Web Audio API. It has a flash
+ * fallback, and uses the file widget for devices that supports nothing.
  */
 
 (function ($) {
@@ -19,43 +22,47 @@
   var swfobjectCheck = typeof (window.swfobject) === 'object';
   var flashVersionCheck = swfobjectCheck ? (swfobject.getFlashPlayerVersion().major >= 10) : false;
 
+  // Set recorder type.
+  var recorderType = false;
+  if (getUserMediaCheck && webAudioCheck && mediaRecorderCheck) {
+    recorderType = 'MediaRecorder';
+  }
+  else if (getUserMediaCheck && webAudioCheck && !mediaRecorderCheck) {
+    recorderType = 'MediaRecorderHTML5';
+  }
+  else if (swfobjectCheck && flashVersionCheck) {
+    recorderType = 'MediaRecorderFlash';
+  }
+
+  // Attach behaviors.
   Drupal.behaviors.mediaRecorder = {
-    attach: function () {
-
-      // Check to see that browser can use the recorder.
-      if ((getUserMediaCheck && webAudioCheck) || (flashVersionCheck && swfobjectCheck)) {
-
-        $('.field-widget-media-recorder').once().each(function (key, element) {
-
-          // Add Drupal MediaRecorder module and initialize.
-          if (getUserMediaCheck && webAudioCheck && mediaRecorderCheck) {
-            element.recorder = Drupal.MediaRecorder;
-          }
-          else if (getUserMediaCheck && webAudioCheck && !mediaRecorderCheck) {
-            element.recorder = Drupal.MediaRecorderHTML5;
-          }
-          else if (flashVersionCheck) {
-
-            // Check for IE9+.
-            if (!document.addEventListener) {
-              alert("The media recorder is not available on versions of Internet Explorer earlier than IE9.");
-              $('.field-widget-media-recorder').find('.media-recorder-wrapper').hide();
-              return;
+    attach: function (context, settings) {
+      if (settings.mediaRecorder && settings.mediaRecorder.elements) {
+        $.each(settings.mediaRecorder.elements, function (key, info) {
+          $('#' + info.id, context).once('media-recorder', function () {
+            var $mediaRecorder = $('#' + info.id);
+            var $mediaRecorderFallback = $('#' + info.id + '-fallback-ajax-wrapper');
+            switch (recorderType) {
+              case 'MediaRecorder':
+                $mediaRecorder.show();
+                $mediaRecorderFallback.hide();
+                new Drupal.MediaRecorder(info.id, info.conf);
+                break;
+              case 'MediaRecorderHTML5':
+                $mediaRecorder.show();
+                $mediaRecorderFallback.hide();
+                new Drupal.MediaRecorderHTML5(info.id, info.conf);
+                break;
+              case 'MediaRecorderFlash':
+                $mediaRecorder.show();
+                $mediaRecorderFallback.hide();
+                new Drupal.MediaRecorderFlash(info.id, info.conf);
+                break;
+              default:
+                $mediaRecorder.hide();
             }
-            element.recorder = Drupal.MediaRecorderFlash;
-          }
-
-          // Hide the normal file input.
-          $(element).find('span.file, span.file-size, .media-recorder-upload, .media-recorder-upload-button, .media-recorder-remove-button').hide();
-
-          // Initialize the recorder.
-          element.recorder.init(element);
+          });
         });
-      }
-
-      // Otherwise just use the basic file field.
-      else {
-        $('.field-widget-media-recorder').find('.media-recorder-wrapper').hide();
       }
     }
   };

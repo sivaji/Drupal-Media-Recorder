@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Definition of MediaRecorderBrowser.
@@ -20,7 +19,7 @@ class MediaRecorderBrowser extends MediaBrowserPlugin {
    * Implements MediaBrowserPlugin::view().
    */
   public function view() {
-    $build['form'] = drupal_get_form('media_recorder_add', $this->params['types'], $this->params['multiselect']);
+    $build['form'] = drupal_get_form('media_recorder_add', $this->params['types'], $this->params['multiselect'], TRUE);
     return $build;
   }
 }

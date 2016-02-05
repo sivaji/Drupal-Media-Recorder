@@ -1,29 +1,96 @@
 /**
  * @file
- * Adds an interface between the media recorder jQuery plugin and the drupal media module.
+ * Provides an interface for the FWRecorder library.
  */
 
 (function ($) {
   'use strict';
 
-  Drupal.MediaRecorderFlash = (function () {
-    var settings = Drupal.settings.mediaRecorder.settings;
+  Drupal.MediaRecorderFlash = function (id, conf) {
+    var settings = conf;
     var origin = window.location.origin || window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
-    var recordingName;
-    var statusInterval;
-    var $element;
-    var $statusWrapper;
-    var $previewWrapper;
-    var $video;
-    var $audio;
-    var $meter;
-    var $startButton;
-    var $recordButton;
-    var $playButton;
-    var $stopButton;
-    var $settingsButton;
-    var $videoButton;
-    var $audioButton;
+
+    var $element = $('#' + id);
+    var $inputFid = $('#' + id + '-fid');
+    var $statusWrapper = $element.find('.media-recorder-status');
+    var $previewWrapper = $element.find('.media-recorder-preview');
+    var $video = $element.find('.media-recorder-video');
+    var $audio = $element.find('.media-recorder-audio');
+    var $meter = $element.find('.media-recorder-meter');
+    var $startButton = $element.find('.media-recorder-enable');
+    var $recordButton = $element.find('.media-recorder-record');
+    var $stopButton = $element.find('.media-recorder-stop');
+    var $playButton = $element.find('.media-recorder-play');
+    var $settingsButton = $element.find('.media-recorder-settings');
+    var $videoButton = $element.find('.media-recorder-enable-video');
+    var $audioButton = $element.find('.media-recorder-enable-audio');
+    var statusInterval = null;
+    var recordingName = id + '-audio';
+
+    // Initialize flash recorder.
+    if (!$('#flash-wrapper').length) {
+      $element.append('<div id="flash-wrapper"><div id="flashcontent"><p>Your browser must have JavaScript enabled and the Adobe Flash Player installed.</p></div></div>');
+
+      window.fwr_event_handler = function (eventName) {
+        Drupal.settings.mediaRecorder.elements.forEach(function (info) {
+          $('#' + info.id).trigger(eventName, arguments);
+        });
+      };
+
+      swfobject.embedSWF(
+        Drupal.settings.basePath + Drupal.settings.mediaRecorder.swfPath + '/html/recorder.swf?id=' + id,
+        'flashcontent',
+        1,
+        1,
+        '11.0.0',
+        '',
+        {},
+        {},
+        {'id': 'flashRecorder', 'name': 'flashRecorder'}
+      );
+    }
+
+    // Initial state.
+    $recordButton.hide();
+    $recordButton.hide();
+    $stopButton.hide();
+    $playButton.hide();
+    $stopButton.before($playButton);
+    $previewWrapper.hide();
+    $video.hide();
+    $audio.hide();
+    $meter.hide();
+    $videoButton.hide();
+    $audioButton.hide();
+
+    // Show file preview if file exists.
+    if (Drupal.settings.mediaRecorder.file) {
+      var file = Drupal.settings.mediaRecorder.file;
+      switch (file.type) {
+        case 'video':
+          $previewWrapper.show();
+          $video.show();
+          $audio.hide();
+          $video[0].src = Drupal.settings.mediaRecorder.file.url;
+          $video[0].muted = '';
+          $video[0].controls = 'controls';
+          $video[0].load();
+          break;
+        case 'audio':
+          $previewWrapper.show();
+          $audio.show();
+          $video.hide();
+          $audio[0].src = Drupal.settings.mediaRecorder.file.url;
+          $audio[0].muted = '';
+          $audio[0].controls = 'controls';
+          $audio[0].load();
+          break;
+      }
+    }
+
+    initializeButtons();
+    initializeEvents();
+    setStatus('Click \'Start\' to enable your mic & camera.');
 
     /**
      * Set status message.
@@ -49,6 +116,7 @@
       var formData = new FormData();
       var req = new XMLHttpRequest();
       formData.append("mediaRecorder", blob);
+      formData.append("mediaRecorderUploadLocation", conf.upload_location);
 
       // Send file.
       req.addEventListener("load", transferComplete, false);
@@ -64,7 +132,7 @@
      * Stop recording and trigger stopped event.
      */
     function start() {
-      showSettings();
+      showSettings('asdf');
     }
 
     /**
@@ -248,7 +316,7 @@
       });
 
       $element.bind('uploadFinished', function (event, data) {
-        $element.find('.media-recorder-fid').val(data.fid);
+        $inputFid.val(data.fid);
         $recordButton[0].disabled = false;
         setStatus('Press record to start recording.');
       });
@@ -274,91 +342,5 @@
       return mm + ':' + ss;
     }
 
-    /**
-     * Initialize recorder.
-     */
-    function init(element) {
-      $element = $(element);
-      $statusWrapper = $element.find('.media-recorder-status');
-      $previewWrapper = $element.find('.media-recorder-preview');
-      $video = $element.find('.media-recorder-video');
-      $audio = $element.find('.media-recorder-audio');
-      $meter = $element.find('.media-recorder-meter');
-      $startButton = $element.find('.media-recorder-enable');
-      $recordButton = $element.find('.media-recorder-record');
-      $stopButton = $element.find('.media-recorder-stop');
-      $playButton = $element.find('.media-recorder-play');
-      $settingsButton = $element.find('.media-recorder-settings');
-      $videoButton = $element.find('.media-recorder-enable-video');
-      $audioButton = $element.find('.media-recorder-enable-audio');
-      recordingName = 'audio';
-
-      // Append flash recorder div.
-      $element.append('<div id="flash-wrapper"><div id="flashcontent"><p>Your browser must have JavaScript enabled and the Adobe Flash Player installed.</p></div></div>');
-
-      // Initialize flash recorder.
-      window.fwr_event_handler = function (eventName) {
-        $element.trigger(eventName, arguments);
-      };
-      swfobject.embedSWF(
-        Drupal.settings.basePath + Drupal.settings.mediaRecorder.flashurl + '/html/recorder.swf',
-        'flashcontent',
-        1,
-        1,
-        '11.0.0',
-        '',
-        {},
-        {},
-        {'id': 'flashRecorder', 'name': 'flashRecorder'}
-      );
-
-      // Initial state.
-      $recordButton.hide();
-      $recordButton.hide();
-      $stopButton.hide();
-      $playButton.hide();
-      $stopButton.before($playButton);
-      $video.hide();
-      $audio.hide();
-      $meter.hide();
-      $videoButton.hide();
-      $audioButton.hide();
-
-      // Show file preview if file exists.
-      if (Drupal.settings.mediaRecorder.file) {
-        var file = Drupal.settings.mediaRecorder.file;
-        switch (file.type) {
-          case 'video':
-            $previewWrapper.show();
-            $video.show();
-            $audio.hide();
-            $video[0].src = Drupal.settings.mediaRecorder.file.url;
-            $video[0].muted = '';
-            $video[0].controls = 'controls';
-            $video[0].load();
-            break;
-          case 'audio':
-            $previewWrapper.show();
-            $audio.show();
-            $video.hide();
-            $audio[0].src = Drupal.settings.mediaRecorder.file.url;
-            $audio[0].muted = '';
-            $audio[0].controls = 'controls';
-            $audio[0].load();
-            break;
-        }
-      }
-
-      initializeButtons();
-      initializeEvents();
-      setStatus('Click \'Start\' to enable your mic & camera.');
-    }
-
-    return {
-      init: init,
-      start: start,
-      record: record,
-      stop: stop
-    };
-  })();
+  };
 })(jQuery);

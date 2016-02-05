@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Admin only functionality for the media_recorder module.
@@ -54,6 +53,14 @@ function media_recorder_admin_form($form, $form_state) {
     ),
   );
 
+  // Recorder CSS enabled.
+  $form['media_recorder_css'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use default CSS stylesheet?'),
+    '#description' => t('Disable if you want to use a different set of styles without having to override the default CSS.'),
+    '#default_value' => variable_get('media_recorder_css', TRUE),
+  );
+
   // Recorder time limit.
   $form['media_recorder_time_limit'] = array(
     '#type' => 'textfield',
@@ -62,6 +69,15 @@ function media_recorder_admin_form($form, $form_state) {
     '#default_value' => variable_get('media_recorder_time_limit', 300),
     '#element_validate' => array('element_validate_integer_positive'),
     '#required' => TRUE,
+  );
+
+  // Recorder allowed entensions.
+  $form['media_recorder_default_allowed_extensions'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Default allowed file extensions'),
+    '#default_value' => variable_get('media_recorder_default_allowed_extensions', 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm'),
+    '#description' => t('Separate extensions with a space or comma and do not include the leading dot.'),
+    '#maxlength' => NULL,
   );
 
   // Recorder upload directory.
@@ -80,14 +96,6 @@ function media_recorder_admin_form($form, $form_state) {
       '#dialog' => TRUE,
     );
   }
-
-  // Recorder CSS enabled.
-  $form['media_recorder_css'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Use default CSS stylesheet?'),
-    '#description' => t('Disable if you want to use a different set of styles without having to override the default CSS.'),
-    '#default_value' => variable_get('media_recorder_css', TRUE),
-  );
 
   return system_settings_form($form);
 }

@@ -1,45 +1,89 @@
 /**
  * @file
- * Adds an interface between the media recorder jQuery plugin and the drupal media module.
+ * Provides an interface for the Recorder.js library.
  */
 
 (function ($) {
   'use strict';
 
-  Drupal.MediaRecorderHTML5 = (function () {
-    var settings = Drupal.settings.mediaRecorder.settings;
+  Drupal.MediaRecorderHTML5 = function (id, conf) {
+    var settings = conf;
     var origin = window.location.origin || window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
-    var audioContext;
-    var canvasContext;
-    var visualizerProcessor;
-    var freqData;
-    var volume;
-    var barWidth;
-    var level;
-    var meterProcessor;
-    var constraints;
-    var localStream;
-    var recorder;
-    var recordURL;
-    var playbackURL;
-    var mimetype;
-    var analyser;
-    var microphone;
-    var blobs;
-    var statusInterval;
-    var $element;
-    var $statusWrapper;
-    var $previewWrapper;
-    var $video;
-    var $audio;
-    var $meter;
-    var $startButton;
-    var $recordButton;
-    var $playButton;
-    var $stopButton;
-    var $settingsButton;
-    var $videoButton;
-    var $audioButton;
+
+    var $element = $('#' + id);
+    var $inputFid = $('#' + id + '-fid');
+    var $statusWrapper = $element.find('.media-recorder-status');
+    var $previewWrapper = $element.find('.media-recorder-preview');
+    var $video = $element.find('.media-recorder-video');
+    var $audio = $element.find('.media-recorder-audio');
+    var $meter = $element.find('.media-recorder-meter');
+    var $startButton = $element.find('.media-recorder-enable');
+    var $recordButton = $element.find('.media-recorder-record');
+    var $stopButton = $element.find('.media-recorder-stop');
+    var $playButton = $element.find('.media-recorder-play');
+    var $settingsButton = $element.find('.media-recorder-settings');
+    var $videoButton = $element.find('.media-recorder-enable-video');
+    var $audioButton = $element.find('.media-recorder-enable-audio');
+
+    var audioContext = null;
+    var canvasContext = null;
+    var visualizerProcessor = null;
+    var freqData = null;
+    var volume = 0;
+    var barWidth = 0;
+    var level = 0;
+    var meterProcessor = null;
+    var localStream = null;
+    var recorder = null;
+    var recordURL = null;
+    var playbackURL = null;
+    var mimetype = null;
+    var analyser = null;
+    var microphone = null;
+    var blobs = [];
+    var statusInterval = null;
+    var constraints = {};
+
+    // Initial state.
+    $recordButton.hide();
+    $stopButton.hide();
+    $playButton.hide();
+    $settingsButton.hide();
+    $video.hide();
+    $audio.hide();
+    $meter.hide();
+    $videoButton.hide();
+    $audioButton.hide();
+    $previewWrapper.hide();
+
+    // Show file preview if file exists.
+    if (conf.file) {
+      var file = conf.file;
+      switch (file.type) {
+        case 'video':
+          $previewWrapper.show();
+          $video.show();
+          $audio.hide();
+          $video[0].src = file.url;
+          $video[0].muted = '';
+          $video[0].controls = 'controls';
+          $video[0].load();
+          break;
+        case 'audio':
+          $previewWrapper.show();
+          $audio.show();
+          $video.hide();
+          $audio[0].src = file.url;
+          $audio[0].muted = '';
+          $audio[0].controls = 'controls';
+          $audio[0].load();
+          break;
+      }
+    }
+
+    initializeButtons();
+    initializeEvents();
+    setStatus('Click \'Start\' to enable your mic & camera.');
 
     /**
      * Set status message.
@@ -166,16 +210,17 @@
 
       // Create formData object.
       var formData = new FormData();
-      var req = new XMLHttpRequest();
-      formData.append("mediaRecorder", blob);
+      var request = new XMLHttpRequest();
       blobs = [blob];
+      formData.append("mediaRecorder", blob);
+      formData.append("mediaRecorderUploadLocation", conf.upload_location);
 
       // Send file.
-      req.addEventListener("load", transferComplete, false);
-      req.open('POST', origin + Drupal.settings.basePath + 'media_recorder/record/file', true);
-      req.send(formData);
+      request.addEventListener("load", transferComplete, false);
+      request.open('POST', origin + Drupal.settings.basePath + 'media_recorder/record/file', true);
+      request.send(formData);
       function transferComplete(evt) {
-        var file = JSON.parse(req.response);
+        var file = JSON.parse(request.response);
         $element.trigger('uploadFinished', file);
       }
     }
@@ -211,7 +256,7 @@
           analyser.smoothingTimeConstant = 0.75;
           analyser.fftSize = 512;
           microphone = audioContext.createMediaStreamSource(stream);
-          recorder = new Recorder(microphone, {workerPath: Drupal.settings.basePath + Drupal.settings.mediaRecorder.html5url + '/recorderWorker.js'});
+          recorder = new Recorder(microphone, {workerPath: Drupal.settings.basePath + Drupal.settings.mediaRecorder.workerPath + '/recorderWorker.js'});
 
           $previewWrapper.show();
           $meter.show();
@@ -312,6 +357,7 @@
         recordingPreview();
         setStatus('Recording 00:00 (Time Limit: ' + timeLimitFormatted + ')');
 
+        currentSeconds = 0;
         statusInterval = setInterval(function () {
           currentSeconds = currentSeconds + 1;
           var currentMilliSeconds = new Date(currentSeconds * 1000);
@@ -331,7 +377,7 @@
       });
 
       $element.bind('uploadFinished', function (event, data) {
-        $element.find('.media-recorder-fid').val(data.fid);
+        $inputFid.val(data.fid);
         $recordButton[0].disabled = false;
         playbackPreview();
         setStatus('Press record to start recording.');
@@ -357,72 +403,5 @@
       }
       return mm + ':' + ss;
     }
-
-    /**
-     * Initialize recorder.
-     */
-    function init(element) {
-      $element = $(element);
-      $statusWrapper = $element.find('.media-recorder-status');
-      $previewWrapper = $element.find('.media-recorder-preview');
-      $video = $element.find('.media-recorder-video');
-      $audio = $element.find('.media-recorder-audio');
-      $meter = $element.find('.media-recorder-meter');
-      $startButton = $element.find('.media-recorder-enable');
-      $recordButton = $element.find('.media-recorder-record');
-      $stopButton = $element.find('.media-recorder-stop');
-      $playButton = $element.find('.media-recorder-play');
-      $settingsButton = $element.find('.media-recorder-settings');
-      $videoButton = $element.find('.media-recorder-enable-video');
-      $audioButton = $element.find('.media-recorder-enable-audio');
-
-      // Initial state.
-      $recordButton.hide();
-      $stopButton.hide();
-      $playButton.hide();
-      $settingsButton.hide();
-      $video.hide();
-      $audio.hide();
-      $meter.hide();
-      $videoButton.hide();
-      $audioButton.hide();
-      $previewWrapper.hide();
-
-      // Show file preview if file exists.
-      if (Drupal.settings.mediaRecorder.file) {
-        var file = Drupal.settings.mediaRecorder.file;
-        switch (file.type) {
-          case 'video':
-            $previewWrapper.show();
-            $video.show();
-            $audio.hide();
-            $video[0].src = Drupal.settings.mediaRecorder.file.url;
-            $video[0].muted = '';
-            $video[0].controls = 'controls';
-            $video[0].load();
-            break;
-          case 'audio':
-            $previewWrapper.show();
-            $audio.show();
-            $video.hide();
-            $audio[0].src = Drupal.settings.mediaRecorder.file.url;
-            $audio[0].muted = '';
-            $audio[0].controls = 'controls';
-            $audio[0].load();
-            break;
-        }
-      }
-
-      initializeButtons();
-      initializeEvents();
-      setStatus('Click \'Start\' to enable your mic & camera.');
-    }
-
-    return {
-      init: init,
-      start: start,
-      record: record,
-      stop: stop
-    };
-  })();
+  };
 })(jQuery);

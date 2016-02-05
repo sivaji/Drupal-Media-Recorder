@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Install, update and uninstall functions for the Media Recorder module.
+ * Install, update and uninstall functions for the media_recorder module.
  */
 
 /**
@@ -64,7 +63,8 @@ function media_recorder_enable() {
  */
 function media_recorder_uninstall() {
   variable_del('media_recorder_constraints');
-  variable_del('media_recorder_time_limit');
-  variable_del('media_recorder_upload_directory');
   variable_del('media_recorder_css');
+  variable_del('media_recorder_time_limit');
+  variable_del('media_recorder_default_allowed_extensions');
+  variable_del('media_recorder_upload_directory');
 }
