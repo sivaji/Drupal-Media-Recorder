@@ -18,6 +18,9 @@
     <audio class="media-recorder-audio" controls></audio>
   </div>
   <div class="media-recorder-status"></div>
+  <div class="media-recorder-progress progress">
+    <div class="progress-bar" role="progressbar"></div>
+  </div>
   <div class="media-recorder-controls">
     <button class="media-recorder-enable" title="Click to enable your mic & camera.">Start</button>
     <button class="media-recorder-record" title="Click to start recording.">Record</button>

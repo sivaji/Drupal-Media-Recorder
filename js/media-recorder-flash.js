@@ -14,6 +14,7 @@
     var $inputFid = $('#' + id + '-fid');
     var $statusWrapper = $element.find('.media-recorder-status');
     var $previewWrapper = $element.find('.media-recorder-preview');
+    var $progressWrapper = $element.find('.media-recorder-progress');
     var $video = $element.find('.media-recorder-video');
     var $audio = $element.find('.media-recorder-audio');
     var $meter = $element.find('.media-recorder-meter');
@@ -62,6 +63,7 @@
     $meter.hide();
     $videoButton.hide();
     $audioButton.hide();
+    $progressWrapper.hide();
 
     // Show file preview if file exists.
     if (Drupal.settings.mediaRecorder.file) {
@@ -289,11 +291,24 @@
         var currentSeconds = 0;
         var timeLimitFormatted = millisecondsToTime(new Date(parseInt(settings.time_limit, 10) * 1000));
 
+        $progressWrapper.show();
+        var $progress = $progressWrapper.children('.progress-bar');
+        $progress.css({
+          width: '0%'
+        });
+
         setStatus('Recording 00:00 (Time Limit: ' + timeLimitFormatted + ')');
+
         statusInterval = setInterval(function () {
           currentSeconds = currentSeconds + 1;
           var currentMilliSeconds = new Date(currentSeconds * 1000);
           var time = millisecondsToTime(currentMilliSeconds);
+          var timePercentage = currentSeconds / settings.time_limit * 100;
+
+          $progress.css({
+            width: timePercentage + '%'
+          });
+
           setStatus('Recording ' + time + ' (Time Limit: ' + timeLimitFormatted + ')');
 
           if (currentSeconds >= settings.time_limit) {
@@ -305,6 +320,7 @@
       // FWRecorder recording_stopped event.
       $element.bind('recording_stopped', function (event) {
         var blob = FWRecorder.getBlob(recordingName);
+        $progressWrapper.hide();
         clearInterval(statusInterval);
         sendBlob(blob);
       });

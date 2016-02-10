@@ -14,6 +14,7 @@
     var $inputFid = $('#' + id + '-fid');
     var $statusWrapper = $element.find('.media-recorder-status');
     var $previewWrapper = $element.find('.media-recorder-preview');
+    var $progressWrapper = $element.find('.media-recorder-progress');
     var $video = $element.find('.media-recorder-video');
     var $audio = $element.find('.media-recorder-audio');
     var $meter = $element.find('.media-recorder-meter');
@@ -58,6 +59,7 @@
     $videoButton.hide();
     $audioButton.hide();
     $previewWrapper.hide();
+    $progressWrapper.hide();
 
     // Set constraints.
     constraints.audio = true;
@@ -497,10 +499,23 @@
         recordingPreview();
         setStatus('Recording 00:00 (Time Limit: ' + timeLimitFormatted + ')');
 
+        $progressWrapper.show();
+        var $progress = $progressWrapper.children('.progress-bar');
+        $progress.css({
+          width: '0%'
+        });
+
+        currentSeconds = 0;
         statusInterval = setInterval(function () {
           currentSeconds = currentSeconds + 1;
           var currentMilliSeconds = new Date(currentSeconds * 1000);
           var time = millisecondsToTime(currentMilliSeconds);
+          var timePercentage = currentSeconds / settings.time_limit * 100;
+
+          $progress.css({
+            width: timePercentage + '%'
+          });
+
           setStatus('Recording ' + time + ' (Time Limit: ' + timeLimitFormatted + ')');
 
           if (currentSeconds >= settings.time_limit) {
@@ -512,6 +527,7 @@
       // Listen for the stop event.
       $element.bind('recordStop', function (event) {
         clearInterval(statusInterval);
+        $progressWrapper.hide();
         setStatus('Please wait while the recording finishes uploading...');
       });
 

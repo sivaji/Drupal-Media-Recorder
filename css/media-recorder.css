@@ -38,6 +38,24 @@
   vertical-align: bottom;
 }
 
+.media-recorder-progress {
+  height: 20px;
+  overflow: hidden;
+  background: #222222;
+  box-shadow: inset 0 0 10px #000000;
+}
+
+.media-recorder-progress .progress-bar {
+  float: left;
+  width: 0;
+  height: 100%;
+  font-size: 12px;
+  line-height: 20px;
+  color: #fff;
+  text-align: center;
+  background-color: #337ab7;
+}
+
 .media-recorder-video {
   width: 100%;
   padding: 5px 0;
