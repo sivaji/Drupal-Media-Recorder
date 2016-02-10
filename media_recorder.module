@@ -348,14 +348,19 @@ function media_recorder_record_stream_finish() {
     return;
   }
 
-  // Change the file name and save as temporary managed file.
+  // Change the file name and save to upload location.
   try {
-    $uri = $_SESSION['media_recorder']['tempnam'];
-    $target = $_POST['mediaRecorderUploadLocation'] . '/' . uniqid('mediaRecorder_') . '.' . $_SESSION['media_recorder']['format'];
-    file_unmanaged_move($uri, $target);
-    $file = file_uri_to_object($target);
-    $file->status = 0;
-    file_save($file);
+    if (file_prepare_directory($_POST['mediaRecorderUploadLocation'], FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+      $uri = $_SESSION['media_recorder']['tempnam'];
+      $target = $_POST['mediaRecorderUploadLocation'] . '/' . uniqid('mediaRecorder_') . '.' . $_SESSION['media_recorder']['format'];
+      file_unmanaged_move($uri, $target);
+      $file = file_uri_to_object($target);
+      $file->status = 0;
+      file_save($file);
+    }
+    else {
+      throw new Exception("Unable to save recording to directory.");
+    }
   }
   catch (Exception $e) {
     header('HTTP/1.0 419 Custom Error');
@@ -441,13 +446,18 @@ function media_recorder_record_file() {
     }
   }
 
-  // Change the file name and save as temporary managed file.
+  // Change the file name and save to upload location.
   try {
-    $target = $_POST['mediaRecorderUploadLocation'] . '/' . uniqid('mediaRecorder_') . '.wav';
-    file_unmanaged_move($uri, $target);
-    $file = file_uri_to_object($target);
-    $file->status = 0;
-    file_save($file);
+    if (file_prepare_directory($_POST['mediaRecorderUploadLocation'], FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+      $target = $_POST['mediaRecorderUploadLocation'] . '/' . uniqid('mediaRecorder_') . '.wav';
+      file_unmanaged_move($uri, $target);
+      $file = file_uri_to_object($target);
+      $file->status = 0;
+      file_save($file);
+    }
+    else {
+      throw new Exception("Unable to save recording to directory.");
+    }
   }
   catch (Exception $e) {
     header('HTTP/1.0 419 Custom Error');
