@@ -107,6 +107,11 @@
   background: #ffa42a;
 }
 
+button.media-recorder-enable-audio, 
+button.media-recorder-enable-video {
+  color: #000;
+}
+
 #flash-wrapper {
   text-align: center;
 }
