@@ -26,6 +26,7 @@
     var $videoButton = $element.find('.media-recorder-enable-video');
     var $audioButton = $element.find('.media-recorder-enable-audio');
 
+    var recording = false;
     var audioContext = null;
     var canvasContext = null;
     var visualizerProcessor = null;
@@ -491,11 +492,22 @@
      */
     function initializeEvents() {
 
+      // Stop page unload if there is a recording in process.
+      window.onbeforeunload = function () {
+        if (recording) {
+          return 'You are still in the process of recording, are you sure you want to leave this page?';
+        }
+        else {
+          return null;
+        }
+      };
+
       // Listen for the record event.
       $element.bind('recordStart', function (event, data) {
         var currentSeconds = 0;
         var timeLimitFormatted = millisecondsToTime(new Date(parseInt(settings.time_limit, 10) * 1000));
 
+        recording = true;
         recordingPreview();
         setStatus('Recording 00:00 (Time Limit: ' + timeLimitFormatted + ')');
 
@@ -533,6 +545,7 @@
 
       // Append file object data.
       $element.bind('refreshData', function (event, data) {
+        recording = false;
         $inputFid.val(data.fid);
         $recordButton[0].disabled = false;
         playbackPreview();

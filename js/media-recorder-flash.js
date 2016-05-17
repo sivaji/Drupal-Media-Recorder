@@ -27,6 +27,7 @@
     var $audioButton = $element.find('.media-recorder-enable-audio');
     var statusInterval = null;
     var recordingName = id + '-audio';
+    var recording = false;
 
     // Initialize flash recorder.
     if (!$('#flash-wrapper').length) {
@@ -204,6 +205,16 @@
      */
     function initializeEvents() {
 
+      // Stop page unload if there is a recording in process.
+      window.onbeforeunload = function () {
+        if (recording) {
+          return 'You are still in the process of recording, are you sure you want to leave this page?';
+        }
+        else {
+          return null;
+        }
+      };
+
       // FWRecorder ready event.
       $element.bind('ready', function (event) {
 
@@ -297,6 +308,7 @@
           width: '0%'
         });
 
+        recording = true;
         setStatus('Recording 00:00 (Time Limit: ' + timeLimitFormatted + ')');
 
         statusInterval = setInterval(function () {
@@ -332,6 +344,7 @@
       });
 
       $element.bind('uploadFinished', function (event, data) {
+        recording = false;
         $inputFid.val(data.fid);
         $recordButton[0].disabled = false;
         setStatus('Press record to start recording.');
