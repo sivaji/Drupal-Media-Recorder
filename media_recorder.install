@@ -47,8 +47,13 @@ function media_recorder_requirements($phase) {
  * Implements hook_enable().
  */
 function media_recorder_enable() {
+
   // Check that all libraries exist.
-  $required_libraries = array('swfobject', 'recorder.js', 'Recorderjs');
+  $required_libraries = array(
+    'swfobject',
+    'FlashWavRecorder',
+    'Recorderjs',
+  );
   foreach ($required_libraries as $name) {
     $library = libraries_detect($name);
     if (!$library['installed']) {
