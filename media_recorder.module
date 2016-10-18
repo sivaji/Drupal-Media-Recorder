@@ -147,6 +147,28 @@ function media_recorder_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Getter callback for retrieving media recorder settings with defaults.
+ */
+function media_recorder_get_settings() {
+  return variable_get('media_recorder', array(
+    'constraints' => array(
+      'audio' => TRUE,
+      'video' => TRUE,
+      'video_resolution' => 320,
+    ),
+    'css' => TRUE,
+    'time_limit' => 300,
+    'allowed_extensions' => 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm',
+    'upload_directory' => 300,
+    'kaltura' => array(
+      'enable' => FALSE,
+      'server' => 0,
+      'recorder' => 0,
+    ),
+  ));
+}
+
+/**
  * Menu callback for recording a media file.
  */
 function media_recorder_record_stream_start() {
@@ -489,6 +511,7 @@ function media_recorder_media_browser_plugin_info() {
 function media_recorder_element_info() {
   $types = array();
 
+  $settings = media_recorder_get_settings();
   $types['media_recorder'] = array(
     '#input' => TRUE,
     '#process' => array('media_recorder_element_process'),
@@ -497,15 +520,11 @@ function media_recorder_element_info() {
     '#default_value' => NULL,
     '#extended' => TRUE,
     '#theme_wrappers' => array('form_element'),
-    '#time_limit' => variable_get('media_recorder_time_limit', 300),
-    '#constraints' => variable_get('media_recorder_constraints', array(
-      'audio' => TRUE,
-      'video' => TRUE,
-      'video_resolution' => 320,
-    )),
-    '#upload_location' => 'public://' . variable_get('media_recorder_upload_directory', ''),
+    '#time_limit' => $settings['time_limit'],
+    '#constraints' => $settings['constraints'],
+    '#upload_location' => 'public://' . $settings['upload_directory'],
     '#upload_validators' => array(
-      'file_validate_extensions' => array(variable_get('media_recorder_default_allowed_extensions', 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm')),
+      'file_validate_extensions' => array($settings['allowed_extensions']),
     ),
   );
 
@@ -518,6 +537,7 @@ function media_recorder_element_info() {
  * @see media_recorder_element_info()
  */
 function media_recorder_element_process($element, &$form_state, $form) {
+  $settings = media_recorder_get_settings();
   $fid = isset($element['#value']['fid']) ? $element['#value']['fid'] : 0;
   $file = NULL;
   $id = uniqid('media-recorder-');
@@ -611,7 +631,7 @@ function media_recorder_element_process($element, &$form_state, $form) {
   );
 
   // Add custom css if enabled.
-  if (variable_get('media_recorder_css', TRUE)) {
+  if ($settings['css']) {
     $element['#attached']['css'] = array(
       array(
         'type' => 'file',
@@ -876,11 +896,12 @@ function media_recorder_form_field_ui_field_edit_form_alter(&$form, &$form_state
  * @see media_recorder_form_field_ui_field_edit_form_alter()
  */
 function _media_recorder_extensions($element, &$form_state) {
+  $settings = media_recorder_get_settings();
   if (!empty($element['#value'])) {
     $extensions = preg_replace('/([, ]+\.?)/', ' ', trim(strtolower($element['#value'])));
     $extensions = array_filter(explode(' ', $extensions));
     if (!in_array('wav', $extensions) || !in_array('ogg', $extensions) || !in_array('webm', $extensions)) {
-      form_error($element, t('The list of allowed extensions is not valid, be sure to include wav, ogg, and webm formats. <br />These are the current default media recorder allowed extensions: @extensions', array('@extensions' => variable_get('media_recorder_default_allowed_extensions', 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm'))));
+      form_error($element, t('The list of allowed extensions is not valid, be sure to include wav, ogg, and webm formats. <br />These are the current default media recorder allowed extensions: @extensions', array('@extensions' => $settings['allowed_extensions'])));
     }
   }
 }

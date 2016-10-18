@@ -62,9 +62,56 @@ function media_recorder_enable() {
  * Implements hook_uninstall().
  */
 function media_recorder_uninstall() {
+  variable_del('media_recorder');
+}
+
+/**
+ * Moves all setting variables into one variable.
+ */
+function media_recorder_update_7200(&$sandbox) {
+  $settings = array(
+    'constraints' => array(
+      'audio' => TRUE,
+      'video' => TRUE,
+      'video_resolution' => 320,
+    ),
+    'css' => TRUE,
+    'time_limit' => 300,
+    'allowed_extensions' => 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm',
+    'upload_directory' => 300,
+    'kaltura' => array(
+      'enable' => FALSE,
+      'server' => 0,
+      'recorder' => 0,
+    ),
+  );
+
+  $media_recorder_constraints = variable_get('media_recorder_constraints', '');
+  $media_recorder_css = variable_get('media_recorder_css', '');
+  $media_recorder_time_limit = variable_get('media_recorder_time_limit', '');
+  $media_recorder_default_allowed_extensions = variable_get('media_recorder_default_allowed_extensions', '');
+  $media_recorder_upload_directory = variable_get('media_recorder_upload_directory', '');
   variable_del('media_recorder_constraints');
   variable_del('media_recorder_css');
   variable_del('media_recorder_time_limit');
   variable_del('media_recorder_default_allowed_extensions');
   variable_del('media_recorder_upload_directory');
+
+  if (!empty($media_recorder_constraints)) {
+    $settings['constraints'] = $media_recorder_constraints;
+  }
+  if (!empty($media_recorder_css)) {
+    $settings['css'] = $media_recorder_css;
+  }
+  if (!empty($media_recorder_time_limit)) {
+    $settings['time_limit'] = $media_recorder_time_limit;
+  }
+  if (!empty($media_recorder_default_allowed_extensions)) {
+    $settings['allowed_extensions'] = $media_recorder_default_allowed_extensions;
+  }
+  if (!empty($media_recorder_upload_directory)) {
+    $settings['upload_directory'] = $media_recorder_upload_directory;
+  }
+
+  variable_set('media_recorder', $settings);
 }
