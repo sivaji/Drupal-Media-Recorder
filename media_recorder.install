@@ -101,6 +101,9 @@ function media_recorder_update_7200(&$sandbox) {
   variable_del('media_recorder_time_limit');
   variable_del('media_recorder_default_allowed_extensions');
   variable_del('media_recorder_upload_directory');
+  variable_del('media_recorder_width');
+  variable_del('media_recorder_height');
+  variable_del('media_recorder_timelimit');
 
   if (!empty($media_recorder_constraints)) {
     $settings['constraints'] = $media_recorder_constraints;
