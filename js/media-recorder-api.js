@@ -253,13 +253,22 @@
      * Stop user media stream.
      */
     function stopStream() {
-      analyser.disconnect();
-      microphone.disconnect();
-      localStream.stop();
+      if (analyser) {
+        analyser.disconnect();
+      }
+      if (microphone) {
+        microphone.disconnect();
+      }
+      if (localStream) {
+        localStream.stop();
+      }
       $previewWrapper.hide();
       $startButton.show();
       $recordButton.hide();
       $stopButton.hide();
+      $videoButton.hide();
+      $audioButton.hide();
+      setStatus('Click \'Start\' to enable your mic & camera.');
     }
 
     /**
