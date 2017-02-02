@@ -586,9 +586,6 @@ function media_recorder_record_kaltura_token() {
       $entry->categoriesIds = $settings['kaltura']['category'];
     }
 
-    // Allow other modules to alter media entry object before operation.
-    drupal_alter('media_kaltura_entry', $entry, NULL, $kaltura['client']);
-
     // Upload the file and create a new Kaltura media entry.
     $entry = $kaltura['client']->media->addFromUploadedFile($entry, $token->id);
 
