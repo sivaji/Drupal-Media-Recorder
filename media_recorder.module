@@ -85,6 +85,22 @@ function media_recorder_menu() {
     'access arguments' => array('create'),
     'type' => MENU_CALLBACK,
   );
+  $items['media_recorder/record/kaltura/token'] = array(
+    'title' => 'Record',
+    'description' => 'Add a Kaltura recording from an upload token (html5).',
+    'page callback' => 'media_recorder_record_kaltura_token',
+    'access callback' => 'file_entity_access',
+    'access arguments' => array('create'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['media_recorder/record/kaltura/entry'] = array(
+    'title' => 'Record',
+    'description' => 'Add a Kaltura recording from an existing entry (flash).',
+    'page callback' => 'media_recorder_record_kaltura_entry',
+    'access callback' => 'file_entity_access',
+    'access arguments' => array('create'),
+    'type' => MENU_CALLBACK,
+  );
   $items['media_recorder/record/stream/start'] = array(
     'title' => 'Record',
     'description' => 'Record a video or audio file as a stream.',
@@ -159,11 +175,13 @@ function media_recorder_get_settings() {
     'css' => TRUE,
     'time_limit' => 300,
     'allowed_extensions' => 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm',
-    'upload_directory' => 300,
+    'upload_directory' => '',
     'kaltura' => array(
       'enable' => FALSE,
       'server' => 0,
       'recorder' => 0,
+      'profile' => 0,
+      'category' => 0,
     ),
   ));
 }
@@ -492,6 +510,182 @@ function media_recorder_record_file() {
 }
 
 /**
+ * Menu callback for saving a Kaltura recording from an upload token.
+ *
+ * This will create a new media entry and file. However it will not trigger the
+ * media_kaltura module's hook_file_insert since this is not a local file, thus
+ * we handle all creation logic here.
+ */
+function media_recorder_record_kaltura_token() {
+  $settings = media_recorder_get_settings();
+
+  // Validate that a upload location was sent.
+  if (!isset($_POST['uploadTokenId']) || empty($_POST['uploadTokenId'])) {
+    header('HTTP/1.0 419 Custom Error');
+    drupal_json_output('Missing configuration.');
+    return;
+  }
+
+  // Validate that a upload location was sent.
+  if (!isset($_POST['mimetype']) || empty($_POST['mimetype'])) {
+    header('HTTP/1.0 419 Custom Error');
+    drupal_json_output('Missing configuration.');
+    return;
+  }
+
+  // Check that Kaltura upload has been enabled.
+  if (!isset($settings['kaltura']['enable']) || !$settings['kaltura']['enable'] || !isset($settings['kaltura']['server']) || !$settings['kaltura']['server']) {
+    return;
+  }
+
+  // Attempt to start a Kaltura session.
+  try {
+
+    // Load the default Kaltura server.
+    $server = media_kaltura_server_load($settings['kaltura']['server']);
+    if (!$server) {
+      throw new Exception('Unable to load Kaltura server.');
+    }
+
+    // Start a new session with the Kaltura server.
+    $kaltura = media_kaltura_start_session($server);
+    if (!$kaltura) {
+      throw new Exception('Unable to start Kaltura session.');
+    }
+  }
+  catch (Exception $e) {
+    watchdog('media_kaltura', 'There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()), WATCHDOG_ERROR);
+  }
+
+  // Add a Kaltura media entry from the upload token.
+  try {
+    $token = $kaltura['client']->uploadToken->get($_POST['uploadTokenId']);
+    $type = substr($_POST['mimetype'], 0, strpos($_POST['mimetype'], '/'));
+
+    // Create a new media entry and set values.
+    $entry = new KalturaMediaEntry();
+    $entry->name = $token->fileName;
+    $entry->mediaType = ($type === 'audio') ? KalturaMediaType::AUDIO : KalturaMediaType::VIDEO;
+
+    // Set default profile if enabled.
+    if (isset($settings['kaltura']['profile']) && $settings['kaltura']['profile']) {
+      $entry->conversionProfileId = $settings['kaltura']['profile'];
+    }
+
+    // Set default category if enabled.
+    if (isset($settings['kaltura']['category']) && $settings['kaltura']['category']) {
+      $entry->categoriesIds = $settings['kaltura']['category'];
+    }
+
+    // Allow other modules to alter media entry object before operation.
+    drupal_alter('media_kaltura_entry', $entry, NULL, $kaltura['client']);
+
+    // Upload the file and create a new Kaltura media entry.
+    $entry = $kaltura['client']->media->addFromUploadedFile($entry, $token->id);
+
+    // Create a new file.
+    if ($entry) {
+      $file = file_uri_to_object('kaltura://' . $server->domain . '/' . $server->partner_id . '/' . $server->subpartner_id . '/' . $server->uiconf_id . '/' . $entry->id);
+      $file->type = $type;
+      $file->filemime = $type . '/kaltura';
+      $file->status = 0;
+      $file->filesize = 0;
+      file_save($file);
+    }
+
+    // Allow modules to act on entry create or update operation.
+    module_invoke_all('media_kaltura_entry', $entry, $file, $kaltura['client']);
+  }
+  catch (Exception $e) {
+    header('HTTP/1.0 419 Custom Error');
+    drupal_json_output($e->getMessage());
+    return;
+  }
+
+  // Return file information.
+  drupal_json_output($file);
+}
+
+/**
+ * Menu callback for saving a Kaltura recording from a media entry.
+ */
+function media_recorder_record_kaltura_entry() {
+  $settings = media_recorder_get_settings();
+
+  // Validate that a upload location was sent.
+  if (!isset($_POST['entries']) || empty($_POST['entries'])) {
+    header('HTTP/1.0 419 Custom Error');
+    drupal_json_output('Missing configuration.');
+    return;
+  }
+
+  // Check that Kaltura upload has been enabled.
+  if (!isset($settings['kaltura']['enable']) || !$settings['kaltura']['enable'] || !isset($settings['kaltura']['server']) || !$settings['kaltura']['server']) {
+    return;
+  }
+
+  // Attempt to start a Kaltura session.
+  try {
+
+    // Load the default Kaltura server.
+    $server = media_kaltura_server_load($settings['kaltura']['server']);
+    if (!$server) {
+      throw new Exception('Unable to load Kaltura server.');
+    }
+
+    // Start a new session with the Kaltura server.
+    $kaltura = media_kaltura_start_session($server);
+    if (!$kaltura) {
+      throw new Exception('Unable to start Kaltura session.');
+    }
+  }
+  catch (Exception $e) {
+    watchdog('media_kaltura', 'There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()), WATCHDOG_ERROR);
+  }
+
+  // Add a Kaltura media entry from the upload token.
+  try {
+    $entries = json_decode($_POST['entries']);
+
+    foreach ($entries as $entry) {
+
+      // Save the entry with a default category if this is enabled.
+      if ($settings['kaltura']['category']) {
+        $categoryEntry = new KalturaCategoryEntry();
+        $categoryEntry->categoryId = $settings['kaltura']['category'];
+        $categoryEntry->entryId = $entry->id;
+        $kaltura['client']->categoryEntry->add($categoryEntry);
+      }
+
+      // Create a new file associated with this entry.
+      if ($entry) {
+        $file = file_uri_to_object('kaltura://' . $server->domain . '/' . $server->partner_id . '/' . $server->subpartner_id . '/' . $server->uiconf_id . '/' . $entry->id);
+        $file->type = ($entry->type == 1 ? 'video' : 'audio');
+        $file->filemime = $file->type . '/kaltura';
+        $file->status = 0;
+        $file->filesize = 0;
+        file_save($file);
+      }
+    }
+  }
+  catch (Exception $e) {
+    header('HTTP/1.0 419 Custom Error');
+    drupal_json_output($e->getMessage());
+    return;
+  }
+
+  // Return file information.
+  $file_view = file_view($file);
+  unset($file_view['links']);
+  unset($file_view['#contextual_links']);
+  drupal_json_output(array(
+    'file' => $file,
+    'entry' => $entry,
+    'preview' => drupal_render($file_view),
+  ));
+}
+
+/**
  * Implements hook_media_browser_plugin_info().
  */
 function media_recorder_media_browser_plugin_info() {
@@ -540,7 +734,7 @@ function media_recorder_element_process($element, &$form_state, $form) {
   $settings = media_recorder_get_settings();
   $fid = isset($element['#value']['fid']) ? $element['#value']['fid'] : 0;
   $file = NULL;
-  $id = uniqid('media-recorder-');
+  $id = $element['#id'];
 
   // If the element as a default file, add the absolute url to the file.
   if (!empty($fid) && $file = file_load($fid)) {
@@ -586,22 +780,22 @@ function media_recorder_element_process($element, &$form_state, $form) {
       array('Recorderjs'),
     ),
     'js' => array(
-      array(
+      'media-recorder-api' => array(
         'type' => 'file',
         'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-api.js',
         'scope' => 'footer',
       ),
-      array(
+      'media-recorder-html5' => array(
         'type' => 'file',
         'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-html5.js',
         'scope' => 'footer',
       ),
-      array(
+      'media-recorder-flash' => array(
         'type' => 'file',
         'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-flash.js',
         'scope' => 'footer',
       ),
-      array(
+      'media-recorder' => array(
         'type' => 'file',
         'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder.js',
         'scope' => 'footer',
@@ -640,6 +834,78 @@ function media_recorder_element_process($element, &$form_state, $form) {
     );
   }
 
+  // Add Media: Kaltura support if enabled.
+  if (module_exists('media_kaltura') && $settings['kaltura']['enable'] && $settings['kaltura']['server'] && $settings['kaltura']['recorder']) {
+
+    // Attempt to start a Kaltura session.
+    try {
+      $server = media_kaltura_server_load($settings['kaltura']['server']);
+      $kaltura = media_kaltura_start_session($server);
+
+      // Override fallback with kaltura upload.
+      $element['fallback'] = array(
+        '#type' => 'media_kaltura_upload',
+        '#required' => TRUE,
+        '#multiple' => FALSE,
+        '#cardinality' => 1,
+        '#extensions' => explode(' ', $element['#upload_validators']['file_validate_extensions'][0]),
+        '#api_url' => $server->api_url,
+        '#ks' => $kaltura['session'],
+        '#default_value' => array(
+          array(
+            'fid' => $fid,
+          ),
+        ),
+        '#attributes' => array(
+          'class' => array(
+            'media-recorder-fallback',
+          ),
+        ),
+      );
+
+      // Add Kaltura related javascript.
+      unset($element['#attached']['js']['media-recorder-html5']);
+      $element['#attached']['js']['media-recorder-api']['data'] = drupal_get_path('module', 'media_recorder') . '/js/media-recorder-api-kaltura.js';
+      $element['#attached']['js']['media-recorder-flash']['data'] = drupal_get_path('module', 'media_recorder') . '/js/media-recorder-flash-kaltura.js';
+      $element['#attached']['js']['kwidget'] = array(
+        'type' => 'file',
+        'data' => '//' . $server->domain . '/p/' . $server->partner_id . '/sp/' . $server->subpartner_id . '/embedIframeJs/uiconf_id/' . $server->uiconf_id . '/partner_id/' . $server->partner_id,
+        'scope' => 'footer',
+        'external' => TRUE,
+      );
+      $element['#attached']['js'][0]['data']['mediaRecorder']['elements'][0]['conf']['kaltura'] = array(
+        'ks' => $kaltura['session'],
+        'partnerID' => $server->partner_id,
+        'apiUrl' => $server->api_url,
+        'playerUI' => $server->uiconf_id,
+        'recorderUI' => $settings['kaltura']['recorder'],
+        'flashVars' => array(
+          'pid' => $server->partner_id,
+          'ks' => $kaltura['session'],
+          'isH264' => TRUE,
+          'h264profile' => 'main',
+          'h264level' => 3,
+          'showUI' => TRUE,
+          'autoPreview' => FALSE,
+          'showPreviewTimer' => TRUE,
+          'removePlayer' => FALSE,
+          'disableglobalclick' => FALSE,
+          'limitRecord' => $element['#time_limit'],
+          'showErrorMessage' => TRUE,
+          'themeURL' => '//' . $server->domain . '/p/' . $server->partner_id . '/sp/0/flash/krecord/v1.7.2/skin.swf',
+          'localeURL' => '//' . $server->domain . '/p/' . $server->partner_id . '/sp/0/flash/krecord/v1.7.2/locale.xml',
+          'host' => $server->domain,
+          'delegate' => 'Drupal.kRecord',
+          'debugMode' => TRUE,
+          'conversionQuality' => $settings['kaltura']['profile'],
+        ),
+      );
+    }
+    catch (Exception $e) {
+      watchdog('media_kaltura', 'There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()), WATCHDOG_ERROR);
+    }
+  }
+
   return $element;
 }
 
@@ -675,10 +941,13 @@ function media_recorder_element_value(&$element, $input = FALSE, $form_state = N
       }
     }
     // Load file if the FID has changed to confirm it exists.
-    if (isset($input['fid']) && $file = file_load($input['fid'])) {
+    if (isset($input['fallback'][0]['fid']) && $file = file_load($input['fallback'][0]['fid'])) {
       $fid = $file->fid;
     }
     elseif (isset($input['fallback']['fid']) && $file = file_load($input['fallback']['fid'])) {
+      $fid = $file->fid;
+    }
+    elseif (isset($input['fid']) && $file = file_load($input['fid'])) {
       $fid = $file->fid;
     }
   }
@@ -719,9 +988,14 @@ function media_recorder_element_validate(&$element, &$form_state) {
   }
 
   if (!empty($fid) && $file = file_load($fid)) {
-    $file_validate_errors = file_validate($file, $element['#upload_validators']);
-    if ($file_validate_errors) {
-      form_error($element, implode('<br />', $file_validate_errors));
+    $scheme = file_uri_scheme($file->uri);
+
+    // Validate local files.
+    if ($scheme === 'public' || $scheme === 'private') {
+      $file_validate_errors = file_validate($file, $element['#upload_validators']);
+      if ($file_validate_errors) {
+        form_error($element, implode('<br />', $file_validate_errors));
+      }
     }
   }
 }

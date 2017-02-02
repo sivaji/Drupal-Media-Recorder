@@ -45,17 +45,24 @@
             switch (recorderType) {
               case 'MediaRecorder':
                 $mediaRecorder.show();
-                $mediaRecorderFallback.hide();
+                $mediaRecorderFallback.remove();
                 new Drupal.MediaRecorder(info.id, info.conf);
                 break;
               case 'MediaRecorderHTML5':
                 $mediaRecorder.show();
-                $mediaRecorderFallback.hide();
-                new Drupal.MediaRecorderHTML5(info.id, info.conf);
+                $mediaRecorderFallback.remove();
+                // Use the kaltura video recorder if kaltura is enabled, rather
+                // than the HTML5 audio only Recorder.js library.
+                if (info.conf.kaltura) {
+                  new Drupal.MediaRecorderFlash(info.id, info.conf);
+                }
+                else {
+                  new Drupal.MediaRecorderHTML5(info.id, info.conf);
+                }
                 break;
               case 'MediaRecorderFlash':
                 $mediaRecorder.show();
-                $mediaRecorderFallback.hide();
+                $mediaRecorderFallback.remove();
                 new Drupal.MediaRecorderFlash(info.id, info.conf);
                 break;
               default:
