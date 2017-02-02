@@ -123,3 +123,24 @@ function media_recorder_update_7200(&$sandbox) {
 
   variable_set('media_recorder', $settings);
 }
+
+/**
+ * Updates admin settings to new constraints format.
+ */
+function media_recorder_update_7201(&$sandbox) {
+  $settings = media_recorder_get_settings();
+  $settings['constraints']['video_width'] = array(
+    'min' => 640,
+    'ideal' => 1280,
+    'max' => 1920,
+  );
+  $settings['constraints']['video_height'] = array(
+    'min' => 480,
+    'ideal' => 720,
+    'max' => 1080,
+  );
+  if (isset($settings['constraints']['video_resolution'])) {
+    unset($settings['constraints']['video_resolution']);
+  }
+  variable_set('media_recorder', $settings);
+}

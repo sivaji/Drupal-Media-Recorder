@@ -51,46 +51,20 @@
     // TODO: Add audio only support if this gets resolved: https://github.com/kaltura/krecord/issues/2
     settings.constraints.audio = false;
     settings.constraints.video = true;
-    settings.constraints.video_resolution = settings.constraints.video_resolution || 640;
-    constraints.audio = false;
+    constraints.audio = true;
     constraints.video = {};
     if (settings.constraints.video) {
-      switch (settings.constraints.video_resolution) {
-        case '640':
-          constraints.video = {
-            width: 640,
-            height: 480
-          };
-          break;
-        case '480':
-          constraints.video = {
-            width: 480,
-            height: 360
-          };
-          break;
-        case '320':
-          constraints.video = {
-            width: 320,
-            height: 240
-          };
-          break;
-        case '240':
-          constraints.video = {
-            width: 240,
-            height: 180
-          };
-          break;
-        case '180':
-          constraints.video = {
-            width: 180,
-            height: 135
-          };
-          break;
-      }
-      constraints.video.frameRate = {
-        min: 30,
-        ideal: 30,
-        max: 30
+      constraints.video = {
+        width: {
+          min: settings.constraints.video_width.min,
+          ideal: settings.constraints.video_width.ideal,
+          max: settings.constraints.video_width.max
+        },
+        height: {
+          min: settings.constraints.video_height.min,
+          ideal: settings.constraints.video_height.ideal,
+          max: settings.constraints.video_height.max
+        }
       };
     }
 
@@ -186,7 +160,7 @@
         'https://' + conf.kaltura.flashVars.host + '/krecord/ui_conf_id/' + conf.kaltura.recorderUI + '/',
         'krecorder',
         $element.width(),
-        $element.width() * 0.75,
+        $element.width() * (constraints.video.height.ideal / constraints.video.width.ideal),
         '9.0.0',
         'expressInstall.swf',
         conf.kaltura.flashVars,
@@ -455,7 +429,7 @@
     };
 
     Drupal.kRecord.connected = function () {
-      kRecorder.setQuality(100, 0, constraints.video.width, constraints.video.height, constraints.video.frameRate.ideal, constraints.video.frameRate.ideal, 70);
+      kRecorder.setQuality(0, 0, constraints.video.width.ideal, constraints.video.height.ideal, 25, 25, 70);
       $settingsButton.show();
       setStatus('Press record to start recording.');
     };

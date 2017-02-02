@@ -41,16 +41,48 @@ function media_recorder_admin_form($form, $form_state) {
     '#title' => t('Video'),
     '#default_value' => $settings['constraints']['video'],
   );
-  $form['media_recorder']['constraints']['video_resolution'] = array(
-    '#type' => 'radios',
-    '#title' => t('Video Resolution'),
-    '#default_value' => $settings['constraints']['video_resolution'],
-    '#options' => array(
-      640 => t('640 x 480'),
-      480 => t('480 x 360'),
-      320 => t('320 x 240'),
-      240 => t('240 x 180'),
-      180 => t('180 x 135'),
+  $form['media_recorder']['constraints']['video_width'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Width'),
+    'min' => array(
+      '#type' => 'textfield',
+      '#title' => t('Minimum Width'),
+      '#default_value' => $settings['constraints']['video_width']['min'],
+      '#element_validate' => array('element_validate_integer_positive'),
+    ),
+    'ideal' => array(
+      '#type' => 'textfield',
+      '#title' => t('Ideal Width'),
+      '#default_value' => $settings['constraints']['video_width']['ideal'],
+      '#element_validate' => array('element_validate_integer_positive'),
+    ),
+    'max' => array(
+      '#type' => 'textfield',
+      '#title' => t('Maximum Width'),
+      '#default_value' => $settings['constraints']['video_width']['max'],
+      '#element_validate' => array('element_validate_integer_positive'),
+    ),
+  );
+  $form['media_recorder']['constraints']['video_height'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Height'),
+    'min' => array(
+      '#type' => 'textfield',
+      '#title' => t('Minimum Height'),
+      '#default_value' => $settings['constraints']['video_height']['min'],
+      '#element_validate' => array('element_validate_integer_positive'),
+    ),
+    'ideal' => array(
+      '#type' => 'textfield',
+      '#title' => t('Ideal Height'),
+      '#default_value' => $settings['constraints']['video_height']['ideal'],
+      '#element_validate' => array('element_validate_integer_positive'),
+    ),
+    'max' => array(
+      '#type' => 'textfield',
+      '#title' => t('Maximum Height'),
+      '#default_value' => $settings['constraints']['video_height']['max'],
+      '#element_validate' => array('element_validate_integer_positive'),
     ),
   );
 

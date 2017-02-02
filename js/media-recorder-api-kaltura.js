@@ -67,42 +67,17 @@
     constraints.audio = true;
     constraints.video = {};
     if (settings.constraints.video) {
-      switch (settings.constraints.video_resolution) {
-        case '640':
-          constraints.video = {
-            width: 640,
-            height: 480
-          };
-          break;
-        case '480':
-          constraints.video = {
-            width: 480,
-            height: 360
-          };
-          break;
-        case '320':
-          constraints.video = {
-            width: 320,
-            height: 240
-          };
-          break;
-        case '240':
-          constraints.video = {
-            width: 240,
-            height: 180
-          };
-          break;
-        case '180':
-          constraints.video = {
-            width: 180,
-            height: 135
-          };
-          break;
-      }
-      constraints.video.frameRate = {
-        min: 30,
-        ideal: 30,
-        max: 30
+      constraints.video = {
+        width: {
+          min: settings.constraints.video_width.min,
+          ideal: settings.constraints.video_width.ideal,
+          max: settings.constraints.video_width.max
+        },
+        height: {
+          min: settings.constraints.video_height.min,
+          ideal: settings.constraints.video_height.ideal,
+          max: settings.constraints.video_height.max
+        }
       };
     }
 
