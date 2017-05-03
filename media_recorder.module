@@ -1083,8 +1083,13 @@ function media_recorder_add_submit($form, &$form_state) {
 function media_recorder_add_submit_ajax_callback(&$form, &$form_state) {
   $commands = array();
   $commands[] = ajax_command_replace('#media-recorder-ajax-wrapper form', drupal_render($form));
-  if ($form_state['executed']) {
-    $script = '<script>Drupal.media.browser.selectMedia([{fid:jQuery("#" + Drupal.settings.mediaRecorder.elements[0].id + "-fid").val()}]);Drupal.media.browser.submit();</script>';
+
+  $fid = is_numeric($form_state['values']['media_recorder']['fid']) ? $form_state['values']['media_recorder']['fid'] : 0;
+  if ($form_state['executed'] && $fid) {
+    $file = file_load($fid);
+    $file->preview = drupal_render($preview);
+    $file->url = file_create_url($file->uri);
+    $script = '<script>Drupal.media.browser.selectMedia(' . drupal_json_encode(array($file)) . '); Drupal.media.browser.submit();</script>';
     $commands[] = ajax_command_append('#media-recorder-ajax-wrapper', $script);
   }
   return array('#type' => 'ajax', '#commands' => $commands);
