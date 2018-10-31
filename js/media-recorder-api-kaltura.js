@@ -37,7 +37,6 @@
     var meterProcessor = null;
     var localStream = null;
     var recorder = null;
-    var recordURL = null;
     var playbackURL = null;
     var format = null;
     var mimetype = null;
@@ -212,7 +211,7 @@
       if (constraints.video) {
         $video.show();
         $audio.hide();
-        $video[0].src = recordURL;
+        $video[0].srcObject = localStream;
         $video[0].muted = 'muted';
         $video[0].controls = '';
         $video[0].load();
@@ -237,6 +236,7 @@
         playbackURL = URL.createObjectURL(new Blob(blobs, {type: mimetype}));
         $video.show();
         $audio.hide();
+        $video[0].srcObject = null;
         $video[0].src = playbackURL;
         $video[0].muted = '';
         $video[0].controls = 'controls';
@@ -279,43 +279,43 @@
       if (localStream) {
         stopStream();
       }
-      navigator.getUserMedia(
-        constraints,
-        function (stream) {
-          localStream = stream;
-          recorder = new MediaRecorder(localStream);
-          recordURL = URL.createObjectURL(localStream);
-          format = constraints.video ? 'webm' : 'ogg';
-          mimetype = constraints.video ? 'video/webm' : 'audio/ogg';
-          audioContext = new AudioContext();
-          analyser = audioContext.createAnalyser();
-          analyser.smoothingTimeConstant = 0.75;
-          analyser.fftSize = 512;
-          microphone = audioContext.createMediaStreamSource(stream);
 
-          $previewWrapper.show();
-          $meter.show();
-          $startButton.hide();
-          $videoButton.hide();
-          $audioButton.hide();
-          $recordButton.show();
-          $stopButton.hide();
-          recordingPreview();
+      navigator.mediaDevices.getUserMedia(constraints)
 
-          if (constraints.video) {
-            createVolumeMeter();
-          }
-          else {
-            createAudioVisualizer();
-          }
+      .then(function (stream) {
+        localStream = stream;
+        recorder = new MediaRecorder(localStream);
+        format = constraints.video ? 'webm' : 'ogg';
+        mimetype = constraints.video ? 'video/webm' : 'audio/ogg';
+        audioContext = new AudioContext();
+        analyser = audioContext.createAnalyser();
+        analyser.smoothingTimeConstant = 0.75;
+        analyser.fftSize = 512;
+        microphone = audioContext.createMediaStreamSource(stream);
 
-          setStatus('Press record to start recording.');
-        },
-        function (error) {
-          stopStream();
-          alert("There was a problem accessing your camera or mic. Please click 'Allow' at the top of the page.");
+        $previewWrapper.show();
+        $meter.show();
+        $startButton.hide();
+        $videoButton.hide();
+        $audioButton.hide();
+        $recordButton.show();
+        $stopButton.hide();
+        recordingPreview();
+
+        if (constraints.video) {
+          createVolumeMeter();
         }
-      );
+        else {
+          createAudioVisualizer();
+        }
+
+        setStatus('Press record to start recording.');
+      })
+
+      .catch(function (error) {
+        stopStream();
+        alert("There was a problem accessing your camera or mic. Please click 'Allow' at the top of the page.");
+      });
     }
 
     /**

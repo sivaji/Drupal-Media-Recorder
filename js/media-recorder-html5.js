@@ -37,7 +37,6 @@
     var meterProcessor = null;
     var localStream = null;
     var recorder = null;
-    var recordURL = null;
     var playbackURL = null;
     var mimetype = null;
     var analyser = null;
@@ -168,7 +167,7 @@
       if (constraints.video) {
         $video.show();
         $audio.hide();
-        $video[0].src = recordURL;
+        $video[0].srcObject = localStream;
         $video[0].muted = 'muted';
         $video[0].controls = '';
         $video[0].load();
@@ -193,6 +192,7 @@
         playbackURL = URL.createObjectURL(new Blob(blobs, {type: mimetype}));
         $video.show();
         $audio.hide();
+        $video[0].srcObject = null;
         $video[0].src = playbackURL;
         $video[0].muted = '';
         $video[0].controls = 'controls';
@@ -255,40 +255,41 @@
       if (localStream) {
         stopStream();
       }
-      navigator.getUserMedia(
-        constraints,
-        function (stream) {
-          localStream = stream;
-          recordURL = URL.createObjectURL(localStream);
-          mimetype = settings.constraints.video ? 'video/webm' : 'audio/ogg';
-          audioContext = new AudioContext();
-          analyser = audioContext.createAnalyser();
-          analyser.smoothingTimeConstant = 0.75;
-          analyser.fftSize = 512;
-          microphone = audioContext.createMediaStreamSource(stream);
-          recorder = new Recorder(microphone, {workerPath: Drupal.settings.basePath + Drupal.settings.mediaRecorder.workerPath + '/recorderWorker.js'});
 
-          $previewWrapper.show();
-          $meter.show();
-          $startButton.hide();
-          $recordButton.show();
-          $stopButton.hide();
-          recordingPreview();
+      navigator.mediaDevices.getUserMedia(constraints)
 
-          if (constraints.video) {
-            createVolumeMeter();
-          }
-          else {
-            createAudioVisualizer();
-          }
+      .then(function (stream) {
+        localStream = stream;
+        mimetype = settings.constraints.video ? 'video/webm' : 'audio/ogg';
+        audioContext = new AudioContext();
+        analyser = audioContext.createAnalyser();
+        analyser.smoothingTimeConstant = 0.75;
+        analyser.fftSize = 512;
+        microphone = audioContext.createMediaStreamSource(stream);
+        recorder = new Recorder(microphone, {workerPath: Drupal.settings.basePath + Drupal.settings.mediaRecorder.workerPath + '/recorderWorker.js'});
 
-          setStatus('Press record to start recording.');
-        },
-        function (error) {
-          stopStream();
-          alert("There was a problem accessing your camera or mic. Please click 'Allow' at the top of the page.");
+        $previewWrapper.show();
+        $meter.show();
+        $startButton.hide();
+        $recordButton.show();
+        $stopButton.hide();
+        recordingPreview();
+
+        if (constraints.video) {
+          createVolumeMeter();
         }
-      );
+        else {
+          createAudioVisualizer();
+        }
+
+        setStatus('Press record to start recording.');
+      })
+
+      .catch(function (error) {
+        stopStream();
+        alert("There was a problem accessing your camera or mic. Please click 'Allow' at the top of the page.");
+      });
+
     }
 
     /**
