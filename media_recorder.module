@@ -999,6 +999,7 @@ function media_recorder_element_value(&$element, $input = FALSE, $form_state = N
  * @see media_recorder_element_info()
  */
 function media_recorder_element_validate(&$element, &$form_state) {
+  print_r($element);exit;
   $fid = isset($element['#value']['fid']) ? $element['#value']['fid'] : $element['#value']['fallback']['fid'];
 
   // Check required property based on the FID.

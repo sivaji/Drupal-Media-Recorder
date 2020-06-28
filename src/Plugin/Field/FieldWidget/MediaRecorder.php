@@ -145,18 +145,17 @@ class MediaRecorder extends WidgetBase {
     $settings = media_recorder_get_settings();
     $element += array(
       '#type' => 'media_recorder',
-      // FIXME
-      '#value_callback' => 'media_recorder_widget_value',
-      '#process' => array_merge($element['#process'], array('media_recorder_widget_process')),
-      '#time_limit' => $this->getSetting('time_limit'),
-      '#constraints' => $this->getSetting('time_limit'),
-      '#extended' => TRUE,
+      // '#value_callback' => 'media_recorder_widget_value',
+      // '#process' => array_merge($element['#process'], array('media_recorder_widget_process')),
+      // '#time_limit' => $this->getSetting('time_limit'),
+      // '#constraints' => $this->getSetting('time_limit'),
+      // '#extended' => TRUE,
       // '#upload_location' => file_field_widget_uri($field, $instance),
       // '#upload_validators' => file_field_widget_upload_validators($field, $instance),
-      '#upload_location' => 'public://' . $settings['upload_directory'],
-      '#upload_validators' => [
-        'file_validate_extensions' => [$settings['allowed_extensions']],
-      ],
+      // '#upload_location' => 'public://' . $settings['upload_directory'],
+      // '#upload_validators' => [
+      //   'file_validate_extensions' => [$settings['allowed_extensions']],
+      // ],
     );
     return $element;
   }

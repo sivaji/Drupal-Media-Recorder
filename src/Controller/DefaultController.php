@@ -418,13 +418,12 @@ class DefaultController extends ControllerBase {
     //   'tempnam' => $_SESSION['media_recorder']['tempnam'] . $_REQUEST['count'],
     // ]);
 
-    $response['data'] = [
+    $response = [
       'count' => $_REQUEST['count'],
       'blob' => $_FILES['blob'],
       'tempnam' => $_SESSION['media_recorder']['tempnam'] . $_REQUEST['count'],
     ];
-    $response['method'] = 'PUT';
-    return new JsonResponse($response);
+    return $this->json_output($response, 200);
   }
 
   /**
@@ -589,7 +588,9 @@ class DefaultController extends ControllerBase {
 
     // Return file information.
     // drupal_json_output($file);
-    return $this->json_output($file, 200);
+    \Drupal::logger('debugging')->warning(print_r($file->id(), TRUE));
+
+    return $this->json_output($file->id(), 200);
   }
 
 }

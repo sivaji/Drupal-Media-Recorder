@@ -29,15 +29,6 @@ class MediaRecorderAdd extends FormBase {
       '#required' => TRUE,
     ];
 
-    $form['#attached']['library'][] = 'media_recorder/swfobject';
-    $form['#attached']['library'][] = 'media_recorder/FlashWavRecorder';
-    $form['#attached']['library'][] = 'media_recorder/Recorderjs';
-    $form['#attached']['library'][] = 'media_recorder/media-recorder-api';
-    $form['#attached']['library'][] = 'media_recorder/media-recorder-html5';
-    $form['#attached']['library'][] = 'media_recorder/media-recorder-flash';
-    $form['#attached']['library'][] = 'media_recorder/media-recorder';
-
-
     // Add media recorder element.
     $form['media_recorder'] = element_info('media_recorder');
     $form['media_recorder'] += [

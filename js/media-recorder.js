@@ -41,9 +41,10 @@
   Drupal.behaviors.mediaRecorder = {
     // attach: function (context, settings) {
     attach: function (context) {
+      console.log(settings);
       if (settings.mediaRecorder && settings.mediaRecorder.elements) {
         $.each(settings.mediaRecorder.elements, function (key, info) {
-          // $('#' + info.id, context).once('media-recorder', function () {
+          $('#' + info.id).once('media-recorder').each(function () {
             var $mediaRecorder = $('#' + info.id);
             var $mediaRecorderFallback = $('#' + info.id + '-fallback-ajax-wrapper');
             console.log(recorderType);
@@ -73,7 +74,7 @@
               default:
                 $mediaRecorder.hide();
             }
-          // });
+          });
         });
       }
     }

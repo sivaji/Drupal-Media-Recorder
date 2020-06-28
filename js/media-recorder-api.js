@@ -370,6 +370,7 @@
             request.open('POST', origin + drupalSettings.path.baseUrl + 'media_recorder/record/stream/record', true);
             request.onload = function (evt) {
               if (request.status === 200) {
+                console.log(request.response);
                 resolve(request.response);
               }
               else {
@@ -392,8 +393,8 @@
           formData.append("mediaRecorderUploadLocation", conf.upload_location);
           request.open('POST', origin + drupalSettings.path.baseUrl + 'media_recorder/record/stream/finish', true);
           request.onload = function (evt) {
-            var file = JSON.parse(request.response);
-            $element.trigger('refreshData', file);
+            var response = JSON.parse(request.response);
+            $element.trigger('refreshData', response.data);
           };
           request.onerror = function (evt) {
             alert('There was an issue saving your recording, please try again.');
@@ -410,7 +411,6 @@
       var request = new XMLHttpRequest();
       request.open('POST', origin + drupalSettings.path.baseUrl + 'media_recorder/record/stream/start', true);
       request.onload = function (evt) {
-        console.log(request.status);
         if (request.status === 200) {
           recorder.start(3000);
           $element.trigger('recordStart');
@@ -532,7 +532,7 @@
       // Append file object data.
       $element.bind('refreshData', function (event, data) {
         recording = false;
-        $inputFid.val(data.fid);
+        $inputFid.val(data);
         $recordButton[0].disabled = false;
         playbackPreview();
         setStatus('Press record to start recording.');
