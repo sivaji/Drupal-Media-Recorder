@@ -5,27 +5,40 @@
 
 namespace Drupal\media_recorder\Controller;
 
+use Exception;
 use Drupal\Core\Controller\ControllerBase;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Drupal\Core\Url;
+use Drupal\file\Entity\File;
+use Drupal\file\FileInterface;
+use Drupal\Core\File\FileSystemInterface;
 
 /**
  * Default controller for the media_recorder module.
  */
 class DefaultController extends ControllerBase {
 
+  public function json_output($data, $code) {
+    return new JsonResponse(['data' => $data, 'method' => 'POST', 'status'=> $code]);
+  }
+
   public function media_recorder_record_file() {
 
     // Validate that temp file was created.
     if (!isset($_FILES['mediaRecorder']['tmp_name']) || empty($_FILES['mediaRecorder']['tmp_name'])) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output('No file was sent.');
-      return;
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output('No file was sent.');
+      // return;
+      return $this->json_output(t('No file was sent.'), 400);
+
     }
 
     // Validate that a upload location was sent.
     if (!isset($_POST['mediaRecorderUploadLocation']) || empty($_POST['mediaRecorderUploadLocation'])) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output('Missing configuration.');
-      return;
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output('Missing configuration.');
+      // return;
+      return $this->json_output(t('Missing configuration.'), 400);
     }
 
     // Create a new temporary file to save data.
@@ -35,27 +48,26 @@ class DefaultController extends ControllerBase {
         throw new Exception("Unable to create temporary file.");
       }
     }
-    
-
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Get file data.
-    try {
-      $data = file_get_contents($_FILES['mediaRecorder']['tmp_name']);
-      if (!$data) {
-        throw new Exception("There was no data sent.");
-      }
+    $data = file_get_contents($_FILES['mediaRecorder']['tmp_name']);
+    if (!$data) {
+      throw new Exception("There was no data sent.");
     }
-    
+    try {
 
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    }
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Open a new file.
@@ -65,12 +77,11 @@ class DefaultController extends ControllerBase {
         throw new Exception("Unable to open temporary file. Please check that your file permissions are set correctly.");
       }
     }
-    
-
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Write to file.
@@ -79,12 +90,11 @@ class DefaultController extends ControllerBase {
         fwrite($fp, $data);
         fclose($fp);
       }
-      
-
-        catch (Exception $e) {
-        header('HTTP/1.0 419 Custom Error');
-        drupal_json_output($e->getMessage());
-        return;
+      catch (Exception $e) {
+        // header('HTTP/1.0 419 Custom Error');
+        // drupal_json_output($e->getMessage());
+        // return;
+        return $this->json_output($e->getMessage(), 400);
       }
     }
 
@@ -93,24 +103,25 @@ class DefaultController extends ControllerBase {
       if (file_prepare_directory($_POST['mediaRecorderUploadLocation'], FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
         $target = $_POST['mediaRecorderUploadLocation'] . '/' . uniqid('mediaRecorder_') . '.wav';
         file_unmanaged_move($uri, $target);
-        $file = file_uri_to_object($target);
+        $file = $this->file_uri_to_object($target);
         $file->status = 0;
-        file_save($file);
+        // file_save($file);
+        $file->save();
       }
       else {
         throw new Exception("Unable to save recording to directory.");
       }
     }
-    
-
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Return file information.
-    drupal_json_output($file);
+    // drupal_json_output($file);
+    return $this->json_output($file, 200);
   }
 
   public function media_recorder_record_kaltura_token() {
@@ -118,16 +129,18 @@ class DefaultController extends ControllerBase {
 
     // Validate that a upload location was sent.
     if (!isset($_POST['uploadTokenId']) || empty($_POST['uploadTokenId'])) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output('Missing configuration.');
-      return;
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output('Missing configuration.');
+      // return;
+      return $this->json_output(t('Missing configuration.'), 400);
     }
 
     // Validate that a upload location was sent.
     if (!isset($_POST['mimetype']) || empty($_POST['mimetype'])) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output('Missing configuration.');
-      return;
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output('Missing configuration.');
+      // return;
+      return $this->json_output(t('Missing configuration.'), 400);
     }
 
     // Check that Kaltura upload has been enabled.
@@ -137,21 +150,18 @@ class DefaultController extends ControllerBase {
 
     // Attempt to start a Kaltura session.
     try {
-
       // Load the default Kaltura server.
       $server = media_kaltura_server_load($settings['kaltura']['server']);
       if (!$server) {
         throw new Exception('Unable to load Kaltura server.');
       }
-
       // Start a new session with the Kaltura server.
       $kaltura = media_kaltura_start_session($server);
       if (!$kaltura) {
         throw new Exception('Unable to start Kaltura session.');
       }
     }
-    
-      catch (Exception $e) {
+    catch (Exception $e) {
       \Drupal::logger('media_kaltura')->error('There was a problem connecting to the kaltura server: @error', [
         '@error' => $e->getMessage()
         ]);
@@ -182,12 +192,13 @@ class DefaultController extends ControllerBase {
 
       // Create a new file.
       if ($entry) {
-        $file = file_uri_to_object('kaltura://' . $server->domain . '/' . $server->partner_id . '/' . $server->subpartner_id . '/' . $server->uiconf_id . '/' . $entry->id);
+        $file = $this->file_uri_to_object('kaltura://' . $server->domain . '/' . $server->partner_id . '/' . $server->subpartner_id . '/' . $server->uiconf_id . '/' . $entry->id);
         $file->type = $type;
         $file->filemime = $type . '/kaltura';
         $file->status = 0;
         $file->filesize = 0;
-        file_save($file);
+        // file_save($file);
+        $file->save();
       }
 
       // Allow modules to act on entry create or update operation.
@@ -197,15 +208,16 @@ class DefaultController extends ControllerBase {
         $kaltura['client'],
       ]);
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Return file information.
-    drupal_json_output($file);
+    // drupal_json_output($file);
+    return $this->json_output($file, 200);
   }
 
   public function media_recorder_record_kaltura_entry() {
@@ -213,9 +225,10 @@ class DefaultController extends ControllerBase {
 
     // Validate that a upload location was sent.
     if (!isset($_POST['entries']) || empty($_POST['entries'])) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output('Missing configuration.');
-      return;
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output('Missing configuration.');
+      // return;
+      return $this->json_output(t('Missing configuration.'), 400);
     }
 
     // Check that Kaltura upload has been enabled.
@@ -238,7 +251,7 @@ class DefaultController extends ControllerBase {
         throw new Exception('Unable to start Kaltura session.');
       }
     }
-    
+
       catch (Exception $e) {
       \Drupal::logger('media_kaltura')->error('There was a problem connecting to the kaltura server: @error', [
         '@error' => $e->getMessage()
@@ -261,31 +274,38 @@ class DefaultController extends ControllerBase {
 
         // Create a new file associated with this entry.
         if ($entry) {
-          $file = file_uri_to_object('kaltura://' . $server->domain . '/' . $server->partner_id . '/' . $server->subpartner_id . '/' . $server->uiconf_id . '/' . $entry->id);
+          $file = $this->file_uri_to_object('kaltura://' . $server->domain . '/' . $server->partner_id . '/' . $server->subpartner_id . '/' . $server->uiconf_id . '/' . $entry->id);
           $file->type = ($entry->type == 1 ? 'video' : 'audio');
           $file->filemime = $file->type . '/kaltura';
           $file->status = 0;
           $file->filesize = 0;
-          file_save($file);
+          // file_save($file);
+          $file->save();
         }
       }
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Return file information.
     $file_view = file_view($file);
     unset($file_view['links']);
     unset($file_view['#contextual_links']);
-    drupal_json_output([
+    // drupal_json_output([
+    //   'file' => $file,
+    //   'entry' => $entry,
+    //   'preview' => \Drupal::service("renderer")->render($file_view),
+    // ]);
+    $response_data = [
       'file' => $file,
       'entry' => $entry,
       'preview' => \Drupal::service("renderer")->render($file_view),
-    ]);
+    ];
+    return $this->json_output($response_data, 200);
   }
 
   public function media_recorder_record_stream_start() {
@@ -300,49 +320,55 @@ class DefaultController extends ControllerBase {
         throw new Exception("Unable to create temporary file.");
       }
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Get file format.
     try {
       $_SESSION['media_recorder']['format'] = $_POST['format'];
       if (!$_SESSION['media_recorder']['format']) {
+        // FIXME
         throw new Exception("Unable to get file format.");
       }
+
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
+    return $this->json_output(t('Temp file created successfully.'), 200);
   }
 
   public function media_recorder_record_stream_record() {
 
     // Validate that temp file was created.
     if (!isset($_SESSION['media_recorder']['tempnam']) || empty($_SESSION['media_recorder']['tempnam'])) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output('Recording session not initiated.');
-      return;
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output('Recording session not initiated.');
+      // return;
+      return $this->json_output(t('Recording session not initiated.'), 400);
     }
 
     // Validate that blob sequence count was sent.
     if (!isset($_REQUEST['count']) || !is_numeric($_REQUEST['count'])) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output('Stream sequence count invalid.');
-      return;
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output('Stream sequence count invalid.');
+      // return;
+      return $this->json_output(t('Stream sequence count invalid.'), 400);
     }
 
     // Validate that blob exists.
     if (!isset($_FILES['blob']['tmp_name']) || empty($_FILES['blob']['tmp_name'])) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output('Stream invalid.');
-      return;
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output('Stream invalid.');
+      // return;
+      return $this->json_output(t('Stream invalid.'), 400);
     }
 
     // Get data from blob.
@@ -352,11 +378,11 @@ class DefaultController extends ControllerBase {
         throw new Exception("Streaming data file is empty.");
       }
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Open new temp file.
@@ -366,11 +392,11 @@ class DefaultController extends ControllerBase {
         throw new Exception("Unable to open temporary file. Please check that your file permissions are set correctly.");
       }
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Write blob to temp file.
@@ -378,35 +404,79 @@ class DefaultController extends ControllerBase {
       fwrite($fp, $data);
       fclose($fp);
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Send success response.
-    drupal_json_output([
+    // drupal_json_output([
+    //   'count' => $_REQUEST['count'],
+    //   'blob' => $_FILES['blob'],
+    //   'tempnam' => $_SESSION['media_recorder']['tempnam'] . $_REQUEST['count'],
+    // ]);
+
+    $response['data'] = [
       'count' => $_REQUEST['count'],
       'blob' => $_FILES['blob'],
       'tempnam' => $_SESSION['media_recorder']['tempnam'] . $_REQUEST['count'],
-    ]);
+    ];
+    $response['method'] = 'PUT';
+    return new JsonResponse($response);
+  }
+
+  /**
+   * Workaround until https://www.drupal.org/project/drupal/issues/685818
+   * is fixed in the core.
+   */
+  function file_uri_to_object($uri, $use_existing = TRUE) {
+    $file = FALSE;
+    $uri = file_stream_wrapper_uri_normalize($uri);
+
+    if ($use_existing) {
+      // We should always attempt to re-use a file if possible.
+      $files = entity_load('file', FALSE, array('uri' => $uri));
+      $file = !empty($files) ? reset($files) : FALSE;
+    }
+
+    if (empty($file)) {
+      // $file = new \stdClass();
+      // $file->uid = $GLOBALS['user']->uid;
+      // $file->filename = drupal_basename($uri);
+      // $file->uri = $uri;
+      // // $file->filemime = file_get_mimetype($uri);
+      // $file->filemime = \Drupal::service('file.mime_type.guesser')->guess($uri);
+      // // This is gagged because some uris will not support it.
+      // $file->filesize = @filesize($uri);
+      // $file->timestamp = REQUEST_TIME;
+      // $file->status = FILE_STATUS_PERMANENT;
+      $file = File::create([
+        'uri' => $uri,
+        'uid' => \Drupal::currentUser()->id(),
+        'status' => FILE_STATUS_PERMANENT,
+      ]);
+    }
+    return $file;
   }
 
   public function media_recorder_record_stream_finish() {
 
     // Validate that temp file was created.
     if (!isset($_SESSION['media_recorder']['tempnam']) || empty($_SESSION['media_recorder']['tempnam'])) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output('No file found.');
-      return;
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output('No file found.');
+      // return;
+      return $this->json_output(t('No file found.'), 400);
     }
 
     // Validate that a upload location was sent.
     if (!isset($_POST['mediaRecorderUploadLocation']) || empty($_POST['mediaRecorderUploadLocation'])) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output('Missing configuration.');
-      return;
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output('Missing configuration.');
+      // return;
+      return $this->json_output(t('Missing configuration.'), 400);
     }
 
     // Get all file chunks.
@@ -416,11 +486,11 @@ class DefaultController extends ControllerBase {
         throw new Exception("Unable to get recorded streams. Please check that your file permissions are set correctly.");
       }
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Sort files in case they are out of order.
@@ -434,11 +504,11 @@ class DefaultController extends ControllerBase {
         throw new Exception("Unable to open temporary file. Please check that your file permissions are set correctly.");
       }
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Iterate over file list and append to temp file.
@@ -451,33 +521,33 @@ class DefaultController extends ControllerBase {
           throw new Exception("Streaming data file is empty.");
         }
       }
-      
-        catch (Exception $e) {
-        header('HTTP/1.0 419 Custom Error');
-        drupal_json_output($e->getMessage());
-        return;
+      catch (Exception $e) {
+        // header('HTTP/1.0 419 Custom Error');
+        // drupal_json_output($e->getMessage());
+        // return;
+        return $this->json_output($e->getMessage(), 400);
       }
 
       // Append data to temp file.
       try {
         fwrite($fp, $data);
       }
-      
-        catch (Exception $e) {
-        header('HTTP/1.0 419 Custom Error');
-        drupal_json_output($e->getMessage());
-        return;
+      catch (Exception $e) {
+        // header('HTTP/1.0 419 Custom Error');
+        // drupal_json_output($e->getMessage());
+        // return;
+        return $this->json_output($e->getMessage(), 400);
       }
 
       // Delete file chunk.
       try {
         unlink($filename);
       }
-      
-        catch (Exception $e) {
-        header('HTTP/1.0 419 Custom Error');
-        drupal_json_output($e->getMessage());
-        return;
+      catch (Exception $e) {
+        // header('HTTP/1.0 419 Custom Error');
+        // drupal_json_output($e->getMessage());
+        // return;
+        return $this->json_output($e->getMessage(), 400);
       }
     }
 
@@ -485,11 +555,11 @@ class DefaultController extends ControllerBase {
     try {
       fclose($fp);
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Change the file name and save to upload location.
@@ -498,26 +568,28 @@ class DefaultController extends ControllerBase {
         $uri = $_SESSION['media_recorder']['tempnam'];
         $target = $_POST['mediaRecorderUploadLocation'] . '/' . uniqid('mediaRecorder_') . '.' . $_SESSION['media_recorder']['format'];
         file_unmanaged_move($uri, $target);
-        $file = file_uri_to_object($target);
+        $file = $this->file_uri_to_object($target);
         $file->status = 0;
-        file_save($file);
+        // file_save($file);
+        $file->save();
       }
       else {
         throw new Exception("Unable to save recording to directory.");
       }
     }
-    
-      catch (Exception $e) {
-      header('HTTP/1.0 419 Custom Error');
-      drupal_json_output($e->getMessage());
-      return;
+    catch (Exception $e) {
+      // header('HTTP/1.0 419 Custom Error');
+      // drupal_json_output($e->getMessage());
+      // return;
+      return $this->json_output($e->getMessage(), 400);
     }
 
     // Close session.
     unset($_SESSION['media_recorder']);
 
     // Return file information.
-    drupal_json_output($file);
+    // drupal_json_output($file);
+    return $this->json_output($file, 200);
   }
 
 }
