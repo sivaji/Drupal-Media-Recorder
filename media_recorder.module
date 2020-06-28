@@ -4,63 +4,65 @@
  * Adds a media recorder widget and add form to the media module.
  */
 
+
 /**
  * Implements hook_libraries_info().
+ * Replaced by media_recorder.libraries.yml
  */
-function media_recorder_libraries_info() {
-  $libraries = array();
+// function media_recorder_libraries_info() {
+//   $libraries = array();
 
-  $libraries['swfobject'] = array(
-    'name' => 'SWFObject',
-    'description' => 'SWFObject is an easy-to-use and standards-friendly method to embed Flash content, which utilizes one small JavaScript file.',
-    'vendor url' => 'https://github.com/swfobject/swfobject',
-    'download url' => 'https://github.com/swfobject/swfobject/zipball/master',
-    'version arguments' => array(
-      'file' => 'swfobject/swfobject.js',
-      'pattern' => '@v([0-9a-zA-Z\.-]+)@',
-    ),
-    'files' => array(
-      'js' => array(
-        'swfobject/swfobject.js' => array(
-          'type' => 'file',
-          'scope' => 'header',
-          'group' => JS_LIBRARY,
-        ),
-      ),
-    ),
-  );
-  $libraries['FlashWavRecorder'] = array(
-    'name' => 'FlashWavRecorder',
-    'description' => 'Simple flash file for recording audio and saving as a WAV.',
-    'vendor url' => 'https://github.com/michalstocki/FlashWavRecorder',
-    'download url' => 'https://github.com/michalstocki/FlashWavRecorder/zipball/master',
-    'version' => '0.9.0',
-    'dependencies' => array(
-      'swfobject (>=2.2)',
-    ),
-    'files' => array(
-      'js' => array(
-        'html/js/recorder.js' => array(
-          'type' => 'file',
-          'scope' => 'header',
-          'group' => JS_LIBRARY,
-        ),
-      ),
-    ),
-  );
-  $libraries['Recorderjs'] = array(
-    'name' => 'Recorderjs',
-    'description' => 'A plugin for recording/exporting the output of Web Audio API nodes',
-    'vendor url' => 'https://github.com/mattdiamond/Recorderjs',
-    'download url' => 'https://github.com/mattdiamond/Recorderjs/zipball/master',
-    'version' => '',
-    'files' => array(
-      'js' => array('dist/recorder.js'),
-    ),
-  );
+//   $libraries['swfobject'] = array(
+//     'name' => 'SWFObject',
+//     'description' => 'SWFObject is an easy-to-use and standards-friendly method to embed Flash content, which utilizes one small JavaScript file.',
+//     'vendor url' => 'https://github.com/swfobject/swfobject',
+//     'download url' => 'https://github.com/swfobject/swfobject/zipball/master',
+//     'version arguments' => array(
+//       'file' => 'swfobject/swfobject.js',
+//       'pattern' => '@v([0-9a-zA-Z\.-]+)@',
+//     ),
+//     'files' => array(
+//       'js' => array(
+//         'swfobject/swfobject.js' => array(
+//           'type' => 'file',
+//           'scope' => 'header',
+//           'group' => JS_LIBRARY,
+//         ),
+//       ),
+//     ),
+//   );
+//   $libraries['FlashWavRecorder'] = array(
+//     'name' => 'FlashWavRecorder',
+//     'description' => 'Simple flash file for recording audio and saving as a WAV.',
+//     'vendor url' => 'https://github.com/michalstocki/FlashWavRecorder',
+//     'download url' => 'https://github.com/michalstocki/FlashWavRecorder/zipball/master',
+//     'version' => '0.9.0',
+//     'dependencies' => array(
+//       'swfobject (>=2.2)',
+//     ),
+//     'files' => array(
+//       'js' => array(
+//         'html/js/recorder.js' => array(
+//           'type' => 'file',
+//           'scope' => 'header',
+//           'group' => JS_LIBRARY,
+//         ),
+//       ),
+//     ),
+//   );
+//   $libraries['Recorderjs'] = array(
+//     'name' => 'Recorderjs',
+//     'description' => 'A plugin for recording/exporting the output of Web Audio API nodes',
+//     'vendor url' => 'https://github.com/mattdiamond/Recorderjs',
+//     'download url' => 'https://github.com/mattdiamond/Recorderjs/zipball/master',
+//     'version' => '',
+//     'files' => array(
+//       'js' => array('dist/recorder.js'),
+//     ),
+//   );
 
-  return $libraries;
-}
+//   return $libraries;
+// }
 
 /**
  * Implements hook_menu().
@@ -166,38 +168,34 @@ function media_recorder_theme($existing, $type, $theme, $path) {
  * Getter callback for retrieving media recorder settings with defaults.
  */
 function media_recorder_get_settings() {
-  // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// return variable_get('media_recorder', array(
-//     'constraints' => array(
-//       'audio' => TRUE,
-//       'video' => TRUE,
-//       'video_width' => array(
-//         'min' => 640,
-//         'ideal' => 1280,
-//         'max' => 1920,
-//       ),
-//       'video_height' => array(
-//         'min' => 480,
-//         'ideal' => 720,
-//         'max' => 1080,
-//       ),
-//     ),
-//     'css' => TRUE,
-//     'time_limit' => 300,
-//     'allowed_extensions' => 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm',
-//     'upload_directory' => '',
-//     'kaltura' => array(
-//       'enable' => FALSE,
-//       'server' => 0,
-//       'recorder' => 0,
-//       'profile' => 0,
-//       'category' => 0,
-//     ),
-//   ));
-
+  // return variable_get('media_recorder', array(
+  return array(
+     'constraints' => array(
+       'audio' => TRUE,
+       'video' => TRUE,
+       'video_width' => array(
+         'min' => 640,
+         'ideal' => 1280,
+         'max' => 1920,
+       ),
+       'video_height' => array(
+         'min' => 480,
+         'ideal' => 720,
+         'max' => 1080,
+       ),
+     ),
+     'css' => TRUE,
+     'time_limit' => 300,
+     'allowed_extensions' => 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm',
+     'upload_directory' => '',
+     'kaltura' => array(
+       'enable' => FALSE,
+       'server' => 0,
+       'recorder' => 0,
+       'profile' => 0,
+       'category' => 0,
+     ),
+  );
 }
 
 /**
@@ -713,35 +711,35 @@ function media_recorder_media_browser_plugin_info() {
 /**
  * Implements hook_element_info().
  */
-function media_recorder_element_info() {
-  $types = array();
+// function media_recorder_element_info() {
+//   $types = array();
 
-  $settings = media_recorder_get_settings();
-  $types['media_recorder'] = array(
-    '#input' => TRUE,
-    '#process' => array('media_recorder_element_process'),
-    '#value_callback' => 'media_recorder_element_value',
-    '#element_validate' => array('media_recorder_element_validate'),
-    '#default_value' => NULL,
-    '#extended' => TRUE,
-    '#theme_wrappers' => array('form_element'),
-    '#time_limit' => $settings['time_limit'],
-    '#constraints' => $settings['constraints'],
-    '#upload_location' => 'public://' . $settings['upload_directory'],
-    '#upload_validators' => array(
-      'file_validate_extensions' => array($settings['allowed_extensions']),
-    ),
-  );
+//   $settings = media_recorder_get_settings();
+//   $types['media_recorder'] = array(
+//     '#input' => TRUE,
+//     '#process' => array('media_recorder_element_process'),
+//     '#value_callback' => 'media_recorder_element_value',
+//     '#element_validate' => array('media_recorder_element_validate'),
+//     '#default_value' => NULL,
+//     '#extended' => TRUE,
+//     '#theme_wrappers' => array('form_element'),
+//     '#time_limit' => $settings['time_limit'],
+//     '#constraints' => $settings['constraints'],
+//     '#upload_location' => 'public://' . $settings['upload_directory'],
+//     '#upload_validators' => array(
+//       'file_validate_extensions' => array($settings['allowed_extensions']),
+//     ),
+//   );
 
-  return $types;
-}
+//   return $types;
+// }
 
 /**
  * Process callback for the media_recorder form element.
  *
  * @see media_recorder_element_info()
  */
-function media_recorder_element_process($element, &$form_state, $form) {
+function media_recorder_element_process(&$element, &$form_state, $form) {
   $settings = media_recorder_get_settings();
   $fid = isset($element['#value']['fid']) ? $element['#value']['fid'] : 0;
   $file = NULL;
@@ -784,36 +782,45 @@ function media_recorder_element_process($element, &$form_state, $form) {
   );
 
   // Add javascript libraries.
+  // $element['#attached']['library'][] = 'media_recorder/swfobject';
+  // $element['#attached']['library'][] = 'media_recorder/FlashWavRecorder';
+  // $element['#attached']['library'][] = 'media_recorder/Recorderjs';
+  // $element['#attached']['library'][] = 'media_recorder/media-recorder-api';
+  // $element['#attached']['library'][] = 'media_recorder/media-recorder-html5';
+  // $element['#attached']['library'][] = 'media_recorder/media-recorder-flash';
+  // $element['#attached']['library'][] = 'media_recorder/media-recorder';
+  // $element['#attached']['library'][] = 'system/maintenance';
   $element['#attached'] = array(
-    'libraries_load' => array(
-      array('swfobject'),
-      array('FlashWavRecorder'),
-      array('Recorderjs'),
-    ),
-    'js' => array(
-      'media-recorder-api' => array(
-        'type' => 'file',
-        'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-api.js',
-        'scope' => 'footer',
-      ),
-      'media-recorder-html5' => array(
-        'type' => 'file',
-        'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-html5.js',
-        'scope' => 'footer',
-      ),
-      'media-recorder-flash' => array(
-        'type' => 'file',
-        'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-flash.js',
-        'scope' => 'footer',
-      ),
-      'media-recorder' => array(
-        'type' => 'file',
-        'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder.js',
-        'scope' => 'footer',
-      ),
-      array(
-        'type' => 'setting',
-        'data' => array(
+    // 'libraries_load' => array(
+    //   array('swfobject'),
+    //   array('FlashWavRecorder'),
+    //   array('Recorderjs'),
+    // ),
+    // 'js' => array(
+    'drupalSettings' => array(
+      // 'media-recorder-api' => array(
+      //   'type' => 'file',
+      //   'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-api.js',
+      //   'scope' => 'footer',
+      // ),
+      // 'media-recorder-html5' => array(
+      //   'type' => 'file',
+      //   'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-html5.js',
+      //   'scope' => 'footer',
+      // ),
+      // 'media-recorder-flash' => array(
+      //   'type' => 'file',
+      //   'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder-flash.js',
+      //   'scope' => 'footer',
+      // ),
+      // 'media-recorder' => array(
+      //   'type' => 'file',
+      //   'data' => drupal_get_path('module', 'media_recorder') . '/js/media-recorder.js',
+      //   'scope' => 'footer',
+      // ),
+      // array(
+        // 'type' => 'setting',
+        // 'data' => array(
           'mediaRecorder' => array(
             'swfPath' => libraries_get_path('FlashWavRecorder'),
             'workerPath' => libraries_get_path('Recorderjs'),
@@ -829,20 +836,20 @@ function media_recorder_element_process($element, &$form_state, $form) {
               ),
             ),
           ),
-        ),
-        'scope' => 'header',
-      ),
+        // ),
+        // 'scope' => 'header',
+      // ),
     ),
   );
 
   // Add custom css if enabled.
   if ($settings['css']) {
-    $element['#attached']['css'] = array(
-      array(
-        'type' => 'file',
-        'data' => drupal_get_path('module', 'media_recorder') . '/css/media-recorder.css',
-      ),
-    );
+    // $element['#attached']['css'] = array(
+    //   array(
+    //     'type' => 'file',
+    //     'data' => drupal_get_path('module', 'media_recorder') . '/css/media-recorder.css',
+    //   ),
+    // );
   }
 
   // Add Media: Kaltura support if enabled.
@@ -875,42 +882,42 @@ function media_recorder_element_process($element, &$form_state, $form) {
       );
 
       // Add Kaltura related javascript.
-      unset($element['#attached']['js']['media-recorder-html5']);
-      $element['#attached']['js']['media-recorder-api']['data'] = drupal_get_path('module', 'media_recorder') . '/js/media-recorder-api-kaltura.js';
-      $element['#attached']['js']['media-recorder-flash']['data'] = drupal_get_path('module', 'media_recorder') . '/js/media-recorder-flash-kaltura.js';
-      $element['#attached']['js']['kwidget'] = array(
-        'type' => 'file',
-        'data' => '//' . $server->domain . '/p/' . $server->partner_id . '/sp/' . $server->subpartner_id . '/embedIframeJs/uiconf_id/' . $server->uiconf_id . '/partner_id/' . $server->partner_id,
-        'scope' => 'footer',
-        'external' => TRUE,
-      );
-      $element['#attached']['js'][0]['data']['mediaRecorder']['elements'][0]['conf']['kaltura'] = array(
-        'ks' => $kaltura['session'],
-        'partnerID' => $server->partner_id,
-        'apiUrl' => $server->api_url,
-        'playerUI' => $server->uiconf_id,
-        'recorderUI' => $settings['kaltura']['recorder'],
-        'flashVars' => array(
-          'pid' => $server->partner_id,
-          'ks' => $kaltura['session'],
-          'isH264' => TRUE,
-          'h264profile' => 'main',
-          'h264level' => 3,
-          'showUI' => TRUE,
-          'autoPreview' => FALSE,
-          'showPreviewTimer' => TRUE,
-          'removePlayer' => FALSE,
-          'disableglobalclick' => FALSE,
-          'limitRecord' => $element['#time_limit'],
-          'showErrorMessage' => TRUE,
-          'themeURL' => '//' . $server->domain . '/p/' . $server->partner_id . '/sp/0/flash/krecord/v1.7.2/skin.swf',
-          'localeURL' => '//' . $server->domain . '/p/' . $server->partner_id . '/sp/0/flash/krecord/v1.7.2/locale.xml',
-          'host' => $server->domain,
-          'delegate' => 'Drupal.kRecord',
-          'debugMode' => TRUE,
-          'conversionQuality' => $settings['kaltura']['profile'],
-        ),
-      );
+      // unset($element['#attached']['js']['media-recorder-html5']);
+      // $element['#attached']['js']['media-recorder-api']['data'] = drupal_get_path('module', 'media_recorder') . '/js/media-recorder-api-kaltura.js';
+      // $element['#attached']['js']['media-recorder-flash']['data'] = drupal_get_path('module', 'media_recorder') . '/js/media-recorder-flash-kaltura.js';
+      // $element['#attached']['js']['kwidget'] = array(
+      //   'type' => 'file',
+      //   'data' => '//' . $server->domain . '/p/' . $server->partner_id . '/sp/' . $server->subpartner_id . '/embedIframeJs/uiconf_id/' . $server->uiconf_id . '/partner_id/' . $server->partner_id,
+      //   'scope' => 'footer',
+      //   'external' => TRUE,
+      // );
+      // $element['#attached']['js'][0]['data']['mediaRecorder']['elements'][0]['conf']['kaltura'] = array(
+      //   'ks' => $kaltura['session'],
+      //   'partnerID' => $server->partner_id,
+      //   'apiUrl' => $server->api_url,
+      //   'playerUI' => $server->uiconf_id,
+      //   'recorderUI' => $settings['kaltura']['recorder'],
+      //   'flashVars' => array(
+      //     'pid' => $server->partner_id,
+      //     'ks' => $kaltura['session'],
+      //     'isH264' => TRUE,
+      //     'h264profile' => 'main',
+      //     'h264level' => 3,
+      //     'showUI' => TRUE,
+      //     'autoPreview' => FALSE,
+      //     'showPreviewTimer' => TRUE,
+      //     'removePlayer' => FALSE,
+      //     'disableglobalclick' => FALSE,
+      //     'limitRecord' => $element['#time_limit'],
+      //     'showErrorMessage' => TRUE,
+      //     'themeURL' => '//' . $server->domain . '/p/' . $server->partner_id . '/sp/0/flash/krecord/v1.7.2/skin.swf',
+      //     'localeURL' => '//' . $server->domain . '/p/' . $server->partner_id . '/sp/0/flash/krecord/v1.7.2/locale.xml',
+      //     'host' => $server->domain,
+      //     'delegate' => 'Drupal.kRecord',
+      //     'debugMode' => TRUE,
+      //     'conversionQuality' => $settings['kaltura']['profile'],
+      //   ),
+      // );
     }
     catch (Exception $e) {
       \Drupal::logger('media_kaltura')->error('There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()));
@@ -929,7 +936,8 @@ function media_recorder_element_value(&$element, $input = FALSE, $form_state = N
   $fid = 0;
 
   // Find the current value of this field from the form state.
-  $form_state_fid = $form_state['values'];
+  // FIXME
+  // $form_state_fid = $form_state['values'];
   foreach ($element['#parents'] as $parent) {
     $form_state_fid = isset($form_state_fid[$parent]) ? $form_state_fid[$parent] : 0;
   }
@@ -1282,8 +1290,8 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
 // Calling _theme() directly can alter the expected output and potentially
 // introduce security issues (see https://www.drupal.org/node/2195739). You
 // should use renderable arrays instead.
-// 
-// 
+//
+//
 // @see https://www.drupal.org/node/2195739
 // $element['#description'] = theme('media_upload_help', array('description' => $element['#description']));
 

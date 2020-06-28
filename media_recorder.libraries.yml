@@ -1,0 +1,39 @@
+swfobject:
+  version: VERSION
+  js:
+    js/swfobject/swfobject/swfobject.js: {}
+
+FlashWavRecorder:
+  version: VERSION
+  js:
+    js/FlashWavRecorder/html/js/recorder.js: {}
+  dependencies:
+    - swfobject
+
+Recorderjs:
+  version: VERSION
+  js:
+    js/Recorderjs/dist/recorder.js: {}
+
+media-recorder-api:
+  version: VERSION
+  js:
+    js/media-recorder-api.js: {}
+
+media-recorder-html5:
+  version: VERSION
+  js:
+    js/media-recorder-html5.js: {}
+
+media-recorder-flash:
+  version: VERSION
+  js:
+    js/media-recorder-flash.js: {}
+
+media-recorder:
+  version: VERSION
+  js:
+    js/media-recorder.js: {}
+  css:
+    component:
+      css/media-recorder.css: {}

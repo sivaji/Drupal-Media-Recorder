@@ -7,7 +7,8 @@
  * fallback, and uses the file widget for devices that supports nothing.
  */
 
-(function ($) {
+(function ($, Drupal, drupalSettings) {
+// (function ($) {
   'use strict';
 
   // Normalize features.
@@ -21,6 +22,8 @@
   var webAudioCheck = typeof (window.AudioContext) === 'function';
   var swfobjectCheck = typeof (window.swfobject) === 'object';
   var flashVersionCheck = swfobjectCheck ? (swfobject.getFlashPlayerVersion().major >= 10) : false;
+
+  var settings = drupalSettings;
 
   // Set recorder type.
   var recorderType = false;
@@ -36,12 +39,14 @@
 
   // Attach behaviors.
   Drupal.behaviors.mediaRecorder = {
-    attach: function (context, settings) {
+    // attach: function (context, settings) {
+    attach: function (context) {
       if (settings.mediaRecorder && settings.mediaRecorder.elements) {
         $.each(settings.mediaRecorder.elements, function (key, info) {
-          $('#' + info.id, context).once('media-recorder', function () {
+          // $('#' + info.id, context).once('media-recorder', function () {
             var $mediaRecorder = $('#' + info.id);
             var $mediaRecorderFallback = $('#' + info.id + '-fallback-ajax-wrapper');
+            console.log(recorderType);
             switch (recorderType) {
               case 'MediaRecorder':
                 $mediaRecorder.show();
@@ -68,9 +73,10 @@
               default:
                 $mediaRecorder.hide();
             }
-          });
+          // });
         });
       }
     }
   };
-})(jQuery);
+// })(jQuery);
+})(jQuery, Drupal, drupalSettings);

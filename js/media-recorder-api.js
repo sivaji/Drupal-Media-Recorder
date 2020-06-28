@@ -3,7 +3,8 @@
  * Provides an interface for the MediaRecorder API.
  */
 
-(function ($) {
+(function ($, Drupal, drupalSettings) {
+// (function ($) {
   'use strict';
 
   Drupal.MediaRecorder = function (id, conf) {
@@ -366,7 +367,7 @@
             formData.append("blob", blob);
             formData.append("count", blobCount);
             var request = new XMLHttpRequest();
-            request.open('POST', origin + Drupal.settings.basePath + 'media_recorder/record/stream/record', true);
+            request.open('POST', origin + drupalSettings.path.baseUrl + 'media_recorder/record/stream/record', true);
             request.onload = function (evt) {
               if (request.status === 200) {
                 resolve(request.response);
@@ -389,7 +390,7 @@
           var request = new XMLHttpRequest();
           var formData = new FormData();
           formData.append("mediaRecorderUploadLocation", conf.upload_location);
-          request.open('POST', origin + Drupal.settings.basePath + 'media_recorder/record/stream/finish', true);
+          request.open('POST', origin + drupalSettings.path.baseUrl + 'media_recorder/record/stream/finish', true);
           request.onload = function (evt) {
             var file = JSON.parse(request.response);
             $element.trigger('refreshData', file);
@@ -407,8 +408,9 @@
       var formData = new FormData();
       formData.append('format', format);
       var request = new XMLHttpRequest();
-      request.open('POST', origin + Drupal.settings.basePath + 'media_recorder/record/stream/start', true);
+      request.open('POST', origin + drupalSettings.path.baseUrl + 'media_recorder/record/stream/start', true);
       request.onload = function (evt) {
+        console.log(request.status);
         if (request.status === 200) {
           recorder.start(3000);
           $element.trigger('recordStart');
@@ -557,4 +559,5 @@
       return mm + ':' + ss;
     }
   };
-})(jQuery);
+// })(jQuery);
+})(jQuery, Drupal, drupalSettings);

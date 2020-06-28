@@ -338,7 +338,7 @@ class MediaRecorderAdminForm extends ConfigFormBase {
               ],
           ];
         }
-        
+
           catch (Exception $e) {
           \Drupal::logger('media_kaltura')->error('There was a problem connecting to the kaltura server: @error', [
             '@error' => $e->getMessage()

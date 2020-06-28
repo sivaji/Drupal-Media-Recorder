@@ -20,7 +20,7 @@ class MediaRecorderAdd extends FormBase {
     return 'media_recorder_add';
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state, $types = NULL, $multiselect = NULL, $media_browser = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $types = NULL, $multiselect = NULL, $media_browser = NULL) {
 
     // Add media recorder element.
     $form['title'] = [
@@ -28,6 +28,15 @@ class MediaRecorderAdd extends FormBase {
       '#title' => t('Title'),
       '#required' => TRUE,
     ];
+
+    $form['#attached']['library'][] = 'media_recorder/swfobject';
+    $form['#attached']['library'][] = 'media_recorder/FlashWavRecorder';
+    $form['#attached']['library'][] = 'media_recorder/Recorderjs';
+    $form['#attached']['library'][] = 'media_recorder/media-recorder-api';
+    $form['#attached']['library'][] = 'media_recorder/media-recorder-html5';
+    $form['#attached']['library'][] = 'media_recorder/media-recorder-flash';
+    $form['#attached']['library'][] = 'media_recorder/media-recorder';
+
 
     // Add media recorder element.
     $form['media_recorder'] = element_info('media_recorder');
@@ -65,7 +74,6 @@ class MediaRecorderAdd extends FormBase {
   }
 
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-
     // Process file.
     if (is_numeric($form_state->getValue(['media_recorder', 'fid'])) && $file = file_load($form_state->getValue(['media_recorder', 'fid']))) {
       if (file_prepare_directory($form['media_recorder']['#upload_location'], FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
@@ -78,8 +86,7 @@ class MediaRecorderAdd extends FormBase {
 
       }
     }
-
-      // Otherwise return an error.
+    // Otherwise return an error.
     else {
       \Drupal::messenger()->addError(t('An unrecoverable error occurred. Try reloading the page and submitting again.'));
     }
