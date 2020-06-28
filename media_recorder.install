@@ -12,7 +12,7 @@ function media_recorder_requirements($phase) {
 
   // Check requirements during the runtime phase.
   if ($phase == 'runtime') {
-    $t = get_t();
+    $t = 't';
 
     // Check that all libraries exist.
     $required_libraries = array(
@@ -58,7 +58,7 @@ function media_recorder_enable() {
     $library = libraries_detect($name);
     if (!$library['installed']) {
       $drush_msg = t('You can use the drush command "drush mrdl" to automatically install all required libraries.');
-      drupal_set_message($library['error message'] . ' ' . $drush_msg, 'error');
+      \Drupal::messenger()->addError($library['error message'] . ' ' . $drush_msg);
     }
   }
 }
@@ -67,7 +67,12 @@ function media_recorder_enable() {
  * Implements hook_uninstall().
  */
 function media_recorder_uninstall() {
-  variable_del('media_recorder');
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// variable_del('media_recorder');
+
 }
 
 /**
@@ -91,19 +96,19 @@ function media_recorder_update_7200(&$sandbox) {
     ),
   );
 
-  $media_recorder_constraints = variable_get('media_recorder_constraints', '');
-  $media_recorder_css = variable_get('media_recorder_css', '');
-  $media_recorder_time_limit = variable_get('media_recorder_time_limit', '');
-  $media_recorder_default_allowed_extensions = variable_get('media_recorder_default_allowed_extensions', '');
-  $media_recorder_upload_directory = variable_get('media_recorder_upload_directory', '');
-  variable_del('media_recorder_constraints');
-  variable_del('media_recorder_css');
-  variable_del('media_recorder_time_limit');
-  variable_del('media_recorder_default_allowed_extensions');
-  variable_del('media_recorder_upload_directory');
-  variable_del('media_recorder_width');
-  variable_del('media_recorder_height');
-  variable_del('media_recorder_timelimit');
+  $media_recorder_constraints = \Drupal::config('media_recorder.settings')->get('media_recorder_constraints');
+  $media_recorder_css = \Drupal::config('media_recorder.settings')->get('media_recorder_css');
+  $media_recorder_time_limit = \Drupal::config('media_recorder.settings')->get('media_recorder_time_limit');
+  $media_recorder_default_allowed_extensions = \Drupal::config('media_recorder.settings')->get('media_recorder_default_allowed_extensions');
+  $media_recorder_upload_directory = \Drupal::config('media_recorder.settings')->get('media_recorder_upload_directory');
+  \Drupal::config('media_recorder.settings')->clear('media_recorder_constraints')->save();
+  \Drupal::config('media_recorder.settings')->clear('media_recorder_css')->save();
+  \Drupal::config('media_recorder.settings')->clear('media_recorder_time_limit')->save();
+  \Drupal::config('media_recorder.settings')->clear('media_recorder_default_allowed_extensions')->save();
+  \Drupal::config('media_recorder.settings')->clear('media_recorder_upload_directory')->save();
+  \Drupal::config('media_recorder.settings')->clear('media_recorder_width')->save();
+  \Drupal::config('media_recorder.settings')->clear('media_recorder_height')->save();
+  \Drupal::config('media_recorder.settings')->clear('media_recorder_timelimit')->save();
 
   if (!empty($media_recorder_constraints)) {
     $settings['constraints'] = $media_recorder_constraints;
@@ -121,7 +126,12 @@ function media_recorder_update_7200(&$sandbox) {
     $settings['upload_directory'] = $media_recorder_upload_directory;
   }
 
-  variable_set('media_recorder', $settings);
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// variable_set('media_recorder', $settings);
+
 }
 
 /**
@@ -142,5 +152,10 @@ function media_recorder_update_7201(&$sandbox) {
   if (isset($settings['constraints']['video_resolution'])) {
     unset($settings['constraints']['video_resolution']);
   }
-  variable_set('media_recorder', $settings);
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// variable_set('media_recorder', $settings);
+
 }

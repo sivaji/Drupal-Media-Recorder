@@ -1,0 +1,5 @@
+media_recorder.admin_form:
+  route_name: media_recorder.admin_form
+  title: 'Media recorder'
+  description: 'Configure the media recorder.'
+  parent: system.admin_config_media

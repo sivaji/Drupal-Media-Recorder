@@ -166,33 +166,38 @@ function media_recorder_theme($existing, $type, $theme, $path) {
  * Getter callback for retrieving media recorder settings with defaults.
  */
 function media_recorder_get_settings() {
-  return variable_get('media_recorder', array(
-    'constraints' => array(
-      'audio' => TRUE,
-      'video' => TRUE,
-      'video_width' => array(
-        'min' => 640,
-        'ideal' => 1280,
-        'max' => 1920,
-      ),
-      'video_height' => array(
-        'min' => 480,
-        'ideal' => 720,
-        'max' => 1080,
-      ),
-    ),
-    'css' => TRUE,
-    'time_limit' => 300,
-    'allowed_extensions' => 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm',
-    'upload_directory' => '',
-    'kaltura' => array(
-      'enable' => FALSE,
-      'server' => 0,
-      'recorder' => 0,
-      'profile' => 0,
-      'category' => 0,
-    ),
-  ));
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// return variable_get('media_recorder', array(
+//     'constraints' => array(
+//       'audio' => TRUE,
+//       'video' => TRUE,
+//       'video_width' => array(
+//         'min' => 640,
+//         'ideal' => 1280,
+//         'max' => 1920,
+//       ),
+//       'video_height' => array(
+//         'min' => 480,
+//         'ideal' => 720,
+//         'max' => 1080,
+//       ),
+//     ),
+//     'css' => TRUE,
+//     'time_limit' => 300,
+//     'allowed_extensions' => 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm',
+//     'upload_directory' => '',
+//     'kaltura' => array(
+//       'enable' => FALSE,
+//       'server' => 0,
+//       'recorder' => 0,
+//       'profile' => 0,
+//       'category' => 0,
+//     ),
+//   ));
+
 }
 
 /**
@@ -205,7 +210,7 @@ function media_recorder_record_stream_start() {
 
   // Create a new temporary file to save streamed data.
   try {
-    $_SESSION['media_recorder']['tempnam'] = drupal_tempnam('temporary://', 'mediaRecorder_');
+    $_SESSION['media_recorder']['tempnam'] = \Drupal::service("file_system")->tempnam('temporary://', 'mediaRecorder_');
     if (!$_SESSION['media_recorder']['tempnam']) {
       throw new Exception("Unable to create temporary file.");
     }
@@ -445,7 +450,7 @@ function media_recorder_record_file() {
 
   // Create a new temporary file to save data.
   try {
-    $uri = drupal_tempnam('temporary://', 'mediaRecorder_');
+    $uri = \Drupal::service("file_system")->tempnam('temporary://', 'mediaRecorder_');
     if (!$uri) {
       throw new Exception("Unable to create temporary file.");
     }
@@ -563,7 +568,7 @@ function media_recorder_record_kaltura_token() {
     }
   }
   catch (Exception $e) {
-    watchdog('media_kaltura', 'There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()), WATCHDOG_ERROR);
+    \Drupal::logger('media_kaltura')->error('There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()));
   }
 
   // Add a Kaltura media entry from the upload token.
@@ -600,7 +605,7 @@ function media_recorder_record_kaltura_token() {
     }
 
     // Allow modules to act on entry create or update operation.
-    module_invoke_all('media_kaltura_entry', $entry, $file, $kaltura['client']);
+    \Drupal::moduleHandler()->invokeAll('media_kaltura_entry', [$entry, $file, $kaltura['client']]);
   }
   catch (Exception $e) {
     header('HTTP/1.0 419 Custom Error');
@@ -646,7 +651,7 @@ function media_recorder_record_kaltura_entry() {
     }
   }
   catch (Exception $e) {
-    watchdog('media_kaltura', 'There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()), WATCHDOG_ERROR);
+    \Drupal::logger('media_kaltura')->error('There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()));
   }
 
   // Add a Kaltura media entry from the upload token.
@@ -687,7 +692,7 @@ function media_recorder_record_kaltura_entry() {
   drupal_json_output(array(
     'file' => $file,
     'entry' => $entry,
-    'preview' => drupal_render($file_view),
+    'preview' => \Drupal::service("renderer")->render($file_view),
   ));
 }
 
@@ -748,7 +753,7 @@ function media_recorder_element_process($element, &$form_state, $form) {
   }
 
   // Tokenize upload_location if token is enabled.
-  $element['#upload_location'] = module_exists('token') ? token_replace($element['#upload_location']) : $element['#upload_location'];
+  $element['#upload_location'] = \Drupal::moduleHandler()->moduleExists('token') ? \Drupal::token()->replace($element['#upload_location']) : $element['#upload_location'];
 
   // Specify a #tree element since we will have children elements.
   $element['#tree'] = TRUE;
@@ -841,7 +846,7 @@ function media_recorder_element_process($element, &$form_state, $form) {
   }
 
   // Add Media: Kaltura support if enabled.
-  if (module_exists('media_kaltura') && $settings['kaltura']['enable'] && $settings['kaltura']['server'] && $settings['kaltura']['recorder']) {
+  if (\Drupal::moduleHandler()->moduleExists('media_kaltura') && $settings['kaltura']['enable'] && $settings['kaltura']['server'] && $settings['kaltura']['recorder']) {
 
     // Attempt to start a Kaltura session.
     try {
@@ -908,7 +913,7 @@ function media_recorder_element_process($element, &$form_state, $form) {
       );
     }
     catch (Exception $e) {
-      watchdog('media_kaltura', 'There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()), WATCHDOG_ERROR);
+      \Drupal::logger('media_kaltura')->error('There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()));
     }
   }
 
@@ -994,7 +999,7 @@ function media_recorder_element_validate(&$element, &$form_state) {
   }
 
   if (!empty($fid) && $file = file_load($fid)) {
-    $scheme = file_uri_scheme($file->uri);
+    $scheme = \Drupal::service("file_system")->uriScheme($file->uri);
 
     // Validate local files.
     if ($scheme === 'public' || $scheme === 'private') {
@@ -1064,13 +1069,16 @@ function media_recorder_add_submit($form, &$form_state) {
       $file->filename = trim($form_state['values']['title']);
       $file->status = FILE_STATUS_PERMANENT;
       file_save($file);
-      drupal_set_message(t('The file <em>!filename</em> was successfully saved.', array('!filename' => l(check_plain($file->filename), 'file/' . $file->fid))), 'status');
+      // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('The file <em>!filename</em> was successfully saved.', array('!filename' => l(\Drupal\Component\Utility\Html::escape($file->filename), 'file/' . $file->fid))), 'status');
+
     }
   }
 
   // Otherwise return an error.
   else {
-    drupal_set_message(t('An unrecoverable error occurred. Try reloading the page and submitting again.'), 'error');
+    \Drupal::messenger()->addError(t('An unrecoverable error occurred. Try reloading the page and submitting again.'));
   }
   return $form;
 }
@@ -1082,14 +1090,14 @@ function media_recorder_add_submit($form, &$form_state) {
  */
 function media_recorder_add_submit_ajax_callback(&$form, &$form_state) {
   $commands = array();
-  $commands[] = ajax_command_replace('#media-recorder-ajax-wrapper form', drupal_render($form));
+  $commands[] = ajax_command_replace('#media-recorder-ajax-wrapper form', \Drupal::service("renderer")->render($form));
 
   $fid = is_numeric($form_state['values']['media_recorder']['fid']) ? $form_state['values']['media_recorder']['fid'] : 0;
   if ($form_state['executed'] && $fid) {
     $file = file_load($fid);
-    $file->preview = drupal_render($preview);
+    $file->preview = \Drupal::service("renderer")->render($preview);
     $file->url = file_create_url($file->uri);
-    $script = '<script>Drupal.media.browser.selectMedia(' . drupal_json_encode(array($file)) . '); Drupal.media.browser.submit();</script>';
+    $script = '<script>Drupal.media.browser.selectMedia(' . \Drupal\Component\Serialization\Json::encode(array($file)) . '); Drupal.media.browser.submit();</script>';
     $commands[] = ajax_command_append('#media-recorder-ajax-wrapper', $script);
   }
   return array('#type' => 'ajax', '#commands' => $commands);
@@ -1269,7 +1277,16 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
 
   $element['#default_value'] = !empty($items) ? $items[0] : $defaults;
   if (empty($element['#default_value']['fid'])) {
-    $element['#description'] = theme('media_upload_help', array('description' => $element['#description']));
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $element['#description'] = theme('media_upload_help', array('description' => $element['#description']));
+
   }
   $elements = array($element);
 
@@ -1306,13 +1323,18 @@ function media_recorder_widget_process($element, &$form_state, $form) {
 
   // Add the description field if enabled.
   if (!empty($instance['settings']['description_field'])) {
-    $element['description'] = array(
-      '#type' => variable_get('file_description_type', 'textfield'),
-      '#title' => t('Description'),
-      '#value' => isset($item['description']) ? $item['description'] : '',
-      '#maxlength' => variable_get('file_description_length', 128),
-      '#description' => t('The description may be used as the label of the link to the file.'),
-    );
+    // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $element['description'] = array(
+//       '#type' => variable_get('file_description_type', 'textfield'),
+//       '#title' => t('Description'),
+//       '#value' => isset($item['description']) ? $item['description'] : '',
+//       '#maxlength' => variable_get('file_description_length', 128),
+//       '#description' => t('The description may be used as the label of the link to the file.'),
+//     );
+
   }
 
   return $element;

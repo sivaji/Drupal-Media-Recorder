@@ -1,0 +1,3 @@
+media_recorder.add:
+  route_name: media_recorder.add
+  title: Record

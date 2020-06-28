@@ -1,0 +1,8 @@
+name: 'Media Recorder'
+description: 'Adds a javascript based video/audio recorder.'
+package: Media
+core: 8.x
+dependencies:
+  - drupal:media
+  - libraries
+type: module

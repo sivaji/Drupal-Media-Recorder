@@ -1,0 +1,14 @@
+media_recorder.settings:
+  type: mapping
+  label: Settings
+  mapping:
+    media_recorder_constraints:
+      type: string
+    media_recorder_css:
+      type: string
+    media_recorder_time_limit:
+      type: string
+    media_recorder_default_allowed_extensions:
+      type: string
+    media_recorder_upload_directory:
+      type: string

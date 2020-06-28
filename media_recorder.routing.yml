@@ -1,0 +1,49 @@
+media_recorder.add:
+  path: /file/add/record
+  defaults:
+    _title: Record
+    _form: \Drupal\media_recorder\Form\MediaRecorderAdd
+  requirements: {  }
+media_recorder.record_file:
+  path: /media_recorder/record/file
+  defaults:
+    _title: Record
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_file'
+  requirements: {  }
+media_recorder.record_kaltura_token:
+  path: /media_recorder/record/kaltura/token
+  defaults:
+    _title: Record
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_kaltura_token'
+  requirements: {  }
+media_recorder.record_kaltura_entry:
+  path: /media_recorder/record/kaltura/entry
+  defaults:
+    _title: Record
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_kaltura_entry'
+  requirements: {  }
+media_recorder.record_stream_start:
+  path: /media_recorder/record/stream/start
+  defaults:
+    _title: Record
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_stream_start'
+  requirements: {  }
+media_recorder.record_stream_record:
+  path: /media_recorder/record/stream/record
+  defaults:
+    _title: Record
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_stream_record'
+  requirements: {  }
+media_recorder.record_stream_finish:
+  path: /media_recorder/record/stream/finish
+  defaults:
+    _title: Record
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_stream_finish'
+  requirements: {  }
+media_recorder.admin_form:
+  path: /admin/config/media/mediarecorder
+  defaults:
+    _title: 'Media recorder'
+    _form: \Drupal\media_recorder\Form\MediaRecorderAdminForm
+  requirements:
+    _permission: 'administer files'

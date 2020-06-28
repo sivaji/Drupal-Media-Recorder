@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Drupal Module Upgrader analysis report</title>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:600italic,400,700,600' rel='stylesheet' type='text/css' />
+    <style type="text/css">
+    <!--
+
+body {
+  width: 80%;
+  color: #343434;
+  margin: 1em auto;
+  font-family: 'Open Sans', Verdana, sans-serif;
+}
+
+details {
+  font-size: 18px;
+  line-height: 25px;
+  margin-bottom: 2em;
+  display: list-item;
+  list-style: none;
+}
+
+details summary {
+  padding: 1em;
+  margin-bottom: 1em;
+  display: list-item;
+  cursor: pointer;
+}
+
+details.error summary {
+  background-color: #ffd5d5;
+}
+
+details.warning summary {
+  background-color: #fff3bb;
+}
+
+a {
+  color: #095cb1;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+h5 {
+  font-size: 1em;
+}
+
+aside {
+  font-style: italic;
+  line-height: 20px;
+  font-size: 15px;
+}
+
+.group {
+  border: 1px solid #ececec;
+  padding: 1em;
+  display: block;
+}
+
+.group > summary {
+  padding: 0;
+  color: #c8c8c8;
+  margin-bottom: 0;;
+  font-weight: bold;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  display: list-item;
+}
+
+.group[open] > summary {
+  margin-bottom: 1em;
+}
+
+.group > details:last-child {
+  margin-bottom: 0;
+}
+
+    -->
+    </style>
+  </head>
+  <body>
+    <h1>Drupal Module Upgrader analysis report</h1>
+      <details open="true" class="group">
+      <summary></summary>
+          <details class="warning">
+      <summary>Many common functions, shared variables, and constants have been renamed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2324935">The global theme variables have been replaced by an ActiveTheme object</a></li>
+              </ul>
+      
+                      </details>
+    <details class="error">
+      <summary>Module info files' <code>core</code> key must have a value of <code>8.x</code>.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1935708"><code>.info</code> files are now <code>.info.yml</code> files</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.info</li>
+            </ul>
+                  <aside>Flagged by info</aside>    </details>
+    <details class="error">
+      <summary>Info files must contain a <code>type</code> key.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1935708#type"><code>.info</code> files are now <code>.info.yml</code> files</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.info</li>
+            </ul>
+                  <aside>Flagged by info</aside>    </details>
+    <details class="error">
+      <summary>Many common dependencies have moved into core.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1935708"><code>.info</code> files are now <code>.info.yml</code> files</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.info</li>
+            </ul>
+                  <aside>Flagged by info</aside>    </details>
+    <details class="error">
+      <summary>Modules no longer declare classes in their info file.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1935708#files"><code>.info</code> files are now <code>.info.yml</code> files</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.info</li>
+            </ul>
+                  <aside>Flagged by info</aside>    </details>
+    <details class="error">
+      <summary>Module info files' <code>configure</code> key must be a route name, not a path.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1935708#configure"><code>.info</code> files are now <code>.info.yml</code> files</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.info</li>
+            </ul>
+                  <aside>Flagged by info</aside>    </details>
+    <details class="error">
+      <summary><code>conf_path()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2275139"><code>conf_path()</code> moved into <code>DrupalKernel</code></a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.drush.inc, line 35</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.drush.inc, line 35</li>
+            </ul>
+                  <aside>Flagged by _function_call:conf_path</aside>    </details>
+    <details class="error">
+      <summary><code>drupal_render()</code> has been removed.</summary>
+
+      
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 690</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1085</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1090</li>
+            </ul>
+                  <aside>Flagged by _function_call:drupal_render</aside>    </details>
+    <details class="error">
+      <summary><code>entity_load()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2266845">Entities are now classed objects implementing <code>EntityInterface</code></a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.admin.inc, line 139</li>
+            </ul>
+                  <aside>Flagged by _function_call:entity_load</aside>    </details>
+    <details class="error">
+      <summary><code>drupal_tempnam()</code> is now a method of the <code>file_system</code> service.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2418133">File system functions moved into <code>file_system</code> service</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 208</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 448</li>
+            </ul>
+                  <aside>Flagged by _function_call:drupal_tempnam</aside>    </details>
+    <details class="error">
+      <summary><code>file_uri_scheme()</code> is now a method of the <code>file_system</code> service.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2418133">File system functions moved into <code>file_system</code> service</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 997</li>
+            </ul>
+                  <aside>Flagged by _function_call:file_uri_scheme</aside>    </details>
+    <details class="error">
+      <summary><code>drupal_get_form()</code> has moved into the FormBuilder service.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2121003">Form generation functions moved into FormBuilder service</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/MediaRecorderBrowser.inc, line 22</li>
+            </ul>
+                  <aside>Flagged by _function_call:drupal_get_form</aside>    </details>
+    <details class="error">
+      <summary><code>form_error()</code> is now a method of <code>FormStateInterface</code>.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2121003">Form functions moved into <code>FormStateInterface</code></a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 993</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1003</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1235</li>
+            </ul>
+                  <aside>Flagged by _function_call:form_error</aside>    </details>
+    <details class="error">
+      <summary><code>form_set_error()</code> is now a method of <code>FormStateInterface</code>.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2121003">Form functions moved into <code>FormStateInterface</code></a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.admin.inc, line 288</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.admin.inc, line 292</li>
+            </ul>
+                  <aside>Flagged by _function_call:form_set_error</aside>    </details>
+    <details class="error">
+      <summary><code>drupal_json_encode()</code> has moved into the Serialization component.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2219113"><code>drupal_json_encode()</code> moved into Serialization component</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1092</li>
+            </ul>
+                  <aside>Flagged by _function_call:drupal_json_encode</aside>    </details>
+    <details class="error">
+      <summary><code>l()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2346779"><code>l()</code> replaced by URL generation API</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.admin.inc, line 150</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1067</li>
+            </ul>
+                  <aside>Flagged by _function_call:l</aside>    </details>
+    <details class="error">
+      <summary><code>module_invoke_all()</code> is now a method of the <code>module_handler</code> service.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1894902"><code>module_invoke_all()</code> replaced by <code>module_handler</code> service</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 603</li>
+            </ul>
+                  <aside>Flagged by _function_call:module_invoke_all</aside>    </details>
+    <details class="error">
+      <summary><code>get_t()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2021435"><code>get_t()</code> replaced by <code>t()</code></a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 15</li>
+            </ul>
+                  <aside>Flagged by _function_call:get_t</aside>    </details>
+    <details class="error">
+      <summary><code>theme()</code> has been renamed to <code>_theme()</code>, and should never be called directly.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2195739"><code>theme()</code> renamed to <code>_theme()</code> and should not be called directly</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1272</li>
+            </ul>
+                  <aside>Flagged by _function_call:theme</aside>    </details>
+    <details class="error">
+      <summary>The core token API is now a service.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1973488">Token API is now a service</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 751</li>
+            </ul>
+                  <aside>Flagged by _function_call:token_replace</aside>    </details>
+    <details class="error">
+      <summary><code>variable_del()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2183531">The Variable API has been removed</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 70</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 99</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 100</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 101</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 102</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 103</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 104</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 105</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 106</li>
+            </ul>
+                  <aside>Flagged by _function_call:variable_del</aside>    </details>
+    <details class="error">
+      <summary><code>variable_get()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2183531">The Variable API has been removed</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 94</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 95</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 96</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 97</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 98</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 169</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1310</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1313</li>
+            </ul>
+                  <aside>Flagged by _function_call:variable_get</aside>    </details>
+    <details class="error">
+      <summary><code>variable_set()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2183531">The Variable API has been removed</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.admin.inc, line 336</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 124</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 145</li>
+            </ul>
+                  <aside>Flagged by _function_call:variable_set</aside>    </details>
+    <details class="error">
+      <summary><code>watchdog()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2270941"><code>watchdog()</code> is deprecated</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.admin.inc, line 273</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.admin.inc, line 317</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 566</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 649</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 911</li>
+            </ul>
+                  <aside>Flagged by _function_call:watchdog</aside>    </details>
+    <details class="error">
+      <summary><code>drupal_set_message()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2774931"><code>drupal_set_message()</code> moved into stream wrapper manager service.</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.admin.inc, line 18</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/includes/media_recorder.admin.inc, line 337</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 61</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1067</li>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1073</li>
+            </ul>
+                  <aside>Flagged by _function_call:drupal_set_message</aside>    </details>
+    <details class="warning">
+      <summary>Default configuration is deleted automatically.</summary>
+
+      
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.install, line 70</li>
+            </ul>
+                  <aside>Flagged by hook_uninstall</aside>    </details>
+    <details class="error">
+      <summary>Classes must be PSR-4 compliant.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/2246699">PSR-4 compatible class loader in Drupal core</a></li>
+              </ul>
+      
+                      </details>
+    <details class="error">
+      <summary><code>hook_field_widget_form()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1796000">Field widgets are now plugins</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1240</li>
+            </ul>
+                  <aside>Flagged by _flag_hook:field_widget_form</aside>    </details>
+    <details class="error">
+      <summary><code>hook_field_widget_info()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1796000">Field widgets are now plugins</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1098</li>
+            </ul>
+                  <aside>Flagged by _flag_hook:field_widget_info</aside>    </details>
+    <details class="error">
+      <summary><code>hook_field_widget_settings_form()</code> has been removed.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1796000">Field widgets are now plugins</a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 1131</li>
+            </ul>
+                  <aside>Flagged by _flag_hook:field_widget_settings_form</aside>    </details>
+    <details class="error">
+      <summary><code>hook_menu()</code> has been removed from Drupal 8.</summary>
+
+      
+            <h5>Documentation</h5>
+      <ul>
+                <li><a target="_blank" href="https://www.drupal.org/node/1800686">All functionality of <code>hook_menu()</code> replaced</a></li>
+                <li><a target="_blank" href="https://www.drupal.org/node/2177901">Dynamic routes are now defined in <code>MODULE.routing.yml</code></a></li>
+                <li><a target="_blank" href="https://www.drupal.org/node/2119699">Page callbacks have been converted to controller classes</a></li>
+                <li><a target="_blank" href="https://www.drupal.org/node/2089605">Route naming convention</a></li>
+                <li><a target="_blank" href="https://www.drupal.org/node/2165243">Contextual links are now plugins defined in <code>MODULE.links.contextual.yml</code></a></li>
+                <li><a target="_blank" href="https://www.drupal.org/node/2007444">Local actions are now plugins defined in <code>MODULE.links.action.yml</code></a></li>
+                <li><a target="_blank" href="https://www.drupal.org/node/2044515">Local tasks and now plugins defined in <code>MODULE.links.task.yml</code></a></li>
+                <li><a target="_blank" href="https://www.drupal.org/node/2228089">Menu links are now defined in <code>MODULE.links.menu.yml</code></a></li>
+              </ul>
+      
+            <h5>Files Affected</h5>
+      <ul>
+              <li>/home/sivaji/Public/drupal8/modules/contrib/media_recorder/media_recorder.module, line 65</li>
+            </ul>
+                  <aside>Flagged by _flag_hook:menu</aside>    </details>
+
+    </details>
+    </body>
+</html>

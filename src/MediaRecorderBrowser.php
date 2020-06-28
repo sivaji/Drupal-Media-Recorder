@@ -1,8 +1,5 @@
 <?php
-/**
- * @file
- * Definition of MediaRecorderBrowser.
- */
+namespace Drupal\media_recorder;
 
 /**
  * Media browser plugin for Media Recorder.

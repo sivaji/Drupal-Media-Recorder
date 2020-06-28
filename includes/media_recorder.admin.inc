@@ -15,7 +15,7 @@ function media_recorder_admin_form($form, $form_state) {
   foreach ($required_libraries as $name) {
     $library = libraries_detect($name);
     if (!$library['installed']) {
-      drupal_set_message($library['error message'], 'error');
+      \Drupal::messenger()->addError($library['error message']);
     }
   }
 
@@ -122,7 +122,7 @@ function media_recorder_admin_form($form, $form_state) {
   );
 
   // Recorder upload directory token support.
-  if (module_exists('token')) {
+  if (\Drupal::moduleHandler()->moduleExists('token')) {
     $form['media_recorder']['upload_directory']['#description'] .= t('This field also supports tokens.');
     $form['media_recorder']['upload_tokens'] = array(
       '#theme' => 'token_tree',
@@ -131,24 +131,27 @@ function media_recorder_admin_form($form, $form_state) {
   }
 
   // Media: Kaltura integration.
-  if (module_exists('media_kaltura')) {
+  if (\Drupal::moduleHandler()->moduleExists('media_kaltura')) {
 
     // Load existing servers and add to options array.
     $rows = array();
     $options = array();
-    $servers = entity_load('media_kaltura_server');
+    $servers = \Drupal::entityTypeManager()->getStorage('media_kaltura_server');
     foreach ($servers as $server) {
-      $rows[$server->id] = array(
-        'domain' => $server->domain,
-        'force_ssl' => $server->force_ssl ? 'Yes' : 'No',
-        'api' => $server->api ? 'Enabled' : 'Disabled',
-        'partner_id' => $server->partner_id,
-        'subpartner_id' => $server->subpartner_id,
-        'user_id' => $server->user_id,
-        'secret' => $server->secret,
-        'uiconf_id' => $server->uiconf_id,
-        'operations' => l(t('edit'), 'admin/config/media/media_kaltura/server/' . $server->id),
-      );
+      // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $rows[$server->id] = array(
+//         'domain' => $server->domain,
+//         'force_ssl' => $server->force_ssl ? 'Yes' : 'No',
+//         'api' => $server->api ? 'Enabled' : 'Disabled',
+//         'partner_id' => $server->partner_id,
+//         'subpartner_id' => $server->subpartner_id,
+//         'user_id' => $server->user_id,
+//         'secret' => $server->secret,
+//         'uiconf_id' => $server->uiconf_id,
+//         'operations' => l(t('edit'), 'admin/config/media/media_kaltura/server/' . $server->id),
+//       );
+
       $options[$server->id] = $server->domain;
     }
 
@@ -270,7 +273,7 @@ function media_recorder_admin_form($form, $form_state) {
         );
       }
       catch (Exception $e) {
-        watchdog('media_kaltura', 'There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()), WATCHDOG_ERROR);
+        \Drupal::logger('media_kaltura')->error('There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()));
       }
     }
   }
@@ -314,7 +317,7 @@ function media_recorder_admin_form_create_recorder_widget_submit($form, &$form_s
     }
   }
   catch (Exception $e) {
-    watchdog('media_kaltura', 'There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()), WATCHDOG_ERROR);
+    \Drupal::logger('media_kaltura')->error('There was a problem connecting to the kaltura server: @error', array('@error' => $e->getMessage()));
   }
 
   // Create a new kRecord widget.
@@ -333,7 +336,12 @@ function media_recorder_admin_form_create_recorder_widget_submit($form, &$form_s
   if ($result && isset($result->id)) {
     $settings = media_recorder_get_settings();
     $settings['kaltura']['recorder'] = $result->id;
-    variable_set('media_recorder', $settings);
-    drupal_set_message(t('kRecord widget successfully created.'));
+    // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// variable_set('media_recorder', $settings);
+
+    \Drupal::messenger()->addMessage(t('kRecord widget successfully created.'));
   }
 }

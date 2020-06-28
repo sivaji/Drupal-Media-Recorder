@@ -24,7 +24,7 @@ function media_recorder_drush_command() {
  * @see media_recorder_drush_command()
  */
 function drush_media_recorder_download_libraries() {
-  if (!module_exists('libraries')) {
+  if (!\Drupal::moduleHandler()->moduleExists('libraries')) {
     return FALSE;
   }
 
@@ -32,7 +32,7 @@ function drush_media_recorder_download_libraries() {
   $base_path = drush_get_context('DRUSH_DRUPAL_CORE');
 
   // Get sites path.
-  $site_path = (conf_path() == 'sites/default') ? 'sites/all' : conf_path();
+  $site_path = (\Drupal\Core\DrupalKernel::findSitePath() == 'sites/default') ? 'sites/all' : \Drupal\Core\DrupalKernel::findSitePath();
 
   // Check that all libraries exist.
   $required_libraries = array('swfobject', 'FlashWavRecorder', 'Recorderjs');
