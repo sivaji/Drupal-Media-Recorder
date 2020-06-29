@@ -41,13 +41,15 @@
   Drupal.behaviors.mediaRecorder = {
     // attach: function (context, settings) {
     attach: function (context) {
-      console.log(settings);
+
       if (settings.mediaRecorder && settings.mediaRecorder.elements) {
         $.each(settings.mediaRecorder.elements, function (key, info) {
           $('#' + info.id).once('media-recorder').each(function () {
+            console.log(info.id);
             var $mediaRecorder = $('#' + info.id);
-            var $mediaRecorderFallback = $('#' + info.id + '-fallback-ajax-wrapper');
-            console.log(recorderType);
+            // var $mediaRecorderFallback = $('#' + info.id + '-fallback-ajax-wrapper');
+            var $mediaRecorderFallback = $('#' + info.id + '-fallback').parent();
+
             switch (recorderType) {
               case 'MediaRecorder':
                 $mediaRecorder.show();

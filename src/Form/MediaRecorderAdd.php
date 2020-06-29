@@ -57,7 +57,7 @@ class MediaRecorderAdd extends FormBase {
         '#value' => t('Save Recording'),
         '#submit' => [
           'media_recorder_add_submit'
-          ],
+        ],
       ];
     }
 
@@ -65,15 +65,19 @@ class MediaRecorderAdd extends FormBase {
   }
 
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+
     // Process file.
     if (is_numeric($form_state->getValue(['media_recorder', 'fid'])) && $file = file_load($form_state->getValue(['media_recorder', 'fid']))) {
       if (file_prepare_directory($form['media_recorder']['#upload_location'], FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
         $file->filename = trim($form_state->getValue(['title']));
         $file->status = FILE_STATUS_PERMANENT;
-        file_save($file);
+        // file_save($file);
+        $file->save();
         // @FIXME
         // l() expects a Url object, created from a route name or external URI.
         // drupal_set_message(t('The file <em>!filename</em> was successfully saved.', array('!filename' => l(\Drupal\Component\Utility\Html::escape($file->filename), 'file/' . $file->fid))), 'status');
+        \Drupal::messenger()->addStatus(t('The file has been saved successfully.'));
+
 
       }
     }

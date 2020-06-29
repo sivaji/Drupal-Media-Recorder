@@ -1308,6 +1308,7 @@ function media_recorder_field_widget_form(&$form, &$form_state, $field, $instanc
  * @see media_recorder_field_widget_form()
  */
 function media_recorder_widget_process($element, &$form_state, $form) {
+  die('module widget process');
   $item = $element['#value'];
   $item['fid'] = $element['fid']['#value'];
 

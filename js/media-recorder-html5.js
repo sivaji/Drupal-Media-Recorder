@@ -3,7 +3,8 @@
  * Provides an interface for the Recorder.js library.
  */
 
-(function ($) {
+(function ($, Drupal, drupalSettings) {
+// (function ($) {
   'use strict';
 
   Drupal.MediaRecorderHTML5 = function (id, conf) {
@@ -220,7 +221,7 @@
 
       // Send file.
       request.addEventListener("load", transferComplete, false);
-      request.open('POST', origin + Drupal.settings.basePath + 'media_recorder/record/file', true);
+      request.open('POST', origin + drupalSettings.path.baseUrl + 'media_recorder/record/file', true);
       request.send(formData);
       function transferComplete(evt) {
         var file = JSON.parse(request.response);
@@ -440,4 +441,5 @@
       return mm + ':' + ss;
     }
   };
-})(jQuery);
+// })(jQuery);
+})(jQuery, Drupal, drupalSettings);
