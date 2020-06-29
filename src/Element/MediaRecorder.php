@@ -54,7 +54,7 @@ class MediaRecorder extends RenderElement {
    * Add comment
    */
   public static function preRender($element) {
-    dpm(__METHOD__);
+    // dpm(__METHOD__);
     $element['#attached']['library'][] = 'media_recorder/swfobject';
     $element['#attached']['library'][] = 'media_recorder/FlashWavRecorder';
     $element['#attached']['library'][] = 'media_recorder/Recorderjs';
@@ -71,12 +71,13 @@ class MediaRecorder extends RenderElement {
    * @see media_recorder_element_info()
    */
   public static function media_recorder_element_value(&$element, $input = FALSE, $form_state = NULL) {
-    dpm(__METHOD__);
+    // dpm(__METHOD__);
     $fid = 0;
 
     // Find the current value of this field from the form state.
     $form_state_fid = $form_state->getValues();
-
+    // dpm($form_state_fid);
+    // dpm($element);
     // print_r($form_state_fid);exit;
     foreach ($element['#parents'] as $parent) {
       $form_state_fid = isset($form_state_fid[$parent]) ? $form_state_fid[$parent] : 0;
@@ -90,7 +91,7 @@ class MediaRecorder extends RenderElement {
     // Process any input and attach files.
     if ($input !== FALSE) {
       $return = $input;
-      return $return;
+      // return $return;
       // print_r($return);exit;
       // Uploads take priority over all other values.
       if ($files = file_managed_file_save_upload($element, $form_state)) {
@@ -156,10 +157,10 @@ class MediaRecorder extends RenderElement {
    * @see media_recorder_element_info()
    */
   function media_recorder_element_process(&$element, FormStateInterface $form_state, &$complete_form) {
-    dpm(__METHOD__);
+    // dpm(__METHOD__);
     $settings = media_recorder_get_settings();
     $fid = isset($element['#value']['fids']) ? $element['#value']['fids'] : 0;
-    // dpm($element['#value']);
+
     $file = $file_obj = NULL;
     $id = $element['#id'];
 
@@ -214,6 +215,11 @@ class MediaRecorder extends RenderElement {
 
     // Add a hidden fid field for storing the returned recorded file using ajax.
     $element['fids'] = array(
+      '#type' => 'hidden',
+      '#value' => $fid,
+      '#attributes' => array('id' => array($id . '-fids')),
+    );
+    $element['fid'] = array(
       '#type' => 'hidden',
       '#value' => $fid,
       '#attributes' => array('id' => array($id . '-fid')),
@@ -365,10 +371,10 @@ class MediaRecorder extends RenderElement {
    * @see media_recorder_element_info()
    */
   function media_recorder_element_validate($element, FormStateInterface $form_state) {
-    dpm(__METHOD__);
+    // dpm(__METHOD__);
 
     $fid = isset($element['#value']['fid']) ? $element['#value']['fid'] : $element['#value']['fallback']['fid'];
-    dpm($fid);
+    // dpm($fid);
     // Check required property based on the FID.
     if ($element['#required'] && empty($fid)) {
       // form_error($element, t('%name is a required field.', array('%name' => $element['#title'])));
@@ -386,7 +392,7 @@ class MediaRecorder extends RenderElement {
         $file_validate_errors = file_validate($file, $element['#upload_validators']);
         if ($file_validate_errors) {
           // form_error($element, implode('<br />', $file_validate_errors));
-          // $form_state->setError($element, implode('<br />', $file_validate_errors));
+          $form_state->setError($element, implode('<br />', $file_validate_errors));
         }
       }
     }

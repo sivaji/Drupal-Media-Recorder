@@ -166,6 +166,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     // dpm(__METHOD__);
     $settings = media_recorder_get_settings();
     $field_settings = $this->getFieldSettings();
+    // print_r($field_settings);exit;
     $cardinality = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
     $defaults = array(
       'fids' => 0,
@@ -177,6 +178,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     // print_r($element_info);exit;
     $element += [
       '#type' => 'media_recorder',
+      // '#default_value' => isset($items[$delta]->value) ? $items[$delta]->value : NULL,
       // '#value_callback' => 'media_recorder_widget_value',
       // '#process' => array_merge($element['#process'], array('media_recorder_widget_process')),
       '#value_callback' => [get_class($this), 'media_recorder_widget_value'],
@@ -186,8 +188,8 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
       '#extended' => TRUE,
       '#field_name' => $this->fieldDefinition->getName(),
       '#entity_type' => $items->getEntity()->getEntityTypeId(),
-      '#display_field' => (bool) $field_settings['display_field'],
-      '#display_default' => $field_settings['display_default'],
+      // '#display_field' => (bool) $field_settings['display_field'],
+      // '#display_default' => $field_settings['display_default'],
       '#description_field' => $field_settings['description_field'],
       // '#upload_location' => file_field_widget_uri($field, $instance),
       // '#upload_validators' => file_field_widget_upload_validators($field, $instance),
@@ -199,20 +201,48 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
 
     // Field stores FID value in a single mode, so we need to transform it for
     // form element to recognize it correctly.
+    // dpm($items[$delta]->getvalues());
     if (!isset($items[$delta]->fids) && isset($items[$delta]->target_id)) {
-      $items[$delta]->fids = [$items[$delta]->target_id];
+      $items[$delta]->fids = $items[$delta]->target_id;
     }
-
+    // dpm($items[$delta]->getValue());
     // $element['#default_value'] = !empty($items) ? $items[$delta] : $defaults;
     $element['#default_value'] = $items[$delta]->getValue() + $defaults;
-    // dpm($element['#default_value']);
+
     $element['fids'] = $element['#default_value']['target_id'];
+    // dpm($form_state->getValues());
     if (empty($element['#default_value']['fid'])) {
     //   $element['#description'] = theme('media_upload_help', array('description' => $element['#description']));
     }
+
+    // FIXME
+    // $element['fids'] = 64;
+    // $element['#default_value']['fids'] = 64;
+    // FIXME
+
     // $elements = array($element);
     return $element;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    // die("good is well");
+    // Since file upload widget now supports uploads of more than one file at a
+    // time it always returns an array of fids. We have to translate this to a
+    // single fid, as field expects single value.
+    $new_values = [];
+    foreach ($values as &$value) {
+      $new_value = $value;
+      $new_value['target_id'] = $value['fids'];
+      unset($new_value['fids']);
+      $new_values[] = $new_value;
+    }
+    // dpm($new_values);
+    return $new_values;
+  }
+
 
   /**
    * An element #process callback for the media_recorder field type.
@@ -288,6 +318,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
    */
   // function media_recorder_widget_value($element, $input = FALSE, $form_state) {
   function media_recorder_widget_value($element, $input, FormStateInterface $form_state) {
+    // return $input;
     // dpm(__METHOD__);
     if ($input) {
       // Checkboxes lose their value when empty.
@@ -302,6 +333,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     // We depend on the media_recorder element to handle uploads.
     // $return = media_recorder_element_value($element, $input, $form_state);
     $return = MediaRecorder::media_recorder_element_value($element, $input, $form_state);
+    // $return['fids'] = isset($return['target_id'])? $return['target_id'] : 0;
     // dpm($return);
     // Ensure that all the required properties are returned even if empty.
     $return += [
@@ -321,7 +353,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
    * @see file_managed_file_submit()
    */
   public static function submit($form, FormStateInterface $form_state) {
-    dpm(__METHOD__);
+    // dpm(__METHOD__);
     // During the form rebuild, formElement() will create field item widget
     // elements using re-indexed deltas, so clear out FormState::$input to
     // avoid a mismatch between old and new deltas. The rebuilt elements will
@@ -368,7 +400,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     // Update items.
     $field_state = static::getWidgetState($parents, $field_name, $form_state);
     $field_state['items'] = $submitted_values;
-    dpm($field_state);
+    // dpm($field_state);
     static::setWidgetState($parents, $field_name, $form_state, $field_state);
   }
 
