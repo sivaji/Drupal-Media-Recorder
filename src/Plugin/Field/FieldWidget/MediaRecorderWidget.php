@@ -165,21 +165,14 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     $element_info = $this->elementInfo->getInfo('media_recorder');
     $element += [
       '#type' => 'media_recorder',
-      // '#default_value' => isset($items[$delta]->value) ? $items[$delta]->value : NULL,
-      // '#value_callback' => 'media_recorder_widget_value',
-      // '#process' => array_merge($element['#process'], ['media_recorder_widget_process')),
-      '#value_callback' => [get_class($this), 'media_recorder_widget_value'],
-      '#process' => array_merge($element_info['#process'], [[get_class($this), 'media_recorder_widget_process']]),
+      '#value_callback' => [get_class($this), 'widgetValue'],
+      '#process' => array_merge($element_info['#process'], [[get_class($this), 'widgetProcess']]),
       '#time_limit' => $this->getSetting('time_limit'),
       '#constraints' => $this->getSetting('time_limit'),
       '#extended' => TRUE,
       '#field_name' => $this->fieldDefinition->getName(),
       '#entity_type' => $items->getEntity()->getEntityTypeId(),
-      // '#display_field' => (bool) $field_settings['display_field'],
-      // '#display_default' => $field_settings['display_default'],
       '#description_field' => $field_settings['description_field'],
-      // '#upload_location' => file_field_widget_uri($field, $instance),
-      // '#upload_validators' => file_field_widget_upload_validators($field, $instance),
       '#upload_location' => $items[$delta]->getUploadLocation(),
       '#upload_validators' => $items[$delta]->getUploadValidators(),
     ];
@@ -188,26 +181,11 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
 
     // Field stores FID value in a single mode, so we need to transform it for
     // form element to recognize it correctly.
-    // dpm($items[$delta]->getvalues());
     if (!isset($items[$delta]->fids) && isset($items[$delta]->target_id)) {
       $items[$delta]->fids = $items[$delta]->target_id;
     }
-    // dpm($items[$delta]->getValue());
-    // $element['#default_value'] = !empty($items) ? $items[$delta] : $defaults;
     $element['#default_value'] = $items[$delta]->getValue() + $defaults;
-
     $element['fids'] = $element['#default_value']['target_id'];
-    // dpm($form_state->getValues());
-    if (empty($element['#default_value']['fid'])) {
-    //   $element['#description'] = theme('media_upload_help', ['description' => $element['#description']));
-    }
-
-    // FIXME
-    // $element['fids'] = 64;
-    // $element['#default_value']['fids'] = 64;
-    // FIXME
-
-    // $elements = [$element);
     return $element;
   }
 
@@ -215,7 +193,6 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
    * {@inheritdoc}
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
-    // die("good is well");
     // Since file upload widget now supports uploads of more than one file at a
     // time it always returns an array of fids. We have to translate this to a
     // single fid, as field expects single value.
@@ -226,7 +203,6 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
       unset($new_value['fids']);
       $new_values[] = $new_value;
     }
-    // dpm($new_values);
     return $new_values;
   }
 
@@ -236,21 +212,12 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
    *
    * @see media_recorder_field_widget_form()
    */
-  // function media_recorder_widget_process($element, &$form_state, $form) {
-  public function media_recorder_widget_process($element, FormStateInterface $form_state, $form) {
-    // dpm(__METHOD__);
-
+  public function widgetProcess($element, FormStateInterface $form_state, $form) {
     $item = $element['#value'];
     // Populate the hidden field with file id.
     $element['fids']['#value'] = $element['#value']['fids'];
 
-    // $item['fids'] = $element['#value'];
-    // dpm($element);
-    // $field = field_widget_field($element, $form_state);
-    // $instance = field_widget_instance($element, $form_state);
-
     // Add the display field if enabled.
-    // if (!empty($field['settings']['display_field'])) {
     if ($element['#display_field']) {
       $element['display'] = [
         '#type' => 'checkbox',
@@ -266,26 +233,8 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
       ];
     }
 
-
-    $element['#submit'][] = [['MediaRecorderWidget', 'submit']];
-    // $element[$key]['#limit_validation_errors'] = [array_slice($element['#parents'], 0, -1)];
-
-
-
     // Add the description field if enabled.
-    // if (!empty($instance['settings']['description_field'])) {
     if ($element['#description_field']) {
-      // @FIXME
-  // // @FIXME
-  // // This looks like another module's variable. You'll need to rewrite this call
-  // // to ensure that it uses the correct configuration object.
-  // $element['description'] = [
-  //       '#type' => variable_get('file_description_type', 'textfield'),
-  //       '#title' => t('Description'),
-  //       '#value' => isset($item['description']) ? $item['description'] : '',
-  //       '#maxlength' => variable_get('file_description_length', 128),
-  //       '#description' => t('The description may be used as the label of the link to the file.'),
-  //     );
       $config = \Drupal::config('file.settings');
       $element['description'] = [
         '#type' => $config->get('description.type'),
@@ -303,16 +252,11 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
    *
    * @see media_recorder_field_widget_form()
    */
-  // function media_recorder_widget_value($element, $input = FALSE, $form_state) {
-  function media_recorder_widget_value($element, $input, FormStateInterface $form_state) {
-    // return $input;
-    // dpm(__METHOD__);
+  function widgetValue($element, $input, FormStateInterface $form_state) {
     if ($input) {
       // Checkboxes lose their value when empty.
       // If the display field is present make sure its unchecked value is saved.
-      // $field = field_widget_field($element, $form_state);
       if (empty($input['display'])) {
-        // $input['display'] = $field['settings']['display_field'] ? 0 : 1;
         $input['display'] = $element['#display_field'] ? 0 : 1;
       }
     }
@@ -320,8 +264,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     // We depend on the media_recorder element to handle uploads.
     // $return = media_recorder_element_value($element, $input, $form_state);
     $return = MediaRecorder::media_recorder_element_value($element, $input, $form_state);
-    // $return['fids'] = isset($return['target_id'])? $return['target_id'] : 0;
-    // dpm($return);
+
     // Ensure that all the required properties are returned even if empty.
     $return += [
       'fids' => 0,
@@ -329,64 +272,6 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
       'description' => '',
     ];
     return $return;
-  }
-
-  /**
-   * Form submission handler for upload/remove button of formElement().
-   *
-   * This runs in addition to and after file_managed_file_submit().
-   *
-   * @see file_managed_file_submit()
-   */
-  public static function submit($form, FormStateInterface $form_state) {
-    // dpm(__METHOD__);
-    // During the form rebuild, formElement() will create field item widget
-    // elements using re-indexed deltas, so clear out FormState::$input to
-    // avoid a mismatch between old and new deltas. The rebuilt elements will
-    // have #default_value set appropriately for the current state of the field,
-    // so nothing is lost in doing this.
-    $button = $form_state->getTriggeringElement();
-    $parents = array_slice($button['#parents'], 0, -2);
-    NestedArray::setValue($form_state->getUserInput(), $parents, NULL);
-
-    // Go one level up in the form, to the widgets container.
-    $element = NestedArray::getValue($form, array_slice($button['#array_parents'], 0, -1));
-    $field_name = $element['#field_name'];
-    $parents = $element['#field_parents'];
-
-    $submitted_values = NestedArray::getValue($form_state->getValues(), array_slice($button['#parents'], 0, -2));
-    foreach ($submitted_values as $delta => $submitted_value) {
-      if (empty($submitted_value['fids'])) {
-        unset($submitted_values[$delta]);
-      }
-    }
-
-    // If there are more files uploaded via the same widget, we have to separate
-    // them, as we display each file in its own widget.
-    $new_values = [];
-    foreach ($submitted_values as $delta => $submitted_value) {
-      if (is_array($submitted_value['fids'])) {
-        foreach ($submitted_value['fids'] as $fid) {
-          $new_value = $submitted_value;
-          $new_value['fids'] = [$fid];
-          $new_values[] = $new_value;
-        }
-      }
-      else {
-        $new_value = $submitted_value;
-      }
-    }
-
-    // Re-index deltas after removing empty items.
-    $submitted_values = array_values($new_values);
-
-    // Update form_state values.
-    NestedArray::setValue($form_state->getValues(), array_slice($button['#parents'], 0, -2), $submitted_values);
-
-    // Update items.
-    $field_state = static::getWidgetState($parents, $field_name, $form_state);
-    $field_state['items'] = $submitted_values;
-    static::setWidgetState($parents, $field_name, $form_state, $field_state);
   }
 
 }
