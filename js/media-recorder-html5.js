@@ -267,7 +267,7 @@
         analyser.smoothingTimeConstant = 0.75;
         analyser.fftSize = 512;
         microphone = audioContext.createMediaStreamSource(stream);
-        recorder = new Recorder(microphone, {workerPath: Drupal.settings.basePath + Drupal.settings.mediaRecorder.workerPath + '/recorderWorker.js'});
+        recorder = new Recorder(microphone, {workerPath: drupalSettings.basePath + drupalSettings.mediaRecorder.workerPath + '/recorderWorker.js'});
 
         $previewWrapper.show();
         $meter.show();

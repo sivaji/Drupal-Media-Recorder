@@ -12,7 +12,14 @@
   'use strict';
 
   // Normalize features.
-  navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+  navigator.getUserMedia = (
+    navigator.getUserMedia ||
+    navigator.mediaDevices.getUserMedia ||
+    navigator.webkitGetUserMedia ||
+    navigator.mozGetUserMedia ||
+    navigator.msGetUserMedia
+  );
+
   window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext;
   window.URL = window.URL || window.webkitURL;
 

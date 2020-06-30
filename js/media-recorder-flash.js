@@ -3,7 +3,8 @@
  * Provides an interface for the FWRecorder library.
  */
 
-(function ($) {
+// (function ($) {
+(function ($, Drupal, drupalSettings) {
   'use strict';
 
   Drupal.MediaRecorderFlash = function (id, conf) {
@@ -34,13 +35,13 @@
       $element.append('<div id="flash-wrapper"><div id="flashcontent"><p>Your browser must have JavaScript enabled and the Adobe Flash Player installed.</p></div></div>');
 
       window.fwr_event_handler = function (eventName) {
-        Drupal.settings.mediaRecorder.elements.forEach(function (info) {
+        drupalSettings.mediaRecorder.elements.forEach(function (info) {
           $('#' + info.id).trigger(eventName, arguments);
         });
       };
 
       swfobject.embedSWF(
-        Drupal.settings.basePath + Drupal.settings.mediaRecorder.swfPath + '/html/recorder.swf?id=' + id,
+        drupalSettings.basePath + drupalSettings.mediaRecorder.swfPath + '/html/recorder.swf?id=' + id,
         'flashcontent',
         1,
         1,
@@ -67,14 +68,14 @@
     $progressWrapper.hide();
 
     // Show file preview if file exists.
-    if (Drupal.settings.mediaRecorder.file) {
-      var file = Drupal.settings.mediaRecorder.file;
+    if (drupalSettings.mediaRecorder.file) {
+      var file = drupalSettings.mediaRecorder.file;
       switch (file.type) {
         case 'video':
           $previewWrapper.show();
           $video.show();
           $audio.hide();
-          $video[0].src = Drupal.settings.mediaRecorder.file.url;
+          $video[0].src = drupalSettings.mediaRecorder.file.url;
           $video[0].muted = '';
           $video[0].controls = 'controls';
           $video[0].load();
@@ -83,7 +84,7 @@
           $previewWrapper.show();
           $audio.show();
           $video.hide();
-          $audio[0].src = Drupal.settings.mediaRecorder.file.url;
+          $audio[0].src = drupalSettings.mediaRecorder.file.url;
           $audio[0].muted = '';
           $audio[0].controls = 'controls';
           $audio[0].load();
@@ -123,7 +124,7 @@
 
       // Send file.
       req.addEventListener("load", transferComplete, false);
-      req.open('POST', origin + Drupal.settings.basePath + 'media_recorder/record/file', true);
+      req.open('POST', origin + drupalSettings.basePath + 'media_recorder/record/file', true);
       req.send(formData);
       function transferComplete(evt) {
         var file = JSON.parse(req.response);
@@ -372,4 +373,6 @@
     }
 
   };
-})(jQuery);
+// })(jQuery);
+})(jQuery, Drupal, drupalSettings);
+
