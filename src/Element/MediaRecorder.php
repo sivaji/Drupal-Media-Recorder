@@ -152,8 +152,7 @@ class MediaRecorder extends RenderElement {
 
       $file_obj = new \stdClass();
       $file_obj->fid = $file->id();
-      // FIXME
-      $file_obj->type = 'audio'; //$file->get('bundle')->value;
+      // $file_obj->type = 'audio'; //$file->get('bundle')->value;
       $file_obj->filemime = $file->getMimeType();
       $file_obj->url = $file->url;
     }
@@ -194,10 +193,10 @@ class MediaRecorder extends RenderElement {
     ];
 
     // Add a hidden fid field for storing the returned recorded file using ajax.
-    $element['fids'] = [
+    $element['fid'] = [
       '#type' => 'hidden',
       '#value' => $fid,
-      '#attributes' => ['id' => [$id . '-fids']],
+      '#attributes' => ['id' => [$id . '-fid']],
     ];
 
     // Add javascript libraries.
