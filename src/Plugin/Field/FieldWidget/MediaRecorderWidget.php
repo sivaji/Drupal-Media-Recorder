@@ -262,8 +262,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     }
 
     // We depend on the media_recorder element to handle uploads.
-    // $return = media_recorder_element_value($element, $input, $form_state);
-    $return = MediaRecorder::media_recorder_element_value($element, $input, $form_state);
+    $return = MediaRecorder::elementValue($element, $input, $form_state);
 
     // Ensure that all the required properties are returned even if empty.
     $return += [
