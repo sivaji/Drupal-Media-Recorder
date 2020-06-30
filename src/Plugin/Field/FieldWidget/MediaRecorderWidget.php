@@ -33,15 +33,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginInterface {
 
   /**
-   * @FIXME
-   * Move all logic relating to the media_recorder widget into this class.
-   * For more information, see:
-   *
-   * https://www.drupal.org/node/1796000
-   * https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Field%21WidgetInterface.php/interface/WidgetInterface/8
-   * https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Field%21WidgetBase.php/class/WidgetBase/8
-   */
-  /**
    * {@inheritdoc}
    */
   public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, ElementInfoManagerInterface $element_info) {
@@ -60,102 +51,102 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
    * {@inheritdoc}
    */
   public static function defaultSettings() {
-    return array(
+    return [
       'time_limit' => 300,
-      'constraints' => array(
+      'constraints' => [
         'audio' => TRUE,
         'video' => TRUE,
-        'video_width' => array(
+        'video_width' => [
           'min' => 640,
           'ideal' => 1280,
           'max' => 1920,
-        ),
-        'video_height' => array(
+        ],
+        'video_height' => [
           'min' => 480,
           'ideal' => 720,
           'max' => 1080,
-        ),
-      ),
-    ) + parent::defaultSettings();
+        ],
+      ],
+     ] + parent::defaultSettings();
   }
 
   /**
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
-    $element['time_limit'] = array(
+    $element['time_limit'] = [
       '#type' => 'textfield',
       '#title' => t('Time Limit'),
       '#description' => t('Time limit in seconds. Defaults to 300 seconds (5 minutes).'),
       '#default_value' => $this->getSetting('time_limit'),
-      '#element_validate' => array('element_validate_integer_positive'),
+      '#element_validate' => ['element_validate_integer_positive'],
       '#required' => TRUE,
-    );
+    ];
     $settings['constraints'] = $this->getSetting('constraints');
-    $element['constraints'] = array(
+    $element['constraints'] = [
       '#type' => 'fieldset',
       '#title' => t('Media Constraints'),
       '#description' => t('Select which recording options will be available.'),
-    );
-    $element['constraints']['audio'] = array(
+    ];
+    $element['constraints']['audio'] = [
       '#type' => 'checkbox',
       '#title' => t('Audio'),
       '#default_value' => $settings['constraints']['audio'],
-    );
-    $element['constraints']['video'] = array(
+    ];
+    $element['constraints']['video'] = [
       '#type' => 'checkbox',
       '#title' => t('Video'),
       '#default_value' => $settings['constraints']['video'],
-    );
-    $element['constraints']['video'] = array(
+    ];
+    $element['constraints']['video'] = [
       '#type' => 'checkbox',
       '#title' => t('Video'),
       '#default_value' => $settings['constraints']['video'],
-    );
-    $element['constraints']['video_width'] = array(
+    ];
+    $element['constraints']['video_width'] = [
       '#type' => 'fieldset',
       '#title' => t('Width'),
-      'min' => array(
+      'min' => [
         '#type' => 'textfield',
         '#title' => t('Minimum Width'),
         '#default_value' => $settings['constraints']['video_width']['min'],
-        '#element_validate' => array('element_validate_integer_positive'),
-      ),
-      'ideal' => array(
+        '#element_validate' => ['element_validate_integer_positive'],
+      ],
+      'ideal' => [
         '#type' => 'textfield',
         '#title' => t('Ideal Width'),
         '#default_value' => $settings['constraints']['video_width']['ideal'],
-        '#element_validate' => array('element_validate_integer_positive'),
-      ),
-      'max' => array(
+        '#element_validate' => ['element_validate_integer_positive'],
+      ],
+      'max' => [
         '#type' => 'textfield',
         '#title' => t('Maximum Width'),
         '#default_value' => $settings['constraints']['video_width']['max'],
-        '#element_validate' => array('element_validate_integer_positive'),
-      ),
-    );
-    $element['constraints']['video_height'] = array(
+        '#element_validate' => ['element_validate_integer_positive'],
+      ],
+    ];
+    $element['constraints']['video_height'] = [
       '#type' => 'fieldset',
       '#title' => t('Height'),
-      'min' => array(
+      'min' => [
         '#type' => 'textfield',
         '#title' => t('Minimum Height'),
         '#default_value' => $settings['constraints']['video_height']['min'],
-        '#element_validate' => array('element_validate_integer_positive'),
-      ),
-      'ideal' => array(
+        '#element_validate' => ['element_validate_integer_positive'],
+      ],
+      'ideal' => [
         '#type' => 'textfield',
         '#title' => t('Ideal Height'),
         '#default_value' => $settings['constraints']['video_height']['ideal'],
-        '#element_validate' => array('element_validate_integer_positive'),
-      ),
-      'max' => array(
+        '#element_validate' => ['element_validate_integer_positive'],
+      ],
+      'max' => [
         '#type' => 'textfield',
         '#title' => t('Maximum Height'),
         '#default_value' => $settings['constraints']['video_height']['max'],
-        '#element_validate' => array('element_validate_integer_positive'),
-      ),
-    );
+        '#element_validate' => ['element_validate_integer_positive'],
+      ],
+    ];
     return $element;
   }
 
@@ -163,24 +154,20 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    // dpm(__METHOD__);
     $settings = media_recorder_get_settings();
     $field_settings = $this->getFieldSettings();
-    // print_r($field_settings);exit;
     $cardinality = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
-    $defaults = array(
+    $defaults = [
       'fids' => 0,
-      // 'display' => !empty($field['settings']['display_default']),
       'display' => 1,
       'description' => '',
-    );
+    ];
     $element_info = $this->elementInfo->getInfo('media_recorder');
-    // print_r($element_info);exit;
     $element += [
       '#type' => 'media_recorder',
       // '#default_value' => isset($items[$delta]->value) ? $items[$delta]->value : NULL,
       // '#value_callback' => 'media_recorder_widget_value',
-      // '#process' => array_merge($element['#process'], array('media_recorder_widget_process')),
+      // '#process' => array_merge($element['#process'], ['media_recorder_widget_process')),
       '#value_callback' => [get_class($this), 'media_recorder_widget_value'],
       '#process' => array_merge($element_info['#process'], [[get_class($this), 'media_recorder_widget_process']]),
       '#time_limit' => $this->getSetting('time_limit'),
@@ -212,7 +199,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     $element['fids'] = $element['#default_value']['target_id'];
     // dpm($form_state->getValues());
     if (empty($element['#default_value']['fid'])) {
-    //   $element['#description'] = theme('media_upload_help', array('description' => $element['#description']));
+    //   $element['#description'] = theme('media_upload_help', ['description' => $element['#description']));
     }
 
     // FIXME
@@ -220,7 +207,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     // $element['#default_value']['fids'] = 64;
     // FIXME
 
-    // $elements = array($element);
+    // $elements = [$element);
     return $element;
   }
 
@@ -265,18 +252,18 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     // Add the display field if enabled.
     // if (!empty($field['settings']['display_field'])) {
     if ($element['#display_field']) {
-      $element['display'] = array(
+      $element['display'] = [
         '#type' => 'checkbox',
         '#title' => t('Include file in display'),
         '#value' => isset($item['display']) ? $item['display'] : $element['#default_value']['display'],
-        '#attributes' => array('class' => array('file-display')),
-      );
+        '#attributes' => ['class' => ['file-display']],
+      ];
     }
     else {
-      $element['display'] = array(
+      $element['display'] = [
         '#type' => 'hidden',
         '#value' => '1',
-      );
+      ];
     }
 
 
@@ -292,7 +279,7 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
   // // @FIXME
   // // This looks like another module's variable. You'll need to rewrite this call
   // // to ensure that it uses the correct configuration object.
-  // $element['description'] = array(
+  // $element['description'] = [
   //       '#type' => variable_get('file_description_type', 'textfield'),
   //       '#title' => t('Description'),
   //       '#value' => isset($item['description']) ? $item['description'] : '',
@@ -341,7 +328,6 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
       'display' => 1,
       'description' => '',
     ];
-
     return $return;
   }
 
@@ -400,7 +386,6 @@ class MediaRecorderWidget extends WidgetBase  implements ContainerFactoryPluginI
     // Update items.
     $field_state = static::getWidgetState($parents, $field_name, $form_state);
     $field_state['items'] = $submitted_values;
-    // dpm($field_state);
     static::setWidgetState($parents, $field_name, $form_state, $field_state);
   }
 
