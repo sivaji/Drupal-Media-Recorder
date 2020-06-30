@@ -10,7 +10,7 @@ media_recorder.record_file:
   path: /media_recorder/record/file
   defaults:
     _title: Record
-    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_file'
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::recordFile'
   requirements:
     _entity_create_access: 'file'
 
@@ -18,7 +18,7 @@ media_recorder.record_kaltura_token:
   path: /media_recorder/record/kaltura/token
   defaults:
     _title: Record
-    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_kaltura_token'
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::kalturaToken'
   requirements:
     _entity_create_access: 'file'
 
@@ -26,7 +26,7 @@ media_recorder.record_kaltura_entry:
   path: /media_recorder/record/kaltura/entry
   defaults:
     _title: Record
-    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_kaltura_entry'
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::kalturaEntry'
   requirements:
     _entity_create_access: 'file'
 
@@ -34,7 +34,7 @@ media_recorder.record_stream_start:
   path: /media_recorder/record/stream/start
   defaults:
     _title: Record
-    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_stream_start'
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::streamStart'
   requirements:
     _entity_create_access: 'file'
 
@@ -42,7 +42,7 @@ media_recorder.record_stream_record:
   path: /media_recorder/record/stream/record
   defaults:
     _title: Record
-    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_stream_record'
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::streamRecord'
   requirements:
     _entity_create_access: 'file'
 
@@ -50,7 +50,7 @@ media_recorder.record_stream_finish:
   path: /media_recorder/record/stream/finish
   defaults:
     _title: Record
-    _controller: '\Drupal\media_recorder\Controller\DefaultController::media_recorder_record_stream_finish'
+    _controller: '\Drupal\media_recorder\Controller\DefaultController::streamFinish'
   requirements:
     _entity_create_access: 'file'
 
