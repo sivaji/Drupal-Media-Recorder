@@ -16,9 +16,9 @@ function media_recorder_requirements($phase) {
 
     // Check that all libraries exist.
     $required_libraries = array(
-      'swfobject',
-      'FlashWavRecorder',
-      'Recorderjs',
+      # 'swfobject',
+      # 'FlashWavRecorder',
+      # 'Recorderjs',
     );
     foreach ($required_libraries as $name) {
       $library = libraries_detect($name);
@@ -50,9 +50,9 @@ function media_recorder_enable() {
 
   // Check that all libraries exist.
   $required_libraries = array(
-    'swfobject',
-    'FlashWavRecorder',
-    'Recorderjs',
+    # 'swfobject',
+    # 'FlashWavRecorder',
+    # 'Recorderjs',
   );
   foreach ($required_libraries as $name) {
     $library = libraries_detect($name);
