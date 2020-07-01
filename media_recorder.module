@@ -7,8 +7,6 @@
 
 use Drupal\Core\Routing\RouteMatchInterface;
 
-// FIXME - load the previously saved audio/video.
-
 /**
  * Implements hook_help().
  */
@@ -37,8 +35,6 @@ function media_recorder_theme() {
  * Getter callback for retrieving media recorder settings with defaults.
  */
 function media_recorder_get_settings() {
-  // FIXME
-  // return variable_get('media_recorder', array(
   return array(
      'constraints' => array(
        'audio' => TRUE,

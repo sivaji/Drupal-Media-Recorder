@@ -52,13 +52,14 @@ class MediaRecorder extends RenderElement {
    * Render API callback: Attaches the requires JS Libraries.
    */
   public static function preRender($element) {
-    $element['#attached']['library'][] = 'media_recorder/swfobject';
-    $element['#attached']['library'][] = 'media_recorder/FlashWavRecorder';
-    $element['#attached']['library'][] = 'media_recorder/Recorderjs';
-    $element['#attached']['library'][] = 'media_recorder/media-recorder-api';
-    $element['#attached']['library'][] = 'media_recorder/media-recorder-html5';
-    $element['#attached']['library'][] = 'media_recorder/media-recorder-flash';
+    // FIXME - remove html5 & flash
+    // $element['#attached']['library'][] = 'media_recorder/swfobject';
+    // $element['#attached']['library'][] = 'media_recorder/FlashWavRecorder';
+    // $element['#attached']['library'][] = 'media_recorder/Recorderjs';
     $element['#attached']['library'][] = 'media_recorder/media-recorder';
+    $element['#attached']['library'][] = 'media_recorder/media-recorder-api';
+    // $element['#attached']['library'][] = 'media_recorder/media-recorder-html5';
+    // $element['#attached']['library'][] = 'media_recorder/media-recorder-flash';
     return $element;
   }
 
@@ -116,8 +117,8 @@ class MediaRecorder extends RenderElement {
     // If there is no input, set the default value.
     else {
       if ($element['#extended']) {
-        $default_fid = isset($element['#default_value']['fid']) ? $element['#default_value']['fid'] : 0;
-        $return = isset($element['#default_value']) ? $element['#default_value'] : ['fid' => 0];
+        $default_fid = isset($element['#default_value']['fids']) ? $element['#default_value']['fids'] : 0;
+        $return = isset($element['#default_value']) ? $element['#default_value'] : ['fids' => 0];
       }
       else {
         $default_fid = isset($element['#default_value']) ? $element['#default_value'] : 0;
@@ -140,7 +141,7 @@ class MediaRecorder extends RenderElement {
    */
   function elementProcess(&$element, FormStateInterface $form_state, &$complete_form) {
     $settings = media_recorder_get_settings();
-    $fid = isset($element['#value']['fids']) ? $element['#value']['fids'] : 0;
+    $fid = isset($element['#default_value']['fids']) ? $element['#default_value']['fids'] : 0;
 
     $file = $file_obj = NULL;
     $id = $element['#id'];
@@ -152,8 +153,8 @@ class MediaRecorder extends RenderElement {
 
       $file_obj = new \stdClass();
       $file_obj->fid = $file->id();
-      // $file_obj->type = 'audio'; //$file->get('bundle')->value;
       $file_obj->filemime = $file->getMimeType();
+      $file_obj->type = current(explode('/', $file_obj->filemime));
       $file_obj->url = $file->url;
     }
 
@@ -203,8 +204,8 @@ class MediaRecorder extends RenderElement {
     $element['#attached'] = [
       'drupalSettings' => [
         'mediaRecorder' => [
-          'swfPath' => libraries_get_path('FlashWavRecorder'),
-          'workerPath' => libraries_get_path('Recorderjs'),
+          // 'swfPath' => libraries_get_path('FlashWavRecorder'),
+          // 'workerPath' => libraries_get_path('Recorderjs'),
           'elements' => [
             [
               'id' => $id,

@@ -27,8 +27,8 @@
   var getUserMediaCheck = typeof (navigator.getUserMedia) === 'function';
   var mediaRecorderCheck = typeof (window.MediaRecorder) === 'function';
   var webAudioCheck = typeof (window.AudioContext) === 'function';
-  var swfobjectCheck = typeof (window.swfobject) === 'object';
-  var flashVersionCheck = swfobjectCheck ? (swfobject.getFlashPlayerVersion().major >= 10) : false;
+  // var swfobjectCheck = typeof (window.swfobject) === 'object';
+  // var flashVersionCheck = swfobjectCheck ? (swfobject.getFlashPlayerVersion().major >= 10) : false;
 
   var settings = drupalSettings;
 
@@ -37,12 +37,12 @@
   if (getUserMediaCheck && webAudioCheck && mediaRecorderCheck) {
     recorderType = 'MediaRecorder';
   }
-  else if (getUserMediaCheck && webAudioCheck && !mediaRecorderCheck) {
-    recorderType = 'MediaRecorderHTML5';
-  }
-  else if (swfobjectCheck && flashVersionCheck) {
-    recorderType = 'MediaRecorderFlash';
-  }
+  // else if (getUserMediaCheck && webAudioCheck && !mediaRecorderCheck) {
+  //   recorderType = 'MediaRecorderHTML5';
+  // }
+  // else if (swfobjectCheck && flashVersionCheck) {
+  //   recorderType = 'MediaRecorderFlash';
+  // }
 
   // Attach behaviors.
   Drupal.behaviors.mediaRecorder = {
@@ -63,24 +63,25 @@
                 $mediaRecorderFallback.remove();
                 new Drupal.MediaRecorder(info.id, info.conf);
                 break;
-              case 'MediaRecorderHTML5':
-                $mediaRecorder.show();
-                $mediaRecorderFallback.remove();
-                // Use the kaltura video recorder if kaltura is enabled, rather
-                // than the HTML5 audio only Recorder.js library.
-                if (info.conf.kaltura) {
-                  new Drupal.MediaRecorderFlash(info.id, info.conf);
-                }
-                else {
-                  new Drupal.MediaRecorderHTML5(info.id, info.conf);
-                }
-                break;
-              case 'MediaRecorderFlash':
-                $mediaRecorder.show();
-                $mediaRecorderFallback.remove();
-                new Drupal.MediaRecorderFlash(info.id, info.conf);
-                break;
+              // case 'MediaRecorderHTML5':
+              //   $mediaRecorder.show();
+              //   $mediaRecorderFallback.remove();
+              //   // Use the kaltura video recorder if kaltura is enabled, rather
+              //   // than the HTML5 audio only Recorder.js library.
+              //   if (info.conf.kaltura) {
+              //     new Drupal.MediaRecorderFlash(info.id, info.conf);
+              //   }
+              //   else {
+              //     new Drupal.MediaRecorderHTML5(info.id, info.conf);
+              //   }
+              //   break;
+              // case 'MediaRecorderFlash':
+              //   $mediaRecorder.show();
+              //   $mediaRecorderFallback.remove();
+              //   new Drupal.MediaRecorderFlash(info.id, info.conf);
+              //   break;
               default:
+                alert("Required features are not found in this browser.")
                 $mediaRecorder.hide();
             }
           });

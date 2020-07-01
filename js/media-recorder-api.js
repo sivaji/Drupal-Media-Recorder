@@ -79,13 +79,14 @@
         }
       };
     }
-
+    // console.log(conf);
     // Show file preview if file exists.
     if (conf.file) {
       var file = conf.file;
       switch (file.type) {
         case 'video':
           $previewWrapper.show();
+          $startButton.text("Remove");
           $video.show();
           $audio.hide();
           $video[0].src = file.url;
@@ -95,6 +96,7 @@
           break;
         case 'audio':
           $previewWrapper.show();
+          $startButton.text("Remove");
           $audio.show();
           $video.hide();
           $audio[0].src = file.url;
@@ -107,7 +109,12 @@
 
     initializeButtons();
     initializeEvents();
-    setStatus('Click \'Start\' to enable your mic & camera.');
+    if (conf && conf.file && conf.file.type) {
+      setStatus('Click \'Remove\' to delete and start a new recording.');
+    }
+    else {
+      setStatus('Click \'Start\' to enable your mic & camera.');
+    }
 
     /**
      * Set status message.
@@ -432,6 +439,7 @@
 
       // Click handler for enable audio button.
       $startButton.bind('click', function (event) {
+        $inputFid.val(0);
         event.preventDefault();
         start();
       });
@@ -477,7 +485,6 @@
      * Initialize recorder.
      */
     function initializeEvents() {
-
       // Stop page unload if there is a recording in process.
       window.onbeforeunload = function () {
         if (recording) {
