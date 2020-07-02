@@ -343,7 +343,7 @@
         $startButton.hide();
         $videoButton.show();
         $audioButton.show();
-        setStatus('Record with audio or video?');
+        setStatus('Record new with audio or video?');
       }
     }
 
@@ -439,6 +439,7 @@
 
       // Click handler for enable audio button.
       $startButton.bind('click', function (event) {
+        $previewWrapper.hide();
         $inputFid.val(0);
         event.preventDefault();
         start();
