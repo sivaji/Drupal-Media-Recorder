@@ -35,33 +35,39 @@ function media_recorder_theme() {
  * Getter callback for retrieving media recorder settings with defaults.
  */
 function media_recorder_get_settings() {
-  return array(
-     'constraints' => array(
-       'audio' => TRUE,
-       'video' => TRUE,
-       'video_width' => array(
-         'min' => 640,
-         'ideal' => 1280,
-         'max' => 1920,
-       ),
-       'video_height' => array(
-         'min' => 480,
-         'ideal' => 720,
-         'max' => 1080,
-       ),
-     ),
-     'css' => TRUE,
-     'time_limit' => 300,
-     'allowed_extensions' => 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm',
-     'upload_directory' => '',
-     'kaltura' => array(
-       'enable' => FALSE,
-       'server' => 0,
-       'recorder' => 0,
-       'profile' => 0,
-       'category' => 0,
-     ),
-  );
+  $default = [
+    'constraints' => [
+      'audio' => TRUE,
+      'video' => TRUE,
+      'video_width' => [
+        'min' => 640,
+        'ideal' => 1280,
+        'max' => 1920,
+      ],
+      'video_height' => [
+        'min' => 480,
+        'ideal' => 720,
+        'max' => 1080,
+      ],
+    ],
+    'css' => TRUE,
+    'time_limit' => 300,
+    'allowed_extensions' => 'wav mp3 m4a ogg oga weba wma mov mp4 wmv m4v mpeg avi ogv webp webm',
+    'upload_directory' => '',
+    'kaltura' => [
+      'enable' => FALSE,
+      'server' => 0,
+      'recorder' => 0,
+      'profile' => 0,
+      'category' => 0,
+    ],
+  ];
+  $config = \Drupal::config('media_recorder.settings');
+  $value = $config->get('media_recorder');
+  if (is_array($value) && !empty($value)) {
+    return $value;
+  }
+  return $default;
 }
 
 

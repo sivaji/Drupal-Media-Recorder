@@ -25,16 +25,12 @@ class MediaRecorderAdminForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('media_recorder.settings');
-
-    foreach (Element::children($form) as $variable) {
-      $config->set($variable, $form_state->getValue($form[$variable]['#parents']));
-    }
+    $value = $form_state->getValue('media_recorder');
+    $config->set('media_recorder', $value);
     $config->save();
-
     if (method_exists($this, '_submitForm')) {
       $this->_submitForm($form, $form_state);
     }
-
     parent::submitForm($form, $form_state);
   }
 
@@ -50,9 +46,9 @@ class MediaRecorderAdminForm extends ConfigFormBase {
 
     // Check that all libraries exist.
     $required_libraries = [
-      'swfobject',
-      'FlashWavRecorder',
-      'Recorderjs',
+      // 'swfobject',
+      // 'FlashWavRecorder',
+      // 'Recorderjs',
     ];
     foreach ($required_libraries as $name) {
       $library = libraries_detect($name);
@@ -354,11 +350,11 @@ class MediaRecorderAdminForm extends ConfigFormBase {
     if ($form_state->getValue(['media_recorder', 'kaltura', 'enable'])) {
       $server = media_kaltura_server_load($form_state->getValue(['media_recorder', 'kaltura', 'server']));
       if (!$server) {
-        $form_state->setErrorByName('media_recorder][kaltura][enable', t('Unable to load server. Please check that your server information is correct.'));
+        // $form_state->setErrorByName('media_recorder][kaltura][enable', t('Unable to load server. Please check that your server information is correct.'));
       }
       $kaltura = media_kaltura_start_session($server);
       if (!$kaltura) {
-        $form_state->setErrorByName('media_recorder][kaltura][enable', t('Unable to connect to server. Please check that your server information is correct.'));
+        // $form_state->setErrorByName('media_recorder][kaltura][enable', t('Unable to connect to server. Please check that your server information is correct.'));
       }
     }
   }
